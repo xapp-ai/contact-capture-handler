@@ -1,0 +1,58 @@
+{
+  "name": "@xapp/contact-capture-handler",
+  "license": "Apache-2.0",
+  "publishConfig": {
+    "access": "public"
+  },
+  "version": "1.0.0",
+  "description": "A data driven contact information collector for 📣 stentor",
+  "types": "lib/index",
+  "typings": "lib/index",
+  "main": "lib/index",
+  "files": [
+    "dist",
+    "lib"
+  ],
+  "engines": {
+    "node": "^12 || ^14 || ^16"
+  },
+  "devDependencies": {
+    "@semantic-release/changelog": "6.0.1",
+    "@semantic-release/git": "10.0.1",
+    "@semantic-release/npm": "9.0.1",
+    "@semantic-release/release-notes-generator": "10.0.3",
+    "@types/chai": "4.3.3",
+    "@types/mocha": "10.0.0",
+    "@types/node": "18.8.2",
+    "@types/sinon": "10.0.13",
+    "@types/sinon-chai": "3.2.8",
+    "@typescript-eslint/eslint-plugin": "5.39.0",
+    "@typescript-eslint/parser": "5.39.0",
+    "@xapp/config": "0.2.3",
+    "aws-sdk": "2.1230.0",
+    "chai": "4.3.6",
+    "conventional-changelog-conventionalcommits": "5.0.0",
+    "eslint": "8.24.0",
+    "eslint-plugin-notice": "0.9.10",
+    "mocha": "10.0.0",
+    "prettier": "2.7.1",
+    "semantic-release": "19.0.5",
+    "sinon": "14.0.1",
+    "sinon-chai": "3.7.0",
+    "stentor": "1.56.97",
+    "ts-node": "10.9.1",
+    "typescript": "4.8.4"
+  },
+  "scripts": {
+    "build": "tsc -d true -p .",
+    "clean": "rm -rf ./lib/*",
+    "lint": "eslint 'src/**/*.{ts,tsx}'",
+    "test": "mocha --recursive -r ts-node/register \"./src/**/*.test.ts\""
+  },
+  "dependencies": {
+    "@xapp/question-answering-handler": "2.1.6"
+  },
+  "peerDependencies": {
+    "stentor": "1.X"
+  }
+}

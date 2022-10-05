@@ -1,0 +1,32 @@
+name: Publish
+
+on:
+  push:
+    branches: [main]
+    tags-ignore: [v*]
+
+jobs:
+  npm-publish:
+    name: npm-publish
+    runs-on: ubuntu-latest
+    environment: publish
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16.14.0
+      - run: yarn --frozen-lockfile
+      - run: yarn lint
+      - run: yarn test
+      - run: yarn build
+      - name: Release
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
+          GH_TOKEN: ${{secrets.GH_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx semantic-release
