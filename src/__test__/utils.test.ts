@@ -153,11 +153,6 @@ describe(`#${generateAlternativeSlots.name}()`, () => {
                 expect(alternatives).to.deep.equal({});
             });
         });
-        describe("but receive title and last name", () => {
-            it("returns the right alternate", () => {
-
-            });
-        });
         describe("when knowledge answer comes in", () => {
             describe("when it is a long query", () => {
                 it("does nothing", () => {
