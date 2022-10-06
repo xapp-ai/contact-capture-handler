@@ -1,6 +1,6 @@
 /*! Copyright (c) 2022, XAPP AI */
 
-import { LeadDataDescriptorRuntime } from "./data";
+import { DataDescriptorRuntime } from "./data";
 
 const US_NO_LENGTH = 10;
 const US_ZIP5_LENGTH = 5;
@@ -45,7 +45,7 @@ export function normalizeZipCode(zipCode: string): string {
  * @param rawQuery
  * @param lead
  */
-export function validateLead(rawQuery: string, lead: LeadDataDescriptorRuntime): string {
+export function validateLead(rawQuery: string, lead: DataDescriptorRuntime): string {
     switch (lead.type) {
         case "PHONE":
             return normalizePhoneNumber(rawQuery);

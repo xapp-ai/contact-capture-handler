@@ -3,16 +3,16 @@ import { Request, RequestSlotMap } from "stentor-models";
 import { capitalize, getSlotValue, requestSlotValueToString, slotExists } from "stentor-utils";
 import { isIntentRequest, keyFromRequest } from "stentor";
 
-import { LeadGenerationRuntimeData, ContactCaptureData, ContactDataType } from "./data";
+import { CaptureRuntimeData, ContactCaptureData, ContactDataType } from "./data";
 import { PseudoSlots } from "./model";
 
 /**
  * Returns a fresh data fields  to capture
  * @param data 
  */
-export function newLeadGenerationData(data: ContactCaptureData): LeadGenerationRuntimeData {
-    const runtimeData: LeadGenerationRuntimeData = {
-        data: ((data as ContactCaptureData).leadGenerationBlueprint.leads
+export function newLeadGenerationData(data: ContactCaptureData): CaptureRuntimeData {
+    const runtimeData: CaptureRuntimeData = {
+        data: ((data as ContactCaptureData).capture.data
             .filter(value => {
                 return value.active;
             })

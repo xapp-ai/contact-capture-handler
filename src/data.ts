@@ -14,14 +14,14 @@ export type ContactDataType =
     "MESSAGE";
 
 export interface ContactCaptureData extends QuestionAnsweringData {
-    leadGenerationBlueprint: LeadGenerationBlueprint;
+    capture: ContactCaptureBlueprint;
 }
 
-export interface LeadGenerationBlueprint {
-    leads: LeadDataDescriptorBase[];
+export interface ContactCaptureBlueprint {
+    data: DataDescriptorBase[];
 }
 
-export interface LeadDataDescriptorBase {
+export interface DataDescriptorBase {
     /**
      * The ID matching to the response that will be used to ask for this data.
      */
@@ -52,7 +52,7 @@ export interface LeadDataDescriptorBase {
     active?: boolean;
 }
 
-export interface LeadDataDescriptorRuntime extends LeadDataDescriptorBase {
+export interface DataDescriptorRuntime extends DataDescriptorBase {
     /**
      * The value collected from the user
      */
@@ -63,7 +63,7 @@ export interface LeadDataDescriptorRuntime extends LeadDataDescriptorBase {
     userSkipped?: boolean;
 }
 
-export interface LeadGenerationRuntimeData {
-    data: LeadDataDescriptorRuntime[];
+export interface CaptureRuntimeData {
+    data: DataDescriptorRuntime[];
     lastModifiedMs?: number;
 }

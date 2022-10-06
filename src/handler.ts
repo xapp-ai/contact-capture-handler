@@ -9,16 +9,21 @@ import { hasSessionId } from "stentor-guards";
 import { existsAndNotEmpty, findValueForKey, getResponseByTag, requestSlotValueToString, responseToMessage, toResponseOutput, requestSlotsToString } from "stentor-utils";
 
 import * as Constants from "./constants";
-import { ContactDataType, ContactCaptureData, LeadGenerationRuntimeData } from "./data";
+import { ContactDataType, ContactCaptureData, CaptureRuntimeData } from "./data";
 import { generateAlternativeSlots, generatePseudoSlots, lookingForHelp, newLeadGenerationData, NOTE_COMPONENTS } from "./utils";
 
+/**
+ * Handler for capturing contact information.
+ * 
+ * It extends the Question Answering Handler to allow the user to ask questions
+ */
 export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, ContactCaptureData> {
 
     // Send the lead
     private static async sendLead(
         slots: RequestSlotMap,
         extras: Record<string, unknown>,
-        leadList: LeadGenerationRuntimeData,
+        leadList: CaptureRuntimeData,
         leadTranscript: Message[],
         service: CrmService,
         request: Request,
@@ -118,6 +123,7 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
 
         const ALWAYS_HANDLE: string[] = [
             "KnowledgeAnswer",
+            "OCSearch",
             "Name",
             "NameOnly",
             "Address",
@@ -195,7 +201,7 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
         // We will use this later to concatenate the 'start' content.
         let isFirstQuestion = false;
 
-        let leadDataList: LeadGenerationRuntimeData = context.session.get(Constants.CONTACT_CAPTURE_LIST);
+        let leadDataList: CaptureRuntimeData = context.session.get(Constants.CONTACT_CAPTURE_LIST);
         // Make sure we have one
         if (!leadDataList) {
             // New potential lead!
