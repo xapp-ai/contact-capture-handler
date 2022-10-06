@@ -785,10 +785,10 @@
   resolved "https://registry.yarnpkg.com/@xapp/patterns/-/patterns-1.40.297.tgz#78dcad6b233f7473f3f78f9b44ccaac189a4190e"
   integrity sha512-k5W31by5RxKA66qfrC5Ygdx8IKQnRZ0Eo5zL/AFKyP5JQEAMJqTloGuUKDezLWs8MFk13MleZCVlHYma8uqfzQ==
 
-"@xapp/question-answering-handler@2.1.6":
-  version "2.1.6"
-  resolved "https://registry.yarnpkg.com/@xapp/question-answering-handler/-/question-answering-handler-2.1.6.tgz#3dc0466b501b2800e94b66283c7fa1d88b5d825f"
-  integrity sha512-fCMAEmmfNZqY5PwFqz8gyd+eZMoZ/KaU0D1vFlyjREC820IcmZRbSri+SJVi2KfeiIe1N/97HY5x+o5QneYtJQ==
+"@xapp/question-answering-handler@2.1.7":
+  version "2.1.7"
+  resolved "https://registry.yarnpkg.com/@xapp/question-answering-handler/-/question-answering-handler-2.1.7.tgz#887b9045310c13407187dc985d6ec06b9deae679"
+  integrity sha512-dqNapFgVvAR5jzAdLkyGNfQJPjm+ynzk9y9E4zDwg1LmFj2zmmCQYSMniUnrYPlWkMZd6HlZXzLExAhMGhn2aA==
   dependencies:
     fuse.js "6.6.2"
     linkifyjs "3.0.5"
