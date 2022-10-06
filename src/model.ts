@@ -1,6 +1,7 @@
 /*! Copyright (c) 2022, XAPP AI */
 
 import { RequestSlotMap } from "stentor";
+
 /**
  * These are generated, they don't exist in the model but are made
  * of other slots from the model;
