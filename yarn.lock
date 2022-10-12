@@ -781,13 +781,13 @@
   resolved "https://registry.yarnpkg.com/@xapp/patterns/-/patterns-1.40.297.tgz#78dcad6b233f7473f3f78f9b44ccaac189a4190e"
   integrity sha512-k5W31by5RxKA66qfrC5Ygdx8IKQnRZ0Eo5zL/AFKyP5JQEAMJqTloGuUKDezLWs8MFk13MleZCVlHYma8uqfzQ==
 
-"@xapp/question-answering-handler@2.1.7":
-  version "2.1.7"
-  resolved "https://registry.yarnpkg.com/@xapp/question-answering-handler/-/question-answering-handler-2.1.7.tgz#887b9045310c13407187dc985d6ec06b9deae679"
-  integrity sha512-dqNapFgVvAR5jzAdLkyGNfQJPjm+ynzk9y9E4zDwg1LmFj2zmmCQYSMniUnrYPlWkMZd6HlZXzLExAhMGhn2aA==
+"@xapp/question-answering-handler@2.1.8":
+  version "2.1.8"
+  resolved "https://registry.yarnpkg.com/@xapp/question-answering-handler/-/question-answering-handler-2.1.8.tgz#bb81f907439b34f6bff2525beebbadd5aa42d8a0"
+  integrity sha512-Ji7IC/Te7ijCHUTeQlZhDg16HCfT/vQgnWmzAFDGnA+lQP44nCU3y/u7YVTL8ZuRvOpxkzreRCC1U5odMn5Wig==
   dependencies:
     fuse.js "6.6.2"
-    linkifyjs "3.0.5"
+    linkifyjs "4.0.2"
 
 JSONStream@^1.0.4:
   version "1.3.5"
@@ -3197,10 +3197,10 @@ lines-and-columns@^1.1.6:
   resolved "https://registry.yarnpkg.com/lines-and-columns/-/lines-and-columns-1.2.4.tgz#eca284f75d2965079309dc0ad9255abb2ebc1632"
   integrity sha512-7ylylesZQ/PV29jhEDl3Ufjo6ZX7gCqJr5F7PKrqc93v7fzSymt1BpwEU8nAUXs8qzzvqhbjhK5QZg6Mt/HkBg==
 
-linkifyjs@3.0.5:
-  version "3.0.5"
-  resolved "https://registry.yarnpkg.com/linkifyjs/-/linkifyjs-3.0.5.tgz#99e51a3a0c0e232fcb63ebb89eea3ff923378f34"
-  integrity sha512-1Y9XQH65eQKA9p2xtk+zxvnTeQBG7rdAXSkUG97DmuI/Xhji9uaUzaWxRj6rf9YC0v8KKHkxav7tnLX82Sz5Fg==
+linkifyjs@4.0.2:
+  version "4.0.2"
+  resolved "https://registry.yarnpkg.com/linkifyjs/-/linkifyjs-4.0.2.tgz#5844ea70f4427004e50036d983b66da50fe13389"
+  integrity sha512-/VSoCZiglX0VMsXmL5PN3lRg45M86lrD9PskdkA2abWaTKap1bIcJ11LS4EE55bcUl9ZOR4eZ792UtQ9E/5xLA==
 
 load-json-file@^4.0.0:
   version "4.0.0"
