@@ -1,3 +1,10 @@
+## [1.0.3](https://github.com/xapp-ai/contact-capture-handler/compare/v1.0.2...v1.0.3) (2022-10-14)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @xapp/question-answering-handler to v2.1.8 ([#12](https://github.com/xapp-ai/contact-capture-handler/issues/12)) ([fa6e4ba](https://github.com/xapp-ai/contact-capture-handler/commit/fa6e4ba696b930d39752e34104160ba5b94498fc))
+
 ## [1.0.2](https://github.com/xapp-ai/contact-capture-handler/compare/v1.0.1...v1.0.2) (2022-10-06)
 
 
