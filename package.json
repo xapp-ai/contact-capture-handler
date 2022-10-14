@@ -50,7 +50,7 @@
     "test": "mocha --recursive -r ts-node/register \"./src/**/*.test.ts\""
   },
   "dependencies": {
-    "@xapp/question-answering-handler": "2.1.7"
+    "@xapp/question-answering-handler": "2.1.8"
   },
   "peerDependencies": {
     "stentor": "1.X"
