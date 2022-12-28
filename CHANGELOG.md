@@ -1,3 +1,10 @@
+## [1.0.4](https://github.com/xapp-ai/contact-capture-handler/compare/v1.0.3...v1.0.4) (2022-12-28)
+
+
+### Bug Fixes
+
+* Create codeql.yml ([#121](https://github.com/xapp-ai/contact-capture-handler/issues/121)) ([e689be7](https://github.com/xapp-ai/contact-capture-handler/commit/e689be72da08bc839cfdcfde779f67882f49e236))
+
 ## [1.0.3](https://github.com/xapp-ai/contact-capture-handler/compare/v1.0.2...v1.0.3) (2022-10-14)
 
 
