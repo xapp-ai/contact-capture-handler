@@ -85,7 +85,7 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
 
         const externalLead = { fields, transcript };
         log().debug(`===\n${JSON.stringify(externalLead, null, 2)}\n===`);
-        if (process.env.SEND_LEAD) {
+        if (process.env.SEND_LEAD === "true") {
             try {
                 const response = await service.send(externalLead, extras);
                 if (response.status === "Success") {
@@ -124,6 +124,7 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
         const ALWAYS_HANDLE: string[] = [
             "KnowledgeAnswer",
             "OCSearch",
+            "InputUnknown",
             "Name",
             "NameOnly",
             "Address",
@@ -143,7 +144,7 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
 
     public async handleRequest(request: Request, context: Context): Promise<void> {
 
-        log().info(`Running in LeadGenerationHandler`);
+        log().info(`Running in ContactCaptureHandler`);
         const key = keyFromRequest(request);
 
         log().info(`Request: ${key} Query: "${request.rawQuery}"`);
@@ -169,7 +170,7 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
         // Now mix them all in priority order
         const slots: RequestSlotMap = { ...requestSlots, ...sessionSlots, ...pseudoSlots, ...alternativeSlots };
 
-        // Persist these new ones for reuse, we want to keep the modifications from the psuedo and alternative
+        // Persist these new ones for reuse, we want to keep the modifications from the pseudo and alternative
         context.session.set(Constants.CONTACT_CAPTURE_SLOTS, slots);
         log().info('Slots');
         log().info(slots);
@@ -179,6 +180,7 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
         let asideResponse: Response;
 
         switch (key) {
+            case "OCSearch":
             case "KnowledgeAnswer":
                 // Get content from the super for the knowledge answer
                 // We just don't want to recreate the logic for
@@ -190,7 +192,11 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
                 // fallback, we can sometimes look at the query (like when asking for first or last names)
                 // and just use the query directly.  This happens when we don't recognize a name.
                 // In this case we don't set the asideResponse with the knowledge base response.
-                if (Object.keys(alternativeSlots).length === 0) {
+                if (
+                    Object.keys(alternativeSlots).length === 0 &&
+                    context.response.response &&
+                    Object.keys(context.response.response).length > 0
+                ) {
                     asideResponse = context.response.response;
                 }
             default:
@@ -239,24 +245,31 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
         }
 
         // Based on slots figure out what information is missing
+        // go through each and check on the slot
         leadDataList.data.forEach((data) => {
             // see if slot exists
             const slot = slots[data.slotName];
             if (slot && slot.value) {
                 // Ok, we have it!
                 data.collectedValue = requestSlotValueToString(slot.value);
+            } else if (data.acceptAnyInput && data.type === previousType) {
+                // only set collected value to rawQuery if they accept it and we are on same type
+                data.collectedValue = request.rawQuery;
             }
         });
         // Find the next piece of data
         const nextRequiredData = leadDataList.data.find((data) => {
+            // the next one is the one we don't have a value for.
             return !data.collectedValue
         });
 
         const nextType = nextRequiredData ? nextRequiredData.type : undefined;
+        // Keep track of if we are repeating ourselves
         const repeat = nextType === previousType;
 
         log().info(`Asking for ${nextType}, previous was ${previousType}.`);
         log().info(`${isFirstQuestion ? 'Their first question' : 'Not their first question'} and they ${isLookingForHelp ? 'are looking for help' : 'are not looking for help'} `)
+        log().info(`isFirstQuestion: ${isFirstQuestion}  lookingForHelp: ${isLookingForHelp}`)
 
         context.session.set(Constants.CONTACT_CAPTURE_CURRENT_DATA, nextType);
 
@@ -271,9 +284,24 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
             // Ask the questions
             const contentId = nextRequiredData.questionContentKey;
             response = getResponseByTag(responses, contentId);
+            log().debug(`Response for tag ${contentId}`);
+            log().debug(response);
+            if (!response) {
+                const errorMessage = `Missing content for tag ${contentId}`;
+                log().error(errorMessage);
+                response = {
+                    outputSpeech: {
+                        displayText: `ERROR: I am not configured correctly. ${errorMessage}`,
+                        ssml: `ERROR: I am not configured correctly. ${errorMessage}`,
+                    },
+                    tag: "ERROR"
+                }
+            }
 
             // If we have an aside response, concat them.
             if (asideResponse) {
+                log().debug(`We have an aside response, concatenating with found response.`);
+                log().debug(asideResponse);
                 // I think we want to use the reprompt here.
                 const reprompt = concatResponseOutput({ displayText: "\n \n \n", ssml: "" }, toResponseOutput(response.reprompt));
                 response.outputSpeech = concatResponseOutput(toResponseOutput(asideResponse.outputSpeech), toResponseOutput(reprompt));

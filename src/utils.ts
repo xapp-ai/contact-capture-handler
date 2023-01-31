@@ -22,7 +22,8 @@ export function newLeadGenerationData(data: ContactCaptureData): CaptureRuntimeD
                         type: value.type,
                         enums: value.enums,
                         questionContentKey: value.questionContentKey,
-                        slotName: value.slotName
+                        slotName: value.slotName,
+                        acceptAnyInput: value.acceptAnyInput
                     };
                 }
             }))
