@@ -6,7 +6,7 @@ import * as sinonChai from "sinon-chai";
 chai.use(sinonChai);
 const expect = chai.expect;
 
-import { Content, Context, IntentRequest, Handler, ResponseBuilder } from "stentor";
+import { Content, Context, IntentRequest, Handler, ResponseBuilder, KnowledgeBaseResult } from "stentor";
 import { IntentRequestBuilder } from "stentor-request";
 import { ContextBuilder } from "stentor-context";
 
@@ -27,6 +27,10 @@ const props: Handler<Content, ContactCaptureData> = {
                 outputSpeech: {
                     ssml: "<speak>What is your name?</speak>",
                     displayText: "What is your name?",
+                },
+                reprompt: {
+                    ssml: "<speak>May I have your name?</speak>",
+                    displayText: "May I have your name?"
                 }
             },
             {
@@ -35,6 +39,16 @@ const props: Handler<Content, ContactCaptureData> = {
                 outputSpeech: {
                     ssml: "<speak>Why hello!</speak>",
                     displayText: "Why hello!",
+                }
+            }
+        ],
+        ["OCSearch"]: [
+            {
+                name: "FAQ",
+                tag: "KB_TOP_FAQ",
+                outputSpeech: {
+                    ssml: "<speak>${TOP_FAQ.text}</speak>",
+                    displayText: "${TOP_FAQ.text}",
                 }
             }
         ]
@@ -279,6 +293,10 @@ describe(`${ContactCaptureHandler.name}`, () => {
                         // It concatenates the ContactCaptureStart & FirstNameQuestionContent question
                         ssml: "<speak>Why hello!  What is your name?</speak>",
                         displayText: "Why hello!  What is your name?",
+                    },
+                    reprompt: {
+                        ssml: '<speak>May I have your name?</speak>',
+                        displayText: 'May I have your name?'
                     }
                 });
 
@@ -427,18 +445,20 @@ describe(`${ContactCaptureHandler.name}`, () => {
                                 ContactCaptureCurrentData: "ORGANIZATION",
                                 ContactCaptureSlots: {},
                                 ContactCaptureList: {
-                                    data: [{
-                                        type: 'FIRST_NAME',
-                                        enums: undefined,
-                                        questionContentKey: 'FirstNameQuestionContent',
-                                        slotName: 'first_name'
-                                    },
-                                    {
-                                        type: 'ORGANIZATION',
-                                        enums: undefined,
-                                        questionContentKey: 'OrganizationQuestionContent',
-                                        slotName: 'organization'
-                                    },]
+                                    data: [
+                                        {
+                                            type: 'FIRST_NAME',
+                                            enums: undefined,
+                                            questionContentKey: 'FirstNameQuestionContent',
+                                            slotName: 'first_name'
+                                        },
+                                        {
+                                            type: 'ORGANIZATION',
+                                            enums: undefined,
+                                            questionContentKey: 'OrganizationQuestionContent',
+                                            slotName: 'organization'
+                                        }
+                                    ]
                                 }
                             }
                         })
@@ -560,6 +580,122 @@ describe(`${ContactCaptureHandler.name}`, () => {
                     const messageData = list.data[2];
                     expect(messageData.collectedValue).to.be.undefined;
                 });
+            });
+        });
+        describe("with a knowledgebase request", () => {
+            const sandbox = sinon.createSandbox();
+            beforeEach(() => {
+                response = new ResponseBuilder({
+                    device: {
+                        audioSupported: false,
+                        channel: "test",
+                        canPlayAudio: false,
+                        canPlayVideo: false,
+                        canSpeak: false,
+                        canThrowCard: false,
+                        canTransferCall: false,
+                        hasScreen: true,
+                        hasWebBrowser: true,
+                        videoSupported: false
+                    }
+                });
+                sandbox.spy(response, "respond");
+
+                const kbResult: KnowledgeBaseResult = {
+                    faqs: [
+                        {
+                            question: "What is your favorite color?",
+                            document: "Blue!"
+                        }
+                    ]
+                };
+
+                request = new IntentRequestBuilder()
+                    .withSlots({})
+                    .withIntentId("OCSearch")
+                    .withRawQuery("what is your favorite color?")
+                    .withKnowledgeBaseResult(kbResult)
+                    .build();
+
+                context = new ContextBuilder()
+                    .withResponse(response)
+                    .withSessionData({
+                        id: "foo",
+                        data: {
+                            ['knowledge_base_result']: kbResult,
+                            ContactCaptureCurrentData: "ORGANIZATION",
+                            ContactCaptureSlots: {},
+                            ContactCaptureList: {
+                                data: [
+                                    {
+                                        type: 'FIRST_NAME',
+                                        enums: undefined,
+                                        questionContentKey: 'FirstNameQuestionContent',
+                                        slotName: 'first_name'
+                                    },
+                                    {
+                                        type: 'ORGANIZATION',
+                                        enums: undefined,
+                                        questionContentKey: 'OrganizationQuestionContent',
+                                        slotName: 'organization',
+                                        collectedValue: "XAPP AI"
+                                    }
+                                ]
+                            }
+                        },
+
+                    })
+                    .build();
+            });
+            afterEach(() => {
+                sandbox.restore();
+            });
+            it("returns the initial response with the aside", async () => {
+                cc = new ContactCaptureHandler(props);
+
+                await cc.handleRequest(request, context);
+
+                expect(response.respond).to.have.been.calledTwice;
+                // first call is getting the FAQ response
+                expect(response.respond).to.have.been.calledWith(
+                    {
+                        name: 'FAQ',
+                        tag: 'KB_TOP_FAQ',
+                        outputSpeech: {
+                            ssml: '<speak>Blue!</speak>',
+                            displayText: 'Blue!'
+                        }
+                    }
+                );
+                // second call is when we concatenate it
+                expect(response.respond).to.have.been.calledWith(
+                    {
+                        name: "First Name",
+                        tag: "FirstNameQuestionContent",
+                        outputSpeech: {
+                            // It concatenates the FAQ and the first name question
+                            ssml: '<speak>Blue!  May I have your name?</speak>',
+                            displayText: 'Blue!  May I have your name?',
+                        },
+                        reprompt: {
+                            ssml: '<speak>May I have your name?</speak>',
+                            displayText: 'May I have your name?'
+                        },
+                        displays: undefined
+                    }
+                );
+
+                // verity necessary context is created
+                const sessionStore = context.storage.sessionStore?.data;
+                const slots = sessionStore ? sessionStore[CONTACT_CAPTURE_SLOTS] : undefined;
+                expect(slots).to.deep.equal({});
+                const leadSent = sessionStore ? sessionStore[CONTACT_CAPTURE_SENT] : undefined;
+                expect(leadSent).to.be.undefined;
+                const previousType = sessionStore ? sessionStore[CONTACT_CAPTURE_CURRENT_DATA] : undefined;
+                expect(previousType).to.equal("FIRST_NAME");
+                const list = sessionStore ? sessionStore[CONTACT_CAPTURE_LIST] : undefined;
+                // the length is the number of TRUE fields we are trying to capture
+                expect(list.data).to.have.length(2);
             });
         });
     });

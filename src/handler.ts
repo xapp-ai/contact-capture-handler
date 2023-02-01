@@ -19,7 +19,19 @@ import { generateAlternativeSlots, generatePseudoSlots, lookingForHelp, newLeadG
  */
 export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, ContactCaptureData> {
 
-    // Send the lead
+    /**
+     * Send the lead to the CRM
+     * 
+     * @param slots 
+     * @param extras 
+     * @param leadList 
+     * @param leadTranscript 
+     * @param service 
+     * @param request 
+     * @param eventService 
+     * @param finalResponse 
+     * @returns 
+     */
     private static async sendLead(
         slots: RequestSlotMap,
         extras: Record<string, unknown>,
@@ -141,6 +153,7 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
 
         return super.canHandleRequest(request, context);
     }
+
 
     public async handleRequest(request: Request, context: Context): Promise<void> {
 
@@ -265,6 +278,7 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
 
         const nextType = nextRequiredData ? nextRequiredData.type : undefined;
         // Keep track of if we are repeating ourselves
+        // TODO: What do we do when we are stuck on the same data request
         const repeat = nextType === previousType;
 
         log().info(`Asking for ${nextType}, previous was ${previousType}.`);
@@ -273,7 +287,6 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
 
         context.session.set(Constants.CONTACT_CAPTURE_CURRENT_DATA, nextType);
 
-        // TODO: What do we do when we are stuck on the same data request
         const responses = findValueForKey(this.intentId, this.content);
 
         let response: Response;
@@ -283,7 +296,9 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
         if (nextRequiredData) {
             // Ask the questions
             const contentId = nextRequiredData.questionContentKey;
-            response = getResponseByTag(responses, contentId);
+            const originalResponse = getResponseByTag(responses, contentId);
+            // Make a copy because when we are running tests we get pass by reference errors impacting other tests
+            response = originalResponse ? { ...originalResponse } : undefined;
             log().debug(`Response for tag ${contentId}`);
             log().debug(response);
             if (!response) {

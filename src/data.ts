@@ -11,6 +11,7 @@ export type ContactDataType =
     "ADDRESS" |
     "EMAIL" |
     "SELECTION" |
+    "COMPANY" |
     "ORGANIZATION" |
     "MESSAGE";
 
