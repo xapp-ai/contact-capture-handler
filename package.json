@@ -4,7 +4,7 @@
   "publishConfig": {
     "access": "public"
   },
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "A data driven contact information collector for 📣 stentor",
   "types": "lib/index",
   "typings": "lib/index",
@@ -50,7 +50,7 @@
     "lint": "eslint 'src/**/*.{ts,tsx}'",
     "test": "mocha --recursive -r ts-node/register \"./src/**/*.test.ts\""
   },
-  "dependencies": { },
+  "dependencies": {},
   "peerDependencies": {
     "@xapp/question-answering-handler": "2.x",
     "stentor": "1.X"

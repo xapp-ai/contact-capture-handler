@@ -1,3 +1,11 @@
+## [1.0.5](https://github.com/xapp-ai/contact-capture-handler/compare/v1.0.4...v1.0.5) (2023-02-01)
+
+
+### Bug Fixes
+
+* Asking Questions in the middle of the flow ([#137](https://github.com/xapp-ai/contact-capture-handler/issues/137)) ([b54c0c4](https://github.com/xapp-ai/contact-capture-handler/commit/b54c0c485a146f92095a9c846018fc292c9a0d04))
+* **deps:** update dependency aws-sdk to v2.1306.0 ([#126](https://github.com/xapp-ai/contact-capture-handler/issues/126)) ([ba11a28](https://github.com/xapp-ai/contact-capture-handler/commit/ba11a281bb086390f444ec5a09c34cb89dacb39f))
+
 ## [1.0.4](https://github.com/xapp-ai/contact-capture-handler/compare/v1.0.3...v1.0.4) (2022-12-28)
 
 
