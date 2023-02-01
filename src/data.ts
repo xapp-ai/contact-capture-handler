@@ -11,6 +11,8 @@ export type ContactDataType =
     "ADDRESS" |
     "EMAIL" |
     "SELECTION" |
+    "COMPANY" |
+    "ORGANIZATION" |
     "MESSAGE";
 
 export interface ContactCaptureData extends QuestionAnsweringData {
@@ -23,7 +25,7 @@ export interface ContactCaptureBlueprint {
 
 export interface DataDescriptorBase {
     /**
-     * The ID matching to the response that will be used to ask for this data.
+     * The tag matching to the response that will be used to ask for this data.
      */
     questionContentKey: string;
     /**
@@ -37,9 +39,14 @@ export interface DataDescriptorBase {
      */
     enums?: string[];
     /**
-     * The name of the slot to pull the data from
+     * The name of the slot to pull the data from.
      */
     slotName?: string;
+    /**
+     * When true, if the slotName is not found or doesn't exist, it will just accept the user's
+     * raw query input.
+     */
+    acceptAnyInput?: boolean;
     /**
      * If the data is required.  If not required and the user says no, we will skip it.
      * 
