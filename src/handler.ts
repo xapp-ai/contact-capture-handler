@@ -2,11 +2,31 @@
 
 import { QuestionAnsweringHandler } from "@xapp/question-answering-handler";
 
-import { compileResponse, concatResponseOutput, Content, Context, keyFromRequest, Request, RequestSlotMap, Response, ResponseOutput, isIntentRequest } from "stentor";
-import { log } from "stentor-logger";
-import { ErrorService, LeadFormField, Message, CrmService } from "stentor-models";
-import { hasSessionId } from "stentor-guards";
-import { existsAndNotEmpty, findValueForKey, getResponseByTag, requestSlotValueToString, responseToMessage, toResponseOutput, requestSlotsToString } from "stentor-utils";
+import {
+    compileResponse,
+    concatResponseOutput,
+    Content,
+    Context,
+    CrmService,
+    ErrorService,
+    existsAndNotEmpty,
+    findValueForKey,
+    getResponseByTag,
+    hasSessionId,
+    isIntentRequest,
+    keyFromRequest,
+    LeadFormField,
+    log,
+    Message,
+    Request,
+    RequestSlotMap,
+    requestSlotsToString,
+    requestSlotValueToString,
+    Response,
+    ResponseOutput,
+    responseToMessage,
+    toResponseOutput,
+} from "stentor";
 
 import * as Constants from "./constants";
 import { ContactDataType, ContactCaptureData, CaptureRuntimeData } from "./data";
@@ -153,7 +173,6 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
 
         return super.canHandleRequest(request, context);
     }
-
 
     public async handleRequest(request: Request, context: Context): Promise<void> {
 
