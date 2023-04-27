@@ -164,7 +164,8 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
             "EmailOnly",
             "NumberOnly",
             "PhoneNumber",
-            "PhoneNumberOnly"
+            "PhoneNumberOnly",
+            "AppointmentDate"
         ];
 
         if (ALWAYS_HANDLE.includes(key)) {

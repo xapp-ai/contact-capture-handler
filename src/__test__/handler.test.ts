@@ -100,6 +100,12 @@ const props: Handler<Content, ContactCaptureData> = {
                     "questionContentKey": "EmailQuestionContent"
                 },
                 {
+                    "slotName": "dateTime",
+                    "active": false,
+                    "type": "DATE_TIME",
+                    "questionContentKey": "DateTimeQuestionContent"
+                },
+                {
                     "slotName": "organization",
                     "active": true,
                     "acceptAnyInput": true,
@@ -206,6 +212,12 @@ const propsWithAnyInputQuestion: Handler<Content, ContactCaptureData> = {
                     "active": false,
                     "type": "EMAIL",
                     "questionContentKey": "EmailQuestionContent"
+                },
+                {
+                    "slotName": "dateTime",
+                    "active": false,
+                    "type": "DATE_TIME",
+                    "questionContentKey": "DateTimeQuestionContent"
                 },
                 {
                     "slotName": "organization",
