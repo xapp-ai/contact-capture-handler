@@ -1,3 +1,10 @@
+# [1.1.0](https://github.com/xapp-ai/contact-capture-handler/compare/v1.0.6...v1.1.0) (2023-05-04)
+
+
+### Features
+
+* Add DateTime collection ([#162](https://github.com/xapp-ai/contact-capture-handler/issues/162)) ([da1c50e](https://github.com/xapp-ai/contact-capture-handler/commit/da1c50e44ddc36b11da28a57ece04e01436e051e))
+
 ## [1.0.6](https://github.com/xapp-ai/contact-capture-handler/compare/v1.0.5...v1.0.6) (2023-04-12)
 
 
