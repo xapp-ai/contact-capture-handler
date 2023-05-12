@@ -35,4 +35,12 @@ export interface PseudoSlots extends RequestSlotMap {
         name: "note";
         type: string;
     }
+
+     /**
+     * Note is passed along in the notes section of the lead
+     */
+     dateTime?: {
+        name: "dateTime";
+        type: string;
+    }
 }

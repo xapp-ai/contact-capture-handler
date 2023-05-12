@@ -24,6 +24,20 @@ export function normalizeEmailAddress(emailAddress: string): string {
 
     return undefined;
 }
+export function normalizeDateTime(dateTime: string): string {
+
+    return dateTime;
+
+    // TODO:  implement date and time validation
+    // var timestamp = Date.parse(dateTime);
+
+    // // Check Epoc date (should be a number)
+    // if (isNaN(timestamp) === false) {
+    //        return dateTime
+    // }
+   
+    // return undefined;
+}
 
 export function normalizeZipCode(zipCode: string): string {
     zipCode = zipCode.trim().replace(/[^\d]/g, "");
@@ -51,6 +65,8 @@ export function validateLead(rawQuery: string, lead: DataDescriptorRuntime): str
             return normalizePhoneNumber(rawQuery);
         case "EMAIL":
             return normalizeEmailAddress(rawQuery);
+        case "DATE_TIME":
+           return normalizeDateTime(rawQuery);
         case "ZIP":
             return normalizeZipCode(rawQuery);
         case "SELECTION":

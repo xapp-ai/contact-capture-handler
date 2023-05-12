@@ -77,6 +77,7 @@ export const NOTE_COMPONENTS: string[] = [
  *   * full_name: Derived from first_name & last_name
  *   * address: Derived from number, street, city, state, zip
  *   * note: Derived from building_type, exterior_product, work_product
+ *   * dateTime:  Derived from day, time
  * 
  * @param slots 
  * @returns 
@@ -115,6 +116,18 @@ export function generatePseudoSlots(slots: RequestSlotMap, request: Request): Ps
             name: 'address',
             value: request.rawQuery
         }
+    }
+
+    const dateTimeComponents = ["day", "time"];
+
+    // Make sure the number isn't already in there
+    if (slots['day'] || slots['time']) {
+        // Get their values and combine them into one address
+        const value = combineSlotValues(slots, dateTimeComponents);
+        pseudoSlots['dateTime'] = {
+            name: 'dateTime',
+            value
+        };
     }
 
     if (slotExists(slots, NOTE_COMPONENTS)) {

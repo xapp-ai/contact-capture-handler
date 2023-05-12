@@ -13,7 +13,8 @@ export type ContactDataType =
     "SELECTION" |
     "COMPANY" |
     "ORGANIZATION" |
-    "MESSAGE";
+    "MESSAGE" |
+    "DATE_TIME";
 
 export interface ContactCaptureData extends QuestionAnsweringData {
     capture: ContactCaptureBlueprint;
