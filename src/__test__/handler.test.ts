@@ -915,7 +915,7 @@ describe(`${ContactCaptureHandler.name}`, () => {
             afterEach(() => {
                 sandbox.restore();
             });
-            it.only("communicates we have all the info we need", async () => {
+            it("communicates we have all the info we need", async () => {
                 cc = new ContactCaptureHandler(props);
                 await cc.handleRequest(request, context);
                 expect(crmService.send).to.have.not.been.called;
