@@ -1,3 +1,10 @@
+## [1.1.1](https://github.com/xapp-ai/contact-capture-handler/compare/v1.1.0...v1.1.1) (2023-05-12)
+
+
+### Bug Fixes
+
+* Sending Leads is now on By Default ([#166](https://github.com/xapp-ai/contact-capture-handler/issues/166)) ([e76c83a](https://github.com/xapp-ai/contact-capture-handler/commit/e76c83acd43a54208557de28f4ba4acd06fbd5eb))
+
 # [1.1.0](https://github.com/xapp-ai/contact-capture-handler/compare/v1.0.6...v1.1.0) (2023-05-04)
 
 
