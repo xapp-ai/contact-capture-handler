@@ -32,7 +32,7 @@
     "@xapp/question-answering-handler": "2.1.14",
     "aws-sdk": "2.1389.0",
     "chai": "4.3.7",
-    "conventional-changelog-conventionalcommits": "6.0.0",
+    "conventional-changelog-conventionalcommits": "6.1.0",
     "eslint-plugin-notice": "0.9.10",
     "eslint": "8.42.0",
     "mocha": "10.2.0",
