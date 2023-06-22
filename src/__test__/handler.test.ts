@@ -58,7 +58,8 @@ const props: Handler<Content, ContactCaptureData> = {
                 outputSpeech: {
                     ssml: "<speak>${TOP_FAQ.text}</speak>",
                     displayText: "${TOP_FAQ.text}",
-                }
+                },
+                conditions: "!!session('TOP_FAQ')"
             }
         ],
         ["Thanks"]: [
@@ -148,6 +149,9 @@ const props: Handler<Content, ContactCaptureData> = {
                     "questionContentKey": "MessageQuestionContent"
                 }
             ]
+        },
+        "chat": {
+            "followUp": ""
         }
     }
 }
@@ -681,6 +685,7 @@ describe(`${ContactCaptureHandler.name}`, () => {
                 sandbox.restore();
             });
             it("returns the initial response with the aside", async () => {
+
                 cc = new ContactCaptureHandler(props);
 
                 await cc.handleRequest(request, context);
@@ -694,7 +699,8 @@ describe(`${ContactCaptureHandler.name}`, () => {
                         outputSpeech: {
                             ssml: '<speak>Blue!</speak>',
                             displayText: 'Blue!'
-                        }
+                        },
+                        conditions: "!!session('TOP_FAQ')"
                     }
                 );
                 // second call is when we concatenate it
@@ -704,8 +710,8 @@ describe(`${ContactCaptureHandler.name}`, () => {
                         tag: "FirstNameQuestionContent",
                         outputSpeech: {
                             // It concatenates the FAQ and the first name question
-                            ssml: '<speak>Blue!  May I have your name?</speak>',
-                            displayText: 'Blue!  May I have your name?',
+                            ssml: '<speak>Blue!\n\nMay I have your name?</speak>',
+                            displayText: 'Blue!\n\nMay I have your name?',
                         },
                         reprompt: {
                             ssml: '<speak>May I have your name?</speak>',
@@ -727,6 +733,125 @@ describe(`${ContactCaptureHandler.name}`, () => {
                 // the length is the number of TRUE fields we are trying to capture
                 expect(list.data).to.have.length(2);
             });
+            describe("that uses the default response", () => {
+                beforeEach(() => {
+                    response = new ResponseBuilder({
+                        device: {
+                            audioSupported: false,
+                            channel: "test",
+                            canPlayAudio: false,
+                            canPlayVideo: false,
+                            canSpeak: false,
+                            canThrowCard: false,
+                            canTransferCall: false,
+                            hasScreen: true,
+                            hasWebBrowser: true,
+                            videoSupported: false
+                        }
+                    });
+                    sandbox.spy(response, "respond");
+
+                    const kbResult: KnowledgeBaseResult = {
+                        faqs: [],
+                        generated: [
+                            {
+                                title: "Answer",
+                                generated: "This is the answer.",
+                                document: "This is the answer.",
+                                type: "retrieval-augmented-generation",
+                                hasAnswer: true
+                            }
+                        ]
+                    };
+
+                    request = new IntentRequestBuilder()
+                        .withSlots({})
+                        .withIntentId("OCSearch")
+                        .withRawQuery("what is your favorite color?")
+                        .withKnowledgeBaseResult(kbResult)
+                        .build();
+
+                    context = new ContextBuilder()
+                        .withResponse(response)
+                        .withSessionData({
+                            id: "foo",
+                            data: {
+                                ['knowledge_base_result']: kbResult,
+                                ContactCaptureCurrentData: "ORGANIZATION",
+                                ContactCaptureSlots: {},
+                                ContactCaptureList: {
+                                    data: [
+                                        {
+                                            type: 'FIRST_NAME',
+                                            enums: undefined,
+                                            questionContentKey: 'FirstNameQuestionContent',
+                                            slotName: 'first_name'
+                                        },
+                                        {
+                                            type: 'ORGANIZATION',
+                                            enums: undefined,
+                                            questionContentKey: 'OrganizationQuestionContent',
+                                            slotName: 'organization',
+                                            collectedValue: "XAPP AI"
+                                        }
+                                    ]
+                                }
+                            },
+                        })
+                        .build();
+                });
+                it("returns the initial response with the aside", async () => {
+
+                    cc = new ContactCaptureHandler(props);
+
+                    await cc.handleRequest(request, context);
+
+                    expect(response.respond).to.have.been.calledTwice;
+                    // first call is getting the FAQ response
+                    expect(response.respond).to.have.been.calledWith(
+                        {
+                            outputSpeech: {
+                                displayText: 'This is the answer.',
+                                ssml: '<speak>This is the answer.</speak>',
+                                suggestions: []
+                            },
+                            reprompt: { displayText: '', ssml: '<speak></speak>' },
+                            displays: [],
+                            tag: 'KB_RAG',
+                        }
+                    );
+                    // second call is when we concatenate it
+                    expect(response.respond).to.have.been.calledWith(
+                        {
+                            name: "First Name",
+                            tag: "FirstNameQuestionContent",
+                            outputSpeech: {
+                                // It concatenates the FAQ and the first name question
+                                ssml: '<speak>This is the answer.\n\nMay I have your name?</speak>',
+                                displayText: 'This is the answer.\n\nMay I have your name?',
+                                suggestions: []
+                            },
+                            reprompt: {
+                                ssml: '<speak>May I have your name?</speak>',
+                                displayText: 'May I have your name?'
+                            },
+                            displays: []
+                        }
+                    );
+
+                    // verity necessary context is created
+                    const sessionStore = context.storage.sessionStore?.data;
+                    const slots = sessionStore ? sessionStore[CONTACT_CAPTURE_SLOTS] : undefined;
+                    expect(slots).to.deep.equal({});
+                    const leadSent = sessionStore ? sessionStore[CONTACT_CAPTURE_SENT] : undefined;
+                    expect(leadSent).to.be.undefined;
+                    const previousType = sessionStore ? sessionStore[CONTACT_CAPTURE_CURRENT_DATA] : undefined;
+                    expect(previousType).to.equal("FIRST_NAME");
+                    const list = sessionStore ? sessionStore[CONTACT_CAPTURE_LIST] : undefined;
+                    // the length is the number of TRUE fields we are trying to capture
+                    expect(list.data).to.have.length(2);
+                });
+            })
         });
         describe("when request completes the data required", () => {
             const sandbox = sinon.createSandbox();
