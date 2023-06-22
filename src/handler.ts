@@ -353,7 +353,7 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
                 log().debug(asideResponse);
                 // I think we want to use the reprompt here.
                 const reprompt = concatResponseOutput({ displayText: "\n \n \n", ssml: "" }, toResponseOutput(response.reprompt));
-                response.outputSpeech = concatResponseOutput(toResponseOutput(asideResponse.outputSpeech), toResponseOutput(reprompt));
+                response.outputSpeech = concatResponseOutput(toResponseOutput(asideResponse.outputSpeech), toResponseOutput(reprompt), { delimiter: "\n\n" });
                 response.reprompt = response.reprompt;
                 response.displays = asideResponse.displays;
             } else if (repeat) {
