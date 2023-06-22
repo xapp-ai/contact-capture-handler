@@ -40,6 +40,8 @@ import { LeadError } from "./model";
  */
 export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, ContactCaptureData> {
 
+    public static readonly TYPE: string = Constants.CONTACT_CAPTURE_HANDLER_TYPE;
+
     /**
      * Send the lead to the CRM
      * 
