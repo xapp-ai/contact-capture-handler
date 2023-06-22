@@ -33,3 +33,5 @@ export const CONTACT_CAPTURE_SLOTS = CONTACT_CAPTURE_PREFIX + "Slots";
 // Intents/Handlers
 export const CONTACT_CAPTURE_HANDLER = CONTACT_CAPTURE_PREFIX + "Handler";
 export const CONTACT_CAPTURE_INTENT = CONTACT_CAPTURE_PREFIX;
+
+export const CONTACT_CAPTURE_HANDLER_TYPE = "ContactCaptureHandler";
