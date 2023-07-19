@@ -14,6 +14,7 @@ import {
     getResponseByTag,
     hasSessionId,
     isIntentRequest,
+    IntentRequest,
     keyFromRequest,
     LeadFormField,
     log,
@@ -32,25 +33,31 @@ import * as Constants from "./constants";
 import { ContactDataType, ContactCaptureData, CaptureRuntimeData } from "./data";
 import { generateAlternativeSlots, generatePseudoSlots, lookingForHelp, newLeadGenerationData, NOTE_COMPONENTS } from "./utils";
 
+interface ComponentRequest extends IntentRequest {
+    dateTime: string;
+    address: string;
+    image: string;
+}
+
 /**
  * Handler for capturing contact information.
- * 
+ *
  * It extends the Question Answering Handler to allow the user to ask questions
  */
 export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, ContactCaptureData> {
 
     /**
      * Send the lead to the CRM
-     * 
-     * @param slots 
-     * @param extras 
-     * @param leadList 
-     * @param leadTranscript 
-     * @param service 
-     * @param request 
-     * @param eventService 
-     * @param finalResponse 
-     * @returns 
+     *
+     * @param slots
+     * @param extras
+     * @param leadList
+     * @param leadTranscript
+     * @param service
+     * @param request
+     * @param eventService
+     * @param finalResponse
+     * @returns
      */
     private static async sendLead(
         slots: RequestSlotMap,
@@ -77,15 +84,10 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
         const slotNames = Object.keys(slots);
         // We do not include these since they then are used to make other fields
         const DONT_INCLUDE = [
-            ...NOTE_COMPONENTS,
-            "title",
-            "number",
-            "street_number",
-            "street_name"
-        ];
+            ...NOTE_COMPONENTS,"title","number","street_number","street_name"];
 
         slotNames.forEach((name) => {
-            // the names in fields are uppercase.  
+            // the names in fields are uppercase.
             const NAME = name.toUpperCase();
 
             const fieldAlreadyExists = fields.find((field) => {
@@ -165,7 +167,8 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
             "NumberOnly",
             "PhoneNumber",
             "PhoneNumberOnly",
-            "AppointmentDate"
+            "AppointmentDate",
+            "OptionSelect",
         ];
 
         if (ALWAYS_HANDLE.includes(key)) {
@@ -191,6 +194,9 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
         if (leadSent) {
             return super.handleRequest(request, context);
         }
+
+        // Component Input
+        this.handleMultiModalInput(request as ComponentRequest);
 
         const requestSlots: RequestSlotMap = isIntentRequest(request) ? request.slots : {};
         // We keep track of special contact capture slots instead of using the slots field
@@ -235,7 +241,7 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
             default:
         }
 
-        // If they were redirected from 
+        // If they were redirected from
         const isLookingForHelp = isIntentRequest(request) ? lookingForHelp(request.intentId) : false;
         // We will use this later to concatenate the 'start' content.
         let isFirstQuestion = false;
@@ -356,7 +362,7 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
                     leadStartResponse = getResponseByTag(responses, Constants.CONTACT_CAPTURE_START_CONTENT);
                 }
                 response.outputSpeech = concatResponseOutput(toResponseOutput(leadStartResponse.outputSpeech), toResponseOutput(response.outputSpeech));
-                // since this is a start, we lose a little bit of fidelity 
+                // since this is a start, we lose a little bit of fidelity
                 // on what question we ask but we need to track the start
                 response.tag = leadStartResponse.tag;
             }
@@ -401,5 +407,42 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
         log().debug(`Response`);
         log().debug(compiled);
         context.response.respond(compiled);
+    }
+
+    private handleMultiModalInput(request: ComponentRequest) {
+
+        const request_type = "INTENT_REQUEST";
+        request.slots = !request.slots ? {} : request.slots;
+        
+        // DateTime
+        if (request.dateTime) {
+            request.type = request_type;
+            request.rawQuery = request.dateTime;
+            request.slots.dateTime = {
+                name: "DateTime",
+                value: request.dateTime,
+            };
+        }
+
+        // Location Form
+        else if (request.address) {
+            request.type = request_type;
+            request.rawQuery = request.address;
+            request.slots.address = {
+                name: "Address",
+                value: request.address,
+            };
+        }
+
+        // Uploaded Image
+        else if (request.image) {
+            request.type = request_type;
+            request.rawQuery = request.image;
+            request.slots.image = {
+                name: "Image",
+                value: request.image,
+            };
+
+        }
     }
 }
