@@ -2,6 +2,13 @@
 
 import { RequestSlotMap } from "stentor";
 
+export class LeadError extends Error {
+    public constructor(message: string) {
+        super(message);
+        this.name = "LeadError"
+    }
+}
+
 /**
  * These are generated, they don't exist in the model but are made
  * of other slots from the model;
