@@ -424,7 +424,7 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
         context.response.respond(compiled);
     }
 
-    private handleMultiModalInput(request: ComponentRequest) {
+    private handleMultiModalInput(request: ComponentRequest) :void {
 
         const request_type = "INTENT_REQUEST";
         request.slots = !request.slots ? {} : request.slots;
