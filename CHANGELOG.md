@@ -1,3 +1,10 @@
+# [1.2.0](https://github.com/xapp-ai/contact-capture-handler/compare/v1.1.2...v1.2.0) (2023-07-19)
+
+
+### Features
+
+* Handle Component Input ([#190](https://github.com/xapp-ai/contact-capture-handler/issues/190)) ([35f7e4b](https://github.com/xapp-ai/contact-capture-handler/commit/35f7e4bcd2532a5a4f0b5b956c425c6e0de88d4e))
+
 ## [1.1.2](https://github.com/xapp-ai/contact-capture-handler/compare/v1.1.1...v1.1.2) (2023-06-22)
 
 
