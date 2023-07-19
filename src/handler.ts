@@ -31,6 +31,7 @@ import {
 import * as Constants from "./constants";
 import { ContactDataType, ContactCaptureData, CaptureRuntimeData } from "./data";
 import { generateAlternativeSlots, generatePseudoSlots, lookingForHelp, newLeadGenerationData, NOTE_COMPONENTS } from "./utils";
+import { LeadError } from "./model";
 
 /**
  * Handler for capturing contact information.
@@ -38,6 +39,8 @@ import { generateAlternativeSlots, generatePseudoSlots, lookingForHelp, newLeadG
  * It extends the Question Answering Handler to allow the user to ask questions
  */
 export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, ContactCaptureData> {
+
+    public static readonly TYPE: string = Constants.CONTACT_CAPTURE_HANDLER_TYPE;
 
     /**
      * Send the lead to the CRM
@@ -104,7 +107,7 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
         });
 
         // Copy the transcript
-        const transcript: Message[] = [...leadTranscript];
+        const transcript: Message[] = existsAndNotEmpty(leadTranscript) ? [...leadTranscript] : [];
         // Add the final response to the transcript if it exists
         if (finalResponse) {
             const responseOutput: Response<ResponseOutput> = {
@@ -117,7 +120,19 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
 
         const externalLead = { fields, transcript };
         log().debug(`===\n${JSON.stringify(externalLead, null, 2)}\n===`);
-        if (process.env.SEND_LEAD === "true") {
+
+        let sendLead = true;
+
+        const envSendLead = process.env.SEND_LEAD;
+        if (envSendLead && typeof envSendLead === "string") {
+            // if we have it, use it
+            if (envSendLead.toLowerCase() === "true") {
+                sendLead = true;
+            } else if (envSendLead.toLowerCase() === "false") {
+                sendLead = false;
+            }
+        }
+        if (sendLead) {
             try {
                 const response = await service.send(externalLead, extras);
                 if (response.status === "Success") {
@@ -125,7 +140,7 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
                 } else {
                     log().error(`Lead not sent!`);
                     log().error(response.message);
-                    eventService.error(new Error(`Lead not sent:${response.message}`));
+                    eventService.error(new LeadError(`Lead not sent:${response.message}`));
                     return false;
                 }
             } catch (e) {
@@ -189,6 +204,8 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
 
         // If the lead was already sent, give it to the super
         if (leadSent) {
+            log().info(`Lead already sent, calling super.handleRequest for content`);
+            // short circuit to the super
             return super.handleRequest(request, context);
         }
 
@@ -202,7 +219,6 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
         const pseudoSlots = generatePseudoSlots({ ...requestSlots, ...sessionSlots, ...alternativeSlots }, request);
         // Now mix them all in priority order
         const slots: RequestSlotMap = { ...requestSlots, ...sessionSlots, ...pseudoSlots, ...alternativeSlots };
-
         // Persist these new ones for reuse, we want to keep the modifications from the pseudo and alternative
         context.session.set(Constants.CONTACT_CAPTURE_SLOTS, slots);
         log().info('Slots');
@@ -339,7 +355,7 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
                 log().debug(asideResponse);
                 // I think we want to use the reprompt here.
                 const reprompt = concatResponseOutput({ displayText: "\n \n \n", ssml: "" }, toResponseOutput(response.reprompt));
-                response.outputSpeech = concatResponseOutput(toResponseOutput(asideResponse.outputSpeech), toResponseOutput(reprompt));
+                response.outputSpeech = concatResponseOutput(toResponseOutput(asideResponse.outputSpeech), toResponseOutput(reprompt), { delimiter: "\n\n" });
                 response.reprompt = response.reprompt;
                 response.displays = asideResponse.displays;
             } else if (repeat) {
@@ -384,7 +400,6 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
             // Send the lead time!
             const leadSent = await ContactCaptureHandler.sendLead(slots, extras, leadDataList, leadTranscript, context.services.crmService, request, context.services.eventService, compileResponse(response, request, context));
             log().info(`Lead Sent ? ${leadSent} `);
-
             // Clean lead gathering list
             // context.session.set(Constants.LEAD_GENERATION_LIST, undefined);
             context.session.set(Constants.CONTACT_CAPTURE_SENT, leadSent);
