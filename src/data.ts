@@ -17,7 +17,32 @@ export type ContactDataType =
     "DATE_TIME";
 
 export interface ContactCaptureData extends QuestionAnsweringData {
+    /**
+     * Information related to lead capture.
+     */
     capture: ContactCaptureBlueprint;
+    /**
+     * Default is PROGRAMMATIC
+     */
+    responses?: "GENERATIVE_AI" | "PROGRAMMATIC";
+    /**
+     * It will not capture the lead and instead provide contact information.
+     * 
+     * Defaults to true.
+     */
+    captureLead?: boolean;
+    /**
+     * Contact information for the 
+     */
+    contactInformation?: {
+        email?: string;
+        phone?: string;
+        contactUrl?: string;
+    }
+    /**
+     * Optional place IDs
+     */
+    placeId?: string[];
 }
 
 export interface ContactCaptureBlueprint {

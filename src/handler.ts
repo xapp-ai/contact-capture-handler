@@ -87,7 +87,12 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
         const slotNames = Object.keys(slots);
         // We do not include these since they then are used to make other fields
         const DONT_INCLUDE = [
-            ...NOTE_COMPONENTS,"title","number","street_number","street_name"];
+            ...NOTE_COMPONENTS,
+            "title",
+            "number",
+            "street_number",
+            "street_name"
+        ];
 
         slotNames.forEach((name) => {
             // the names in fields are uppercase.
@@ -257,6 +262,8 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
             default:
         }
 
+        // SPLIT HERE FOR STRATEGY
+
         // If they were redirected from
         const isLookingForHelp = isIntentRequest(request) ? lookingForHelp(request.intentId) : false;
         // We will use this later to concatenate the 'start' content.
@@ -424,11 +431,11 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
         context.response.respond(compiled);
     }
 
-    private handleMultiModalInput(request: ComponentRequest) :void {
+    private handleMultiModalInput(request: ComponentRequest): void {
 
         const request_type = "INTENT_REQUEST";
         request.slots = !request.slots ? {} : request.slots;
-        
+
         // DateTime
         if (request.dateTime) {
             request.type = request_type;
