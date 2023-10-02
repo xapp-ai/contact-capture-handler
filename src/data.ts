@@ -28,7 +28,7 @@ export interface ContactCaptureData extends QuestionAnsweringData {
     /**
      * It will not capture the lead and instead provide contact information.
      * 
-     * Defaults to true.
+     * Defaults to false.
      */
     captureLead?: boolean;
     /**
