@@ -1,34 +1,27 @@
 /*! Copyright (c) 2023, XAPP AI */
 
-
-
 import {
     compileResponse,
     concatResponseOutput,
-
     Context,
-
+    existsAndNotEmpty,
     findValueForKey,
     getResponseByTag,
     hasSessionId,
-
+    isIntentRequest,
     log,
-
     Request,
-
+    RequestSlotMap,
     requestSlotValueToString,
     Response,
-    // ResponseOutput,
-    RequestSlotMap,
     toResponseOutput,
-    isIntentRequest,
 } from "stentor";
 
 import * as Constants from "../constants";
-
 import { ContactDataType, CaptureRuntimeData } from "../data";
 import { lookingForHelp, newLeadGenerationData, } from "../utils";
 import { ContactCaptureHandler } from "../handler";
+import { GooglePlacesService, PlacesService } from "../services";
 
 import { ResponseStrategy } from "./ResponseStrategy";
 
@@ -40,8 +33,68 @@ export class ProgrammaticResponseStrategy implements ResponseStrategy {
         const asideResponse: Response = context.session.get(Constants.CONTACT_CAPTURE_ASIDE);
         const slots: RequestSlotMap = context.session.get(Constants.CONTACT_CAPTURE_SLOTS);
         const isLookingForHelp = isIntentRequest(request) ? lookingForHelp(request.intentId) : false;
-
         const previousType = context.session.get(Constants.CONTACT_CAPTURE_CURRENT_DATA) as ContactDataType;
+
+        // Our response that we will end up returning
+        let response: Response;
+        const responses = findValueForKey(handler.intentId, handler.content);
+
+        if (!handler.data.captureLead) {
+
+            // First find response for not sending leads
+            const noCaptureResponse = getResponseByTag(responses, Constants.CONTACT_CAPTURE_NO_LEAD_CAPTURE_CONTENT);
+
+            if (noCaptureResponse) {
+                response = noCaptureResponse;
+            } else {
+                // Build our own.
+                // 1. Grab the place ID and look it up
+                // Currently, just get the first one
+                const place = existsAndNotEmpty(handler.data.places) ? handler.data.places[0] : undefined;
+                if (place) {
+                    let placesService: PlacesService = handler.data.placeService;
+                    if (!placesService) {
+                        // make sure we have the process.env.PLACES
+                        log().debug(`Defaulting to GooglePlacesService...`);
+                        if (process.env.PLACES_API_KEY) {
+                            placesService = new GooglePlacesService(process.env.PLACES_API_KEY);
+                        } else {
+                            log().warn(`Unable to use default GooglePlacesService, environment variable PLACES_API_KEY is not set.`);
+                        }
+                    }
+                    // make sure we have one still
+                    if (placesService) {
+                        const details = await placesService.getDetails({ place_id: place.placeId, fields: ["opening_hours", "formatted_phone_number"] });
+
+                        // only if we have the phone number
+                        if (details.formatted_phone_number) {
+                            response = {
+                                name: "No Capture with Number",
+                                tag: "ContactCaptureNoCaptureStart",
+                                outputSpeech: {
+                                    displayText: `We can help with that, it is best to give us a call at ${details.formatted_phone_number} to continue the conversation.`
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if (!response) {
+                    // defaulting to generic no capture response.
+                    response = {
+                        name: "No Capture",
+                        tag: "ContactCaptureNoCaptureStart",
+                        outputSpeech: {
+                            displayText: "We can help with that, please contact us to continue the conversation."
+                        },
+                        displays: []
+                    }
+                }
+            }
+
+            return response;
+        }
+
         // We will use this later to concatenate the 'start' content.
         let isFirstQuestion = false;
 
@@ -112,9 +165,6 @@ export class ProgrammaticResponseStrategy implements ResponseStrategy {
 
         context.session.set(Constants.CONTACT_CAPTURE_CURRENT_DATA, nextType);
 
-        const responses = findValueForKey(handler.intentId, handler.content);
-
-        let response: Response;
         // Two paths here to get the response depending on if we have a next step or not
         // 1. We have a step, we find the content and ask the question
         // 2. We don't have any more information to ask so we close out the lead capture.

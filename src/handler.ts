@@ -254,10 +254,12 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
             default:
         }
 
-        const strategy = new ResponseStrategySelector({
-            strategy: this.data.responses,
-            captureLead: this.data.captureLead
-        }).getStrategy();
+        // Alert people the new setting
+        if (typeof this.data.captureLead !== "boolean") {
+            log().warn('captureLeads is not set, currently defaulting to false which means it will not capture lead data.')
+        }
+
+        const strategy = new ResponseStrategySelector().getStrategy();
 
         const response = await strategy.getResponse(this, request, context);
 

@@ -1,9 +1,9 @@
 /*! Copyright (c) 2023, XAPP AI */
 
 import { FetchService } from "stentor-service-fetch";
-import { SearchParams, SearchResponse, Place, DetailParams } from "./models";
+import { SearchParams, SearchResponse, Place, DetailParams, PlacesService } from "./models";
 
-export class PlacesService extends FetchService {
+export class GooglePlacesService extends FetchService implements PlacesService {
     private apiKey: string;
     private baseUrl = 'https://maps.googleapis.com/maps/api/place';
 

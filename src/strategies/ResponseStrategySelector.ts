@@ -1,21 +1,16 @@
 /*! Copyright (c) 2023, XAPP AI */
 import { ProgrammaticResponseStrategy } from "./ProgrammaticResponseStrategy";
-import { ResponseStrategy } from "./ResponseStrategy";
+import { ResponseStrategy, ResponseStrategyProps } from "./ResponseStrategy";
 
-
-export interface ResponseStrategySelectorProps {
+export interface ResponseStrategySelectorProps extends ResponseStrategyProps {
     strategy?: "GENERATIVE_AI" | "PROGRAMMATIC";
-    captureLead?: boolean;
 }
 
 export class ResponseStrategySelector {
 
     private strategy: ResponseStrategy;
 
-    public constructor(props: ResponseStrategySelectorProps) {
-
-        console.log(props);
-
+    public constructor() {
         this.strategy = new ProgrammaticResponseStrategy();
     }
 

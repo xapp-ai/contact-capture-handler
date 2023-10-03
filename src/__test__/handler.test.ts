@@ -6,7 +6,15 @@ import * as sinonChai from "sinon-chai";
 chai.use(sinonChai);
 const expect = chai.expect;
 
-import { Content, Context, IntentRequest, Handler, ResponseBuilder, KnowledgeBaseResult, CrmService } from "stentor";
+import {
+    Content,
+    Context,
+    IntentRequest,
+    Handler,
+    ResponseBuilder,
+    KnowledgeBaseResult,
+    CrmService
+} from "stentor";
 import { CrmResponse } from "stentor-models";
 import { IntentRequestBuilder } from "stentor-request";
 import { ContextBuilder } from "stentor-context";
@@ -14,12 +22,26 @@ import { ContextBuilder } from "stentor-context";
 import { ContactCaptureData } from "../data";
 import { ContactCaptureHandler } from "../handler";
 import { CONTACT_CAPTURE_CURRENT_DATA, CONTACT_CAPTURE_LIST, CONTACT_CAPTURE_SENT, CONTACT_CAPTURE_SLOTS } from "../constants";
+import { DetailParams, Place, PlacesService, SearchParams } from "../services";
 
 class MockCRM implements CrmService {
     public async send(): Promise<CrmResponse> {
         return {
             status: "Success"
         };
+    }
+}
+
+class MockPlacesService implements PlacesService {
+    public async search(params: SearchParams): Promise<Place[]> {
+        // eslint-disable-next-line no-console
+        console.log(params);
+        return [{ place_id: "place_id" }];
+    }
+    public async getDetails(params: DetailParams): Promise<Place> {
+        // eslint-disable-next-line no-console
+        console.log(params);
+        return { place_id: "place_id", formatted_phone_number: "111-123-3333" }
     }
 }
 
@@ -74,6 +96,7 @@ const props: Handler<Content, ContactCaptureData> = {
     },
     data: {
         "inputUnknownStrategy": "REPROMPT",
+        "captureLead": true,
         "capture": {
             "data": [
                 {
@@ -266,6 +289,135 @@ const propsWithAnyInputQuestion: Handler<Content, ContactCaptureData> = {
                     "questionContentKey": "MessageQuestionContent"
                 }
             ]
+        },
+        "captureLead": true
+    }
+}
+
+
+const propsWithNoCapture: Handler<Content, ContactCaptureData> = {
+    intentId: "intentId",
+    type: "ContactCaptureHandler",
+    appId: "appId",
+    organizationId: "organizationId",
+    content: {
+        ["intentId"]: [
+            {
+                name: "First Name",
+                tag: "FirstNameQuestionContent",
+                outputSpeech: {
+                    ssml: "<speak>What is your name?</speak>",
+                    displayText: "What is your name?",
+                },
+                reprompt: {
+                    ssml: "<speak>May I have your name?</speak>",
+                    displayText: "May I have your name?"
+                }
+            },
+            {
+                name: "Start",
+                tag: "ContactCaptureStart",
+                outputSpeech: {
+                    ssml: "<speak>Why hello!</speak>",
+                    displayText: "Why hello!",
+                }
+            }
+        ],
+        ["OCSearch"]: [
+            {
+                name: "FAQ",
+                tag: "KB_TOP_FAQ",
+                outputSpeech: {
+                    ssml: "<speak>${TOP_FAQ.text}</speak>",
+                    displayText: "${TOP_FAQ.text}",
+                },
+                conditions: "!!session('TOP_FAQ')"
+            }
+        ],
+        ["Thanks"]: [
+            {
+                name: "No Problem",
+                outputSpeech: {
+                    ssml: "<speak>No Problem</speak>",
+                    displayText: "No problem",
+                }
+            }
+        ]
+    },
+    data: {
+        "inputUnknownStrategy": "REPROMPT",
+        "capture": {
+            "data": []
+        },
+        "chat": {
+            "followUp": ""
+        }
+    }
+}
+
+const propsWithNoCaptureAndContent: Handler<Content, ContactCaptureData> = {
+    intentId: "intentId",
+    type: "ContactCaptureHandler",
+    appId: "appId",
+    organizationId: "organizationId",
+    content: {
+        ["intentId"]: [
+            {
+                name: "First Name",
+                tag: "FirstNameQuestionContent",
+                outputSpeech: {
+                    ssml: "<speak>What is your name?</speak>",
+                    displayText: "What is your name?",
+                },
+                reprompt: {
+                    ssml: "<speak>May I have your name?</speak>",
+                    displayText: "May I have your name?"
+                }
+            },
+            {
+                name: "Start",
+                tag: "ContactCaptureStart",
+                outputSpeech: {
+                    ssml: "<speak>Why hello!</speak>",
+                    displayText: "Why hello!",
+                }
+            },
+            {
+                name: "No Capture",
+                tag: "ContactCaptureNoCaptureStart",
+                outputSpeech: {
+                    displayText: "Please call us ASAP!"
+                }
+            }
+        ],
+        ["OCSearch"]: [
+            {
+                name: "FAQ",
+                tag: "KB_TOP_FAQ",
+                outputSpeech: {
+                    ssml: "<speak>${TOP_FAQ.text}</speak>",
+                    displayText: "${TOP_FAQ.text}",
+                },
+                conditions: "!!session('TOP_FAQ')"
+            }
+        ],
+        ["Thanks"]: [
+            {
+                name: "No Problem",
+                outputSpeech: {
+                    ssml: "<speak>No Problem</speak>",
+                    displayText: "No problem",
+                }
+            }
+        ]
+    },
+    data: {
+        "inputUnknownStrategy": "REPROMPT",
+        "capture": {
+            "data": []
+        },
+        "chat": {
+            "followUp": ""
         }
     }
 }
@@ -275,6 +427,10 @@ describe(`${ContactCaptureHandler.name}`, () => {
     let response: ResponseBuilder;
     let request: IntentRequest;
     let context: Context;
+    // Services
+    let crmService: CrmService;
+    let placesService: PlacesService;
+
     it(`returns an instance of itself`, () => {
         expect(new ContactCaptureHandler(props)).to.be.instanceOf(ContactCaptureHandler);
     });
@@ -856,7 +1012,7 @@ describe(`${ContactCaptureHandler.name}`, () => {
             });
             describe("when request completes the data required", () => {
                 const sandbox = sinon.createSandbox();
-                let crmService: CrmService;
+
                 beforeEach(() => {
                     response = new ResponseBuilder({
                         device: {
@@ -1067,7 +1223,112 @@ describe(`${ContactCaptureHandler.name}`, () => {
             });
         });
         describe("with captureLead set to false", () => {
+            const sandbox = sinon.createSandbox();
+            beforeEach(() => {
+                response = new ResponseBuilder({
+                    device: {
+                        audioSupported: false,
+                        channel: "test",
+                        canPlayAudio: false,
+                        canPlayVideo: false,
+                        canSpeak: false,
+                        canThrowCard: false,
+                        canTransferCall: false,
+                        hasScreen: true,
+                        hasWebBrowser: true,
+                        videoSupported: false
+                    }
+                });
+                sandbox.spy(response, "respond");
 
+                request = new IntentRequestBuilder()
+                    .withSlots({})
+                    .withIntentId(props.intentId)
+                    .updateDevice({
+                        canSpeak: false
+                    }).build();
+
+                context = new ContextBuilder()
+                    .withResponse(response)
+                    .withSessionData({ id: "foo", data: {} })
+                    .build();
+
+                placesService = new MockPlacesService();
+                sandbox.spy(placesService, "getDetails");
+            });
+            afterEach(() => {
+                sandbox.restore();
+            });
+            describe("with content available", () => {
+                it("returns as expected", async () => {
+
+                    const handler = new ContactCaptureHandler(propsWithNoCaptureAndContent);
+
+                    await handler.handleRequest(request, context);
+
+                    expect(response.respond).to.have.been.calledOnce;
+                    expect(response.respond).to.have.been.calledWith({
+                        outputSpeech: { displayText: 'Please call us ASAP!', ssml: '<speak></speak>' },
+                        name: 'No Capture',
+                        tag: "ContactCaptureNoCaptureStart"
+                    });
+                });
+            });
+            describe("with places and placesservice", () => {
+                it("returns as expected", async () => {
+
+                    const props = { ...propsWithNoCapture };
+
+                    if (props.data) {
+                        props.data.places = [{ placeId: "place_id" }];
+                        props.data.placeService = placesService;
+                    }
+
+                    const handler = new ContactCaptureHandler(props);
+
+                    await handler.handleRequest(request, context);
+
+
+                    expect(placesService.getDetails).to.have.been.calledOnce;
+
+                    expect(response.respond).to.have.been.calledOnce;
+                    expect(response.respond).to.have.been.calledWith({
+                        outputSpeech: {
+                            displayText: 'We can help with that, it is best to give us a call at 111-123-3333 to continue the conversation.',
+                            ssml: '<speak></speak>'
+                        },
+                        name: 'No Capture with Number',
+                        tag: "ContactCaptureNoCaptureStart"
+                    });
+                });
+            });
+            describe("without places", () => {
+                it("returns as expected", async () => {
+                    const props = { ...propsWithNoCapture };
+
+                    if (props.data) {
+                        delete props.data.places;
+                        props.data.placeService = placesService;
+                    }
+
+                    const handler = new ContactCaptureHandler(props);
+
+                    await handler.handleRequest(request, context);
+
+                    expect(placesService.getDetails).to.have.been.not.been.called;
+
+                    expect(response.respond).to.have.been.calledOnce;
+                    expect(response.respond).to.have.been.calledWith({
+                        name: 'No Capture',
+                        tag: 'ContactCaptureNoCaptureStart',
+                        outputSpeech: {
+                            displayText: 'We can help with that, please contact us to continue the conversation.',
+                            ssml: '<speak></speak>'
+                        },
+                        displays: []
+                    });
+                });
+            });
         });
     });
 });
