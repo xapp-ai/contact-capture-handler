@@ -1,9 +1,8 @@
 /*! Copyright (c) 2023, XAPP AI */
 
-import { Response, ResponseOutput, Request, Context, FetchService } from "stentor";
+import { Response, Request, Context, FetchService } from "stentor";
 import { ContactCaptureHandler } from "../handler";
-import { ResponseStrategy } from "./ResponseStrategy";
-
+import { ResponseStrategy } from "../strategies/ResponseStrategy";
 
 export class GenerativeAIService extends FetchService implements ResponseStrategy {
     private apiKey: string;
@@ -26,14 +25,21 @@ export class GenerativeAIService extends FetchService implements ResponseStrateg
             // Extract the transcript from the context
             const transcript = context.session.transcript();
 
+            // Construct the messages to send to the Chat API
+            const messages = [
+                { role: "system", content: "You are a helpful assistant." },
+                { role: "user", content: transcript }
+            ];
+
             // Call OpenAI API to get a generative response
             const openAIResponse = await fetch(
-                'https://api.openai.com/v1/engines/davinci-codex/completions',
+                'https://api.openai.com/v1/chat/completions',
                 {
                     method: 'POST',
                     body: JSON.stringify({
-                        prompt: transcript,  // Use the transcript as the prompt
-                        max_tokens: 150,  // Limit the response length
+                        model: "gpt-3.5-turbo",
+                        messages: messages,
+                        max_tokens: 150,
                     }),
                     headers: {
                         'Content-Type': 'application/json',
@@ -51,7 +57,7 @@ export class GenerativeAIService extends FetchService implements ResponseStrateg
             const responseData = await openAIResponse.json();
 
             // Extract and format the OpenAI API response
-            const aiText = responseData.choices[0]?.text.trim();
+            const aiText = responseData.choices[0]?.message.content.trim();
 
             // Construct and return the Response object
             return {
