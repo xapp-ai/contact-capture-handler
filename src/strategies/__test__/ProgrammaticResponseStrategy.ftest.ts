@@ -159,7 +159,7 @@ const props: Handler<Content, ContactCaptureData> = {
     }
 }
 
-describe.only(`${ProgrammaticResponseStrategy.name}`, () => {
+describe(`${ProgrammaticResponseStrategy.name}`, () => {
     let handler: ContactCaptureHandler;
     let response: ResponseBuilder;
     let request: IntentRequest;
@@ -183,6 +183,7 @@ describe.only(`${ProgrammaticResponseStrategy.name}`, () => {
 
             const strategy = new ProgrammaticResponseStrategy();
             const response = await strategy.getResponse(handler, request, context);
+            // eslint-disable-next-line no-console
             console.log(response);
             expect(response).to.exist;
             const output = toResponseOutput(response.outputSpeech || "");

@@ -16,6 +16,7 @@ describe(`${GooglePlacesService.name}`, () => {
             const srv = new GooglePlacesService(apiKey);
 
             const results = await srv.search({ query: "303 Roofing" });
+            // eslint-disable-next-line no-console
             console.log(results);
             expect(results).to.exist;
         });
@@ -27,6 +28,7 @@ describe(`${GooglePlacesService.name}`, () => {
             const results = await srv.getDetails({ place_id: "ChIJMcF-qCTHt4kRku3nUycnN-M" });
             expect(results).to.exist;
 
+            // eslint-disable-next-line no-console
             console.log(results);
         });
     });
