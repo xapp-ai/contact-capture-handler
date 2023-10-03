@@ -1,3 +1,15 @@
+# [1.3.0](https://github.com/xapp-ai/contact-capture-handler/compare/v1.2.0...v1.3.0) (2023-10-03)
+
+
+### Bug Fixes
+
+* Publish node version  ([#211](https://github.com/xapp-ai/contact-capture-handler/issues/211)) ([6c5b71e](https://github.com/xapp-ai/contact-capture-handler/commit/6c5b71e475bf4336ea0de5b0bac34a331fe780ea))
+
+
+### Features
+
+* No Capture Mode ([#210](https://github.com/xapp-ai/contact-capture-handler/issues/210)) ([ef0a9e2](https://github.com/xapp-ai/contact-capture-handler/commit/ef0a9e25c463238577f5063df1b574a7e1b081be))
+
 # [1.2.0](https://github.com/xapp-ai/contact-capture-handler/compare/v1.1.2...v1.2.0) (2023-07-19)
 
 
