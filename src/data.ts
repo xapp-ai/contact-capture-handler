@@ -1,6 +1,7 @@
 /*! Copyright (c) 2022, XAPP AI */
 
 import { QuestionAnsweringData } from "@xapp/question-answering-handler";
+import { ResponseStrategyProps } from "./strategies/ResponseStrategy";
 
 export type ContactDataType =
     "FIRST_NAME" |
@@ -16,8 +17,24 @@ export type ContactDataType =
     "MESSAGE" |
     "DATE_TIME";
 
-export interface ContactCaptureData extends QuestionAnsweringData {
+export interface ContactCaptureData extends QuestionAnsweringData, ResponseStrategyProps {
+    /**
+     * Information related to lead capture.
+     */
     capture: ContactCaptureBlueprint;
+    /**
+     * Default is PROGRAMMATIC
+     */
+    responses?: "GENERATIVE_AI" | "PROGRAMMATIC";
+
+    /**
+     * Contact information for the 
+     */
+    /* contactInformation?: {
+        email?: string;
+        phone?: string;
+        contactUrl?: string;
+    } */
 }
 
 export interface ContactCaptureBlueprint {
