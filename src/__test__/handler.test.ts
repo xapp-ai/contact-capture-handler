@@ -294,7 +294,6 @@ const propsWithAnyInputQuestion: Handler<Content, ContactCaptureData> = {
     }
 }
 
-
 const propsWithNoCapture: Handler<Content, ContactCaptureData> = {
     intentId: "intentId",
     type: "ContactCaptureHandler",
@@ -433,6 +432,59 @@ describe(`${ContactCaptureHandler.name}`, () => {
 
     it(`returns an instance of itself`, () => {
         expect(new ContactCaptureHandler(props)).to.be.instanceOf(ContactCaptureHandler);
+    });
+    describe(`#${ContactCaptureHandler.prototype.canHandleRequest.name}()`, () => {
+        beforeEach(() => {
+            request = new IntentRequestBuilder()
+                .withSlots({})
+                .withIntentId(props.intentId)
+                .updateDevice({
+                    canSpeak: false
+                }).build();
+
+            context = new ContextBuilder()
+                .withResponse(response)
+                .withSessionData({ id: "foo", data: {} })
+                .build();
+        });
+        it("returns as expected", () => {
+            const handler = new ContactCaptureHandler(propsWithNoCapture);
+            const handled = handler.canHandleRequest(request, context);
+            expect(handled).to.be.true
+        });
+        describe("for a knowledge base request", () => {
+            it("returns as expected", () => {
+                request = new IntentRequestBuilder()
+                    .withSlots({})
+                    .withIntentId("KnowledgeAnswer")
+                    .updateDevice({
+                        canSpeak: false
+                    }).build();
+                const handler = new ContactCaptureHandler(propsWithNoCapture);
+                const handled = handler.canHandleRequest(request, context);
+                expect(handled).to.be.false
+            });
+        });
+        describe("with captureLeads set to true", () => {
+            it("returns as expected", () => {
+                const handler = new ContactCaptureHandler(props);
+                const handled = handler.canHandleRequest(request, context);
+                expect(handled).to.be.true
+            });
+            describe("for a knowledge base request", () => {
+                it("returns as expected", () => {
+                    request = new IntentRequestBuilder()
+                        .withSlots({})
+                        .withIntentId("KnowledgeAnswer")
+                        .updateDevice({
+                            canSpeak: false
+                        }).build();
+                    const handler = new ContactCaptureHandler(props);
+                    const handled = handler.canHandleRequest(request, context);
+                    expect(handled).to.be.true
+                });
+            });
+        });
     });
     describe(`#${ContactCaptureHandler.prototype.handleRequest.name}()`, () => {
         describe("with captureLead set to true", () => {
@@ -1260,6 +1312,7 @@ describe(`${ContactCaptureHandler.name}`, () => {
                 sandbox.restore();
             });
             describe("with content available", () => {
+                /** User has set content with appropriate tag */
                 it("returns as expected", async () => {
 
                     const handler = new ContactCaptureHandler(propsWithNoCaptureAndContent);
@@ -1326,6 +1379,72 @@ describe(`${ContactCaptureHandler.name}`, () => {
                             ssml: '<speak></speak>'
                         },
                         displays: []
+                    });
+                });
+            });
+            describe("with a Knowledgebase request", () => {
+                it("returns as expected", async () => {
+
+                    const handler = new ContactCaptureHandler(propsWithNoCaptureAndContent);
+
+                    const kbResult: KnowledgeBaseResult = {
+                        faqs: [
+                            {
+                                question: "What is your favorite color?",
+                                document: "Blue!"
+                            }
+                        ]
+                    };
+
+                    request = new IntentRequestBuilder()
+                        .withSlots({})
+                        .withIntentId("OCSearch")
+                        .withRawQuery("what is your favorite color?")
+                        .withKnowledgeBaseResult(kbResult)
+                        .build();
+
+                    context = new ContextBuilder()
+                        .withResponse(response)
+                        .withSessionData({
+                            id: "foo",
+                            data: {
+                                ['knowledge_base_result']: kbResult,
+                                ContactCaptureCurrentData: "ORGANIZATION",
+                                ContactCaptureSlots: {},
+                                ContactCaptureList: {
+                                    data: [
+                                        {
+                                            type: 'FIRST_NAME',
+                                            enums: undefined,
+                                            questionContentKey: 'FirstNameQuestionContent',
+                                            slotName: 'first_name'
+                                        },
+                                        {
+                                            type: 'ORGANIZATION',
+                                            enums: undefined,
+                                            questionContentKey: 'OrganizationQuestionContent',
+                                            slotName: 'organization',
+                                            collectedValue: "XAPP AI"
+                                        }
+                                    ]
+                                }
+                            },
+
+                        })
+                        .build();
+
+                    await handler.handleRequest(request, context);
+
+                    expect(response.respond).to.have.been.calledTwice;
+                    expect(response.respond).to.have.been.calledWith({
+                        name: 'No Capture',
+                        tag: "ContactCaptureNoCaptureStart",
+                        outputSpeech: {
+                            ssml: '<speak>Blue!</speak>',
+                            displayText: 'Blue!\n\nPlease call us ASAP!'
+                        },
+                        reprompt: undefined,
+                        displays: undefined
                     });
                 });
             });

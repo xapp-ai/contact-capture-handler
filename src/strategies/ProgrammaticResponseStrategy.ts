@@ -19,7 +19,7 @@ import {
 
 import * as Constants from "../constants";
 import { ContactDataType, CaptureRuntimeData } from "../data";
-import { lookingForHelp, newLeadGenerationData, } from "../utils";
+import { concatenateAside, lookingForHelp, newLeadGenerationData, } from "../utils";
 import { ContactCaptureHandler } from "../handler";
 import { GooglePlacesService, PlacesService } from "../services";
 
@@ -39,11 +39,11 @@ export class ProgrammaticResponseStrategy implements ResponseStrategy {
         let response: Response;
         const responses = findValueForKey(handler.intentId, handler.content);
 
+        // if we are NOT capturing leads
         if (!handler.data.captureLead) {
-
             // First find response for not sending leads
             const noCaptureResponse = getResponseByTag(responses, Constants.CONTACT_CAPTURE_NO_LEAD_CAPTURE_CONTENT);
-
+            // if we have it, set it as the response
             if (noCaptureResponse) {
                 response = noCaptureResponse;
             } else {
@@ -91,6 +91,8 @@ export class ProgrammaticResponseStrategy implements ResponseStrategy {
                     }
                 }
             }
+
+            response = concatenateAside(response, asideResponse);
 
             return response;
         }
@@ -193,10 +195,7 @@ export class ProgrammaticResponseStrategy implements ResponseStrategy {
                 log().debug(`We have an aside response, concatenating with found response.`);
                 log().debug(asideResponse);
                 // I think we want to use the reprompt here.
-                const reprompt = concatResponseOutput({ displayText: "\n \n \n", ssml: "" }, toResponseOutput(response.reprompt));
-                response.outputSpeech = concatResponseOutput(toResponseOutput(asideResponse.outputSpeech), toResponseOutput(reprompt), { delimiter: "\n\n" });
-                response.reprompt = response.reprompt;
-                response.displays = asideResponse.displays;
+                response = concatenateAside(response, asideResponse);
             } else if (repeat) {
                 // Give them the reprompt on a repeat
                 response.outputSpeech = response.reprompt;
