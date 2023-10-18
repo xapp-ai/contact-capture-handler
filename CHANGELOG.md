@@ -1,3 +1,10 @@
+## [1.3.1](https://github.com/xapp-ai/contact-capture-handler/compare/v1.3.0...v1.3.1) (2023-10-18)
+
+
+### Bug Fixes
+
+* Looping when not capturing lead ([#220](https://github.com/xapp-ai/contact-capture-handler/issues/220)) ([923d903](https://github.com/xapp-ai/contact-capture-handler/commit/923d903503fd10be33a1a52e08027d2ee04e1111))
+
 # [1.3.0](https://github.com/xapp-ai/contact-capture-handler/compare/v1.2.0...v1.3.0) (2023-10-03)
 
 
