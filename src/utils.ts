@@ -1,7 +1,7 @@
 /*! Copyright (c) 2022, XAPP AI */
-import { Request, RequestSlotMap } from "stentor-models";
+import { Request, RequestSlotMap, Response } from "stentor-models";
 import { capitalize, getSlotValue, requestSlotValueToString, slotExists } from "stentor-utils";
-import { isIntentRequest, keyFromRequest } from "stentor";
+import { concatResponseOutput, isIntentRequest, keyFromRequest, toResponseOutput } from "stentor";
 
 import { CaptureRuntimeData, ContactCaptureData, ContactDataType } from "./data";
 import { PseudoSlots } from "./model";
@@ -291,4 +291,40 @@ export function cleanCode(code: string): string {
     }
 
     return code.replace(/[ "'`]/g, "");
+}
+
+
+function hasReprompt(response: Response): boolean {
+
+    if (response.reprompt) {
+
+        const reprompt = toResponseOutput(response.reprompt);
+
+        return !!reprompt.displayText;
+    }
+
+    return false;
+}
+
+/**
+ * Takes your current response and combines it with your aside response
+ */
+export function concatenateAside(currentResponse: Response, aside: Response | undefined): Response {
+
+    if (!aside) {
+        return currentResponse;
+    }
+
+    // make a copy
+    const response = { ...currentResponse };
+
+    // we may not have a reprompt so we use the output
+    const question = hasReprompt(response) ? response.reprompt : response.outputSpeech;
+    // this is our question
+    const reprompt = concatResponseOutput({ displayText: "\n \n \n", ssml: "" }, toResponseOutput(question));
+    response.outputSpeech = concatResponseOutput(toResponseOutput(aside.outputSpeech), toResponseOutput(reprompt), { delimiter: "\n\n" });
+    response.reprompt = response.reprompt;
+    response.displays = aside.displays;
+
+    return response;
 }

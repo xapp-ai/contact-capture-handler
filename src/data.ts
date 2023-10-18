@@ -26,15 +26,6 @@ export interface ContactCaptureData extends QuestionAnsweringData, ResponseStrat
      * Default is PROGRAMMATIC
      */
     responses?: "GENERATIVE_AI" | "PROGRAMMATIC";
-
-    /**
-     * Contact information for the 
-     */
-    /* contactInformation?: {
-        email?: string;
-        phone?: string;
-        contactUrl?: string;
-    } */
 }
 
 export interface ContactCaptureBlueprint {

@@ -163,8 +163,6 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
         }
 
         const ALWAYS_HANDLE: string[] = [
-            "KnowledgeAnswer",
-            "OCSearch",
             "InputUnknown",
             "Name",
             "NameOnly",
@@ -177,6 +175,12 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
             "AppointmentDate",
             "OptionSelect",
         ];
+
+        if (this?.data?.captureLead) {
+            // we add these if we are capturing the lead then we want to keep the
+            // user in this flow while still answering their question
+            ALWAYS_HANDLE.push(...["KnowledgeAnswer", "OCSearch"]);
+        }
 
         if (ALWAYS_HANDLE.includes(key)) {
             return true;
@@ -206,7 +210,6 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
 
         // Component Input
         this.handleMultiModalInput(request as ComponentRequest);
-
 
         /**
          * Set the Slots (captured data so far) on the Session Storage
@@ -259,10 +262,10 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
             log().warn('captureLeads is not set, currently defaulting to false which means it will not capture lead data.')
         }
 
+        // Determine our strategy
         const strategy = new ResponseStrategySelector().getStrategy();
-
+        // Get the response
         const response = await strategy.getResponse(this, request, context);
-
         // Compile and respond
         const compiled = compileResponse(response, request, context);
         // Change turnsToLive to 1
