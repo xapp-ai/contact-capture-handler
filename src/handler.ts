@@ -23,6 +23,7 @@ import {
     ResponseOutput,
     responseToMessage,
     toResponseOutput,
+    isChannelActionRequest,
 } from "stentor";
 
 import * as Constants from "./constants";
@@ -77,6 +78,7 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
             ...NOTE_COMPONENTS,
             "title",
             "number",
+            // don't need _number & _name because "street" includes both
             "street_number",
             "street_name"
         ];
@@ -186,6 +188,10 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
             return true;
         }
 
+        if (isChannelActionRequest(request)) {
+            return true;
+        }
+
         return super.canHandleRequest(request, context);
     }
 
@@ -194,7 +200,7 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
         log().info(`Running in ContactCaptureHandler`);
         const key = keyFromRequest(request);
 
-        log().info(`Request: ${key} Query: "${request.rawQuery}"`);
+        log().info(`Request: ${key} Channel: ${request.channel} Query: "${request.rawQuery}"`);
         if (isIntentRequest(request)) {
             log().info(`Slots: ${requestSlotsToString(request.slots)}`);
         }
@@ -215,6 +221,10 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
          * Set the Slots (captured data so far) on the Session Storage
          */
         const requestSlots: RequestSlotMap = isIntentRequest(request) ? request.slots : {};
+        if (isChannelActionRequest(request) && request.channel === "form-widget") {
+            // TODO: convert the form fields to RequestSlotMap so we handle it the rest of the way through
+
+        }
         // We keep track of special contact capture slots instead of using the slots field
         // because we may modify them based on this specific use case
         const sessionSlots = context.session.get(Constants.CONTACT_CAPTURE_SLOTS) as RequestSlotMap;
