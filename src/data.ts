@@ -26,6 +26,15 @@ export interface ContactCaptureData extends QuestionAnsweringData, ResponseStrat
      * Default is PROGRAMMATIC
      */
     responses?: "GENERATIVE_AI" | "PROGRAMMATIC";
+    /**
+     * The form descriptions for the form widget
+     */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    forms?: any[]; //TODO: Once it works define the types
+    /**
+     * The name of the "main" capture form
+     */
+    CAPTURE_MAIN_FORM: string;
 }
 
 export interface ContactCaptureBlueprint {

@@ -31,6 +31,7 @@ import { ContactDataType, ContactCaptureData, CaptureRuntimeData } from "./data"
 import { generateAlternativeSlots, generatePseudoSlots, NOTE_COMPONENTS } from "./utils";
 import { LeadError } from "./model";
 import { ResponseStrategySelector } from "./strategies/ResponseStrategySelector";
+import { FormActionResponseData } from "./strategies/FormResponseStrategy";
 
 interface ComponentRequest extends IntentRequest {
     dateTime: string;
@@ -200,14 +201,20 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
         log().info(`Running in ContactCaptureHandler`);
         const key = keyFromRequest(request);
 
-        log().info(`Request: ${key} Channel: ${request.channel} Query: "${request.rawQuery}"`);
         if (isIntentRequest(request)) {
-            log().info(`Slots: ${requestSlotsToString(request.slots)}`);
+            log().info(`Request: ${key} Channel: ${request.channel} Query: "${request.rawQuery}"`);
+            log().info(`Request Slots: ${requestSlotsToString(request.slots)}`);
+        } else if (isChannelActionRequest(request)) {
+            log().info(`Request: CHANNEL_ACTION_REQUEST Channel: ${request.channel} Action: "${request.action}"`);
+            const data: FormActionResponseData = request.attributes?.data as FormActionResponseData;
+            log().info(`Attributes: ${JSON.stringify(data?.result || {})}`)
         }
+
         const leadSent = context.session.get(Constants.CONTACT_CAPTURE_SENT) as boolean;
         const previousType = context.session.get(Constants.CONTACT_CAPTURE_CURRENT_DATA) as ContactDataType;
 
-        // If the lead was already sent, give it to the super
+        // If the lead was already sent, nothing to do
+        // TODO: What to do in the form widget?
         if (leadSent) {
             log().info(`Lead already sent, calling super.handleRequest for content`);
             // short circuit to the super
@@ -221,9 +228,16 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
          * Set the Slots (captured data so far) on the Session Storage
          */
         const requestSlots: RequestSlotMap = isIntentRequest(request) ? request.slots : {};
-        if (isChannelActionRequest(request) && request.channel === "form-widget") {
-            // TODO: convert the form fields to RequestSlotMap so we handle it the rest of the way through
 
+        // Convert the form fields to RequestSlotMap so we handle it the rest of the way through
+        const formSlots: RequestSlotMap = {};
+        if (isChannelActionRequest(request) && request.action === "FORM_SUBMIT") {
+            const data: FormActionResponseData = request.attributes?.data as FormActionResponseData;
+            for (const [name, value] of Object.entries(data.result)) {
+                formSlots[name] = {
+                    name, value
+                };
+            }
         }
         // We keep track of special contact capture slots instead of using the slots field
         // because we may modify them based on this specific use case
@@ -233,11 +247,10 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
         // Pseudo slots are not actual real slots but derivative of others
         const pseudoSlots = generatePseudoSlots({ ...requestSlots, ...sessionSlots, ...alternativeSlots }, request);
         // Now mix them all in priority order
-        const slots: RequestSlotMap = { ...requestSlots, ...sessionSlots, ...pseudoSlots, ...alternativeSlots };
+        const slots: RequestSlotMap = { ...requestSlots, ...sessionSlots, ...pseudoSlots, ...alternativeSlots, ...formSlots };
         // Persist these new ones for reuse, we want to keep the modifications from the pseudo and alternative
         context.session.set(Constants.CONTACT_CAPTURE_SLOTS, slots);
-        log().info('Slots');
-        log().info(slots);
+        log().info(`Contact capture slots: ${requestSlotsToString(slots)}`);
 
         // An asideResponse is used to handle quick knowledge base questions
         // and still continue the lead capture
@@ -273,7 +286,7 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
         }
 
         // Determine our strategy
-        const strategy = new ResponseStrategySelector().getStrategy();
+        const strategy = new ResponseStrategySelector().getStrategy(request);
         // Get the response
         const response = await strategy.getResponse(this, request, context);
         // Compile and respond
