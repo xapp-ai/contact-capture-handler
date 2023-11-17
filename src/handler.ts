@@ -259,7 +259,8 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
 
         // Alert people the new setting
         if (typeof this.data.captureLead !== "boolean") {
-            log().warn('captureLeads is not set, currently defaulting to false which means it will not capture lead data.')
+            log().warn(`'captureLead' is not set on handler data, currently defaulting to false which means it will not capture lead data. type:${typeof this.data.captureLead} value:${this.data.captureLead}`);
+            log().debug(this.data);
         }
 
         // Determine our strategy
