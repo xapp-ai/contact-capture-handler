@@ -40,7 +40,7 @@
     "mocha": "10.2.0",
     "prettier": "3.0.3",
     "semantic-release": "22.0.5",
-    "sinon": "16.0.0",
+    "sinon": "16.1.3",
     "sinon-chai": "3.7.0",
     "stentor": "1.58.51",
     "stentor-service-fetch": "1.58.49",
