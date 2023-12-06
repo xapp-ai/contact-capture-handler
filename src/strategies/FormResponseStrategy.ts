@@ -159,9 +159,11 @@ export class FormResponseStrategy implements ResponseStrategy {
 
         log().info(`Lead Sent ? ${leadSent} `);
 
-        // Clean lead gathering list. This will restart the interview
-        context.session.set(Constants.CONTACT_CAPTURE_LIST, undefined);
-        context.session.set(Constants.CONTACT_CAPTURE_SENT, false);
+        // Clean lead gathering list. This will restart the interview.
+        // Corection. Widget will reset the session. Keep it.
+        // context.session.set(Constants.CONTACT_CAPTURE_LIST, undefined);
+        
+        context.session.set(Constants.CONTACT_CAPTURE_SENT, leadSent);
 
         return {}; // form widget - no response
     }
