@@ -4,7 +4,6 @@ import {
     compileResponse,
     Context,
     hasSessionId,
-    isChannelActionRequest,
     log,
     Request,
     RequestSlotMap,
@@ -30,7 +29,10 @@ export interface FormActionResponseData {
     form: string;
     step: string;
 
-    // When we need to respond with another (usually dynamic) foem to continue
+    // Was this the last step?
+    last: boolean;
+
+    // When we need to respond with another (usually dynamic) form to continue
     followupForm?: string;
 }
 
@@ -46,6 +48,26 @@ function getFormResponse(data: ContactCaptureData, formName: string): Response {
     };
 
     return response;
+}
+
+function getStepFromData(data: ContactCaptureData, formName: string, stepName: string): any {
+    const formDeclaration = data.forms.find((form) => {
+        return (form.name = formName);
+    });
+
+    if (!formDeclaration) {
+        throw new Error(`FormResponseStrategy: Unknown form: "${formName}"`);
+    }
+
+    const formStep = formDeclaration.steps.find((step: any) => {
+        return (step.name = stepName);
+    });
+
+    if (!formStep) {
+        throw new Error(`FormResponseStrategy: Unknown step: "${stepName}". Form: "${formName}"`);
+    }
+
+    return formStep;
 }
 
 export class FormResponseStrategy implements ResponseStrategy {
@@ -86,40 +108,32 @@ export class FormResponseStrategy implements ResponseStrategy {
         });
 
         // If this isn't the first request and we still have missing data,
-        // that's a problem, unless a followup form is requested
+        // that's a problem, unless it's mid-form submit or a followup form is requested
 
         if (nextRequiredData) {
-            if (isChannelActionRequest(request)) {
-                const data: FormActionResponseData = request.attributes?.data as FormActionResponseData;
-
-                // Send the requested form
-                if (data.followupForm) {
-                    response = getFormResponse(handler.data, data.followupForm);
-
-                    // Update the list on session
-                    context.session.set(Constants.CONTACT_CAPTURE_LIST, leadDataList);
-
-                    return response;
-                }
-            }
-
-            // This means the form finished but we still are missing data. Check the blueprint.
-            const errorMessage = `Form widget didn't collect this attribute: "${nextRequiredData.slotName}"`;
-            log().error(errorMessage);
-            response = {
-                outputSpeech: {
-                    displayText: `ERROR: I am not configured correctly. ${errorMessage}`
-                },
-                tag: "ERROR"
-            };
-
             // Update the list on session
             context.session.set(Constants.CONTACT_CAPTURE_LIST, leadDataList);
 
-            return response;
+            const data: FormActionResponseData = request.attributes?.data as FormActionResponseData;
+
+            // Send the requested form
+            if (data.followupForm) {
+                return getFormResponse(handler.data, data.followupForm);
+            }
+
+            const stepFromData = getStepFromData(handler.data, data.form, data.step);
+
+            // Mid-form submit (not final)
+            if (!stepFromData.final) {
+                return {}; // form widget - no response (carry on)
+            }
+
+            // This means the form finished but we still are missing data. Check the blueprint.
+            log().error(`Form widget didn't collect this attribute: "${nextRequiredData.slotName}"`);
         }
 
-        // Send the lead 
+        // Send the lead if we got here
+
         // TODO: Code repetition. Share this with ProgrammaticResponseStrategy)
 
         const url: string = request.attributes?.currentUrl as string;
@@ -130,6 +144,7 @@ export class FormResponseStrategy implements ResponseStrategy {
         };
 
         const leadTranscript = context.session.transcript();
+
         // Send the lead time!
         const leadSent = await ContactCaptureHandler.sendLead(
             slots,
@@ -141,11 +156,12 @@ export class FormResponseStrategy implements ResponseStrategy {
             context.services.eventService,
             compileResponse(response, request, context),
         );
+
         log().info(`Lead Sent ? ${leadSent} `);
 
-        // Clean lead gathering list
-        // context.session.set(Constants.CONTACT_CAPTURE_LIST, undefined);
-        context.session.set(Constants.CONTACT_CAPTURE_SENT, leadSent);
+        // Clean lead gathering list. This will restart the interview
+        context.session.set(Constants.CONTACT_CAPTURE_LIST, undefined);
+        context.session.set(Constants.CONTACT_CAPTURE_SENT, false);
 
         return {}; // form widget - no response
     }
