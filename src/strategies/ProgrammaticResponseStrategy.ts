@@ -29,6 +29,8 @@ export class ProgrammaticResponseStrategy implements ResponseStrategy {
 
     public async getResponse(handler: ContactCaptureHandler, request: Request, context: Context): Promise<Response> {
 
+        // TODO: Update this method to return what fields the form-widget should ask for based on the handler.data fields
+
         // Helpful data that will be used
         const asideResponse: Response = context.session.get(Constants.CONTACT_CAPTURE_ASIDE);
         const slots: RequestSlotMap = context.session.get(Constants.CONTACT_CAPTURE_SLOTS);

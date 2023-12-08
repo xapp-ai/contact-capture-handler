@@ -175,7 +175,8 @@ const props: Handler<Content, ContactCaptureData> = {
         },
         "chat": {
             "followUp": ""
-        }
+        },
+        CAPTURE_MAIN_FORM: ""
     }
 }
 
@@ -290,7 +291,8 @@ const propsWithAnyInputQuestion: Handler<Content, ContactCaptureData> = {
                 }
             ]
         },
-        "captureLead": true
+        "captureLead": true,
+        CAPTURE_MAIN_FORM: ""
     }
 }
 
@@ -350,7 +352,8 @@ const propsWithNoCapture: Handler<Content, ContactCaptureData> = {
         },
         "chat": {
             "followUp": ""
-        }
+        },
+        CAPTURE_MAIN_FORM: ""
     }
 }
 
@@ -417,7 +420,8 @@ const propsWithNoCaptureAndContent: Handler<Content, ContactCaptureData> = {
         },
         "chat": {
             "followUp": ""
-        }
+        },
+        CAPTURE_MAIN_FORM: ""
     }
 }
 
