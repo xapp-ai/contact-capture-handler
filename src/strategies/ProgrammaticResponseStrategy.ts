@@ -43,17 +43,21 @@ export class ProgrammaticResponseStrategy implements ResponseStrategy {
 
         // if we are NOT capturing leads
         if (!handler.data.captureLead) {
+            log().debug(`We are not capturing the lead data.`);
             // First find response for not sending leads
             const noCaptureResponse = getResponseByTag(responses, Constants.CONTACT_CAPTURE_NO_LEAD_CAPTURE_CONTENT);
             // if we have it, set it as the response
             if (noCaptureResponse) {
+                log().debug(`Found response with tag ${Constants.CONTACT_CAPTURE_NO_LEAD_CAPTURE_CONTENT}, using it.`);
                 response = noCaptureResponse;
             } else {
+                log().debug(`Attempting to use placeId to build response.`);
                 // Build our own.
                 // 1. Grab the place ID and look it up
                 // Currently, just get the first one
                 const place = existsAndNotEmpty(handler.data.places) ? handler.data.places[0] : undefined;
                 if (place) {
+                    log().debug(`Using place ${place.placeId}`);
                     let placesService: PlacesService = handler.data.placeService;
                     if (!placesService) {
                         // make sure we have the process.env.PLACES
@@ -66,8 +70,8 @@ export class ProgrammaticResponseStrategy implements ResponseStrategy {
                     }
                     // make sure we have one still
                     if (placesService) {
-                        const details = await placesService.getDetails({ place_id: place.placeId, fields: ["opening_hours", "formatted_phone_number"] });
-
+                        const details = await placesService.getDetails({ place_id: place.placeId, fields: ["name", "opening_hours", "formatted_phone_number"] });
+                        log().info(`Received details for business ${details.name} ${details.formatted_phone_number}`);
                         // only if we have the phone number
                         if (details.formatted_phone_number) {
                             response = {
@@ -82,6 +86,7 @@ export class ProgrammaticResponseStrategy implements ResponseStrategy {
                 }
 
                 if (!response) {
+                    log().debug("Unable to build response, defaulting to a generic response without business information.");
                     // defaulting to generic no capture response.
                     response = {
                         name: "No Capture",

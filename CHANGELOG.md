@@ -1,3 +1,10 @@
+## [1.3.2](https://github.com/xapp-ai/contact-capture-handler/compare/v1.3.1...v1.3.2) (2023-11-17)
+
+
+### Bug Fixes
+
+* update dependency aws-sdk to v2.1498.0 ([#208](https://github.com/xapp-ai/contact-capture-handler/issues/208)) ([e9cc1d5](https://github.com/xapp-ai/contact-capture-handler/commit/e9cc1d5ea57adc9adeae3bdfe103bab771abd36c))
+
 ## [1.3.1](https://github.com/xapp-ai/contact-capture-handler/compare/v1.3.0...v1.3.1) (2023-10-18)
 
 
