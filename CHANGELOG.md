@@ -1,3 +1,10 @@
+## [1.4.1](https://github.com/xapp-ai/contact-capture-handler/compare/v1.4.0...v1.4.1) (2024-01-03)
+
+
+### Bug Fixes
+
+* update dependency stentor to v1.58.74 ([#240](https://github.com/xapp-ai/contact-capture-handler/issues/240)) ([04d17a4](https://github.com/xapp-ai/contact-capture-handler/commit/04d17a44a32d282f3ed0504df726cc5b9b26513e))
+
 # [1.4.0](https://github.com/xapp-ai/contact-capture-handler/compare/v1.3.2...v1.4.0) (2023-12-08)
 
 
