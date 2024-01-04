@@ -60,7 +60,7 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
         request: Request,
         eventService: ErrorService,
         finalResponse?: Response
-    ): Promise<boolean> {
+    ): Promise<{success: boolean, id?: string}> {
         const fields: LeadFormField[] = [];
 
         for (const lead of leadList.data) {
@@ -115,7 +115,7 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
             transcript.push(finalMessage);
         }
 
-        const externalLead = { fields, transcript };
+        const externalLead = { fields, transcript, refId: extras.existingRefId as string};
         log().debug(`===\n${JSON.stringify(externalLead, null, 2)}\n===`);
 
         let sendLead = true;
@@ -133,24 +133,24 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
             try {
                 const response = await service.send(externalLead, extras);
                 if (response.status === "Success") {
-                    return true;
+                    return {success: true, id: (response as any).refId}; // TODO: Type not published yet!
                 } else {
                     log().error(`Lead not sent!`);
                     log().error(response.message);
                     eventService.error(new LeadError(`Lead not sent:${response.message}`));
-                    return false;
+                    return {success: false};
                 }
             } catch (e) {
                 log().error(`Lead not sent!`);
                 log().error(e);
                 eventService.error(e);
-                return false;
+                return {success: false};
             }
         } else {
             log().warn(`NOT SENDING LEADS.  Set environment variable SEND_LEAD=true to send.`);
             log().info(`===\n${JSON.stringify(externalLead, null, 2)}\n===`);
             // Do we fake it here?
-            return false;
+            return {success: false};
         }
     }
 

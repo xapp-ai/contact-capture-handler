@@ -24,6 +24,10 @@ export const CONTACT_CAPTURE_LIST = CONTACT_CAPTURE_PREFIX + "List";
  */
 export const CONTACT_CAPTURE_SENT = CONTACT_CAPTURE_PREFIX + "LeadSent";
 /**
+ * Existing booking id (to update gradually a booking with partials)
+ */
+export const CONTACT_CAPTURE_EXISTING_REF_ID = CONTACT_CAPTURE_PREFIX + "ExistingRefId";
+/**
  * Data we are currently waiting back on
  */
 export const CONTACT_CAPTURE_CURRENT_DATA = CONTACT_CAPTURE_PREFIX + "CurrentData";

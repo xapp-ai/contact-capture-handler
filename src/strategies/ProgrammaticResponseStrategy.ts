@@ -243,11 +243,11 @@ export class ProgrammaticResponseStrategy implements ResponseStrategy {
 
             const leadTranscript = context.session.transcript();
             // Send the lead time!
-            const leadSent = await ContactCaptureHandler.sendLead(slots, extras, leadDataList, leadTranscript, context.services.crmService, request, context.services.eventService, compileResponse(response, request, context));
-            log().info(`Lead Sent ? ${leadSent} `);
+            const leadSendResult = await ContactCaptureHandler.sendLead(slots, extras, leadDataList, leadTranscript, context.services.crmService, request, context.services.eventService, compileResponse(response, request, context));
+            log().info(`Lead Sent ? ${leadSendResult.success} `);
             // Clean lead gathering list
             // context.session.set(Constants.LEAD_GENERATION_LIST, undefined);
-            context.session.set(Constants.CONTACT_CAPTURE_SENT, leadSent);
+            context.session.set(Constants.CONTACT_CAPTURE_SENT, leadSendResult.success);
         }
 
         return response;
