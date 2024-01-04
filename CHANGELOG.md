@@ -1,3 +1,10 @@
+# [1.5.0](https://github.com/xapp-ai/contact-capture-handler/compare/v1.4.1...v1.5.0) (2024-01-04)
+
+
+### Features
+
+* Form widget support with CRM update ([#246](https://github.com/xapp-ai/contact-capture-handler/issues/246)) ([8d7ab44](https://github.com/xapp-ai/contact-capture-handler/commit/8d7ab44ea6cb5f061292f58f5603560fd9f9e75e))
+
 ## [1.4.1](https://github.com/xapp-ai/contact-capture-handler/compare/v1.4.0...v1.4.1) (2024-01-03)
 
 
