@@ -52,7 +52,7 @@ function getFormResponse(data: ContactCaptureData, formName: string): Response {
 
 function getStepFromData(data: ContactCaptureData, formName: string, stepName: string): any {
     const formDeclaration = data.forms.find((form) => {
-        return (form.name == formName);
+        return (form.name === formName);
     });
 
     if (!formDeclaration) {
@@ -60,7 +60,7 @@ function getStepFromData(data: ContactCaptureData, formName: string, stepName: s
     }
 
     const formStep = formDeclaration.steps.find((step: any) => {
-        return (step.name == stepName);
+        return (step.name === stepName);
     });
 
     if (!formStep) {
