@@ -52,7 +52,7 @@ function getFormResponse(data: ContactCaptureData, formName: string): Response {
 
 function getStepFromData(data: ContactCaptureData, formName: string, stepName: string): any {
     const formDeclaration = data.forms.find((form) => {
-        return (form.name = formName);
+        return (form.name == formName);
     });
 
     if (!formDeclaration) {
@@ -60,7 +60,7 @@ function getStepFromData(data: ContactCaptureData, formName: string, stepName: s
     }
 
     const formStep = formDeclaration.steps.find((step: any) => {
-        return (step.name = stepName);
+        return (step.name == stepName);
     });
 
     if (!formStep) {
@@ -68,6 +68,30 @@ function getStepFromData(data: ContactCaptureData, formName: string, stepName: s
     }
 
     return formStep;
+}
+
+function leadSummary(slots: RequestSlotMap, leadDataList: CaptureRuntimeData): string {
+    if (!leadDataList?.data) {
+        return "";
+    }
+
+    let summary = "=== Collected Attributes ===";
+
+    for (const name in slots) {
+        if (slots.hasOwnProperty(name)) {
+            const slot = slots[name];
+            const value = JSON.stringify(slot.value || slot.rawValue);
+            summary += `\n    ● ${name}: ${value}`;
+        }
+    }
+
+    // for (const d of leadDataList.data) {
+    //     const name = d.slotName || d.type;
+    //     const value = JSON.stringify(d.collectedValue || "");
+    //     summary += `\n\t${name}: ${value}`;
+    // }
+
+    return summary;
 }
 
 export class FormResponseStrategy implements ResponseStrategy {
@@ -129,24 +153,30 @@ export class FormResponseStrategy implements ResponseStrategy {
             }
 
             // This means the form finished but we still are missing data. Check the blueprint.
-            log().error(`Form widget didn't collect this attribute: "${nextRequiredData.slotName}"`);
+            // log().warn(`Form widget didn't collect this attribute: "${nextRequiredData.slotName}"`);
         }
 
         // Send the lead if we got here
 
-        // TODO: Code repetition. Share this with ProgrammaticResponseStrategy)
+        // For update
+        const existingRefId = context.session.get(Constants.CONTACT_CAPTURE_EXISTING_REF_ID);
 
         const url: string = request.attributes?.currentUrl as string;
         const extras = {
             source: url || "unknown",
             completed: true,
             externalId: hasSessionId(request) ? request.sessionId : "unknown",
+            existingRefId
         };
 
+        // In case of a form, there is no transcript. The data is the "transcript".
         const leadTranscript = context.session.transcript();
+        if (leadTranscript && leadTranscript.length > 0) {
+            leadTranscript[0].message = `\n${leadSummary(slots, leadDataList)}`;
+        }
 
         // Send the lead time!
-        const leadSent = await ContactCaptureHandler.sendLead(
+        const leadSendResult = await ContactCaptureHandler.sendLead(
             slots,
             extras,
             leadDataList,
@@ -157,13 +187,16 @@ export class FormResponseStrategy implements ResponseStrategy {
             compileResponse(response, request, context),
         );
 
-        log().info(`Lead Sent ? ${leadSent} `);
+        log().info(`Lead Sent ? ${leadSendResult.success} (id=${leadSendResult.id})`);
 
         // Clean lead gathering list. This will restart the interview.
-        // Corection. Widget will reset the session. Keep it.
+        // Correction. Widget will reset the session. Keep it.
         // context.session.set(Constants.CONTACT_CAPTURE_LIST, undefined);
         
-        context.session.set(Constants.CONTACT_CAPTURE_SENT, leadSent);
+        // Never ends. We send partials
+        // context.session.set(Constants.CONTACT_CAPTURE_SENT, leadSendResult.success);
+
+        context.session.set(Constants.CONTACT_CAPTURE_EXISTING_REF_ID, leadSendResult.id);
 
         return {}; // form widget - no response
     }
