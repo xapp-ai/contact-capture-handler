@@ -1016,13 +1016,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/sinon-chai@npm:3.2.10":
-  version: 3.2.10
-  resolution: "@types/sinon-chai@npm:3.2.10"
+"@types/sinon-chai@npm:3.2.12":
+  version: 3.2.12
+  resolution: "@types/sinon-chai@npm:3.2.12"
   dependencies:
     "@types/chai": "*"
     "@types/sinon": "*"
-  checksum: 72e1f4e4622fba57d59f482ce421a7493e26baeea7bdc57a13e4ec93af62122188f9ea14c7b16e33d0e5a198c7d5df4651401c763071f114aebdc1893e03179e
+  checksum: d906f2f766613534c5e9fe1437ec740fb6a9a550f02d1a0abe180c5f18fe73a99f0c12935195404d42f079f5f72a371e16b81e2aef963a6ef0ee0ed9d5d7f391
   languageName: node
   linkType: hard
 
@@ -1220,7 +1220,7 @@ __metadata:
     "@types/mocha": 10.0.3
     "@types/node": 20.8.2
     "@types/sinon": 17.0.2
-    "@types/sinon-chai": 3.2.10
+    "@types/sinon-chai": 3.2.12
     "@typescript-eslint/eslint-plugin": 6.11.0
     "@typescript-eslint/parser": 6.11.0
     "@xapp/config": 0.2.3
