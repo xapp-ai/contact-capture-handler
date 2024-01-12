@@ -1160,7 +1160,8 @@ describe(`${ContactCaptureHandler.name}`, () => {
                             { name: 'PHONE_NUMBER', value: '123-456-7777' },
                             { name: 'FULL_NAME', value: 'Michael Myers' }
                         ],
-                        transcript: []
+                        transcript: [],
+                        refId: undefined
                     }, { source: 'unknown', completed: true, externalId: 'sessionId' });
 
                     const sessionStore = context.storage.sessionStore?.data;
