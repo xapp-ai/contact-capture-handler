@@ -1,3 +1,10 @@
+## [1.5.1](https://github.com/xapp-ai/contact-capture-handler/compare/v1.5.0...v1.5.1) (2024-01-19)
+
+
+### Bug Fixes
+
+* update dependency node to v20 ([#267](https://github.com/xapp-ai/contact-capture-handler/issues/267)) ([9674b02](https://github.com/xapp-ai/contact-capture-handler/commit/9674b02b6fdb56a6389577054d6641e4df85fde0))
+
 # [1.5.0](https://github.com/xapp-ai/contact-capture-handler/compare/v1.4.1...v1.5.0) (2024-01-04)
 
 
