@@ -1041,10 +1041,19 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:*, @types/node@npm:20.8.2":
+"@types/node@npm:*":
   version: 20.8.2
   resolution: "@types/node@npm:20.8.2"
   checksum: 3da73e25d821bfcdb7de98589027e08bb4848e55408671c4a83ec0341e124b5313a0b20e1e4b4eff1168ea17a86f622ad73fcb04b761abd77496b9a27cbd5de5
+  languageName: node
+  linkType: hard
+
+"@types/node@npm:20.11.5":
+  version: 20.11.5
+  resolution: "@types/node@npm:20.11.5"
+  dependencies:
+    undici-types: ~5.26.4
+  checksum: a542727de1334ae20a3ca034b0ecf4b464a57ca01efc4f9cf43bd9ab93896125ab3c2de060ecd8f6ae23b86c6bf3463f681b643e69c032c6a662d376c98a6092
   languageName: node
   linkType: hard
 
@@ -1307,13 +1316,13 @@ __metadata:
     "@semantic-release/release-notes-generator": 12.1.0
     "@types/chai": 4.3.11
     "@types/mocha": 10.0.6
-    "@types/node": 20.8.2
+    "@types/node": 20.11.5
     "@types/sinon": 17.0.3
     "@types/sinon-chai": 3.2.12
     "@typescript-eslint/eslint-plugin": 6.19.0
     "@typescript-eslint/parser": 6.19.0
     "@xapp/config": 0.2.3
-    "@xapp/question-answering-handler": 2.4.1
+    "@xapp/question-answering-handler": 2.4.2
     aws-sdk: 2.1539.0
     chai: 4.4.1
     conventional-changelog-conventionalcommits: 7.0.2
@@ -1343,15 +1352,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@xapp/question-answering-handler@npm:2.4.1":
-  version: 2.4.1
-  resolution: "@xapp/question-answering-handler@npm:2.4.1"
+"@xapp/question-answering-handler@npm:2.4.2":
+  version: 2.4.2
+  resolution: "@xapp/question-answering-handler@npm:2.4.2"
   dependencies:
-    fuse.js: 6.6.2
+    fuse.js: 7.0.0
     linkifyjs: 4.1.3
   peerDependencies:
     stentor: 1.X
-  checksum: cdbeb81193c7bb3c6467e7e47d89d1e6b42d40842ff3ef4f0dbbbb6240f598f64ec4ba29261da0abf2054c3fe45c1c96de1982b4296a11f0bd793c8beb9c9885
+  checksum: aa43604b08918bf53c3a89a3f6f2ce69fd11777de3f712d1c0565bc08ccf0a987dd4097d6a96a4cc5f6451ae2290619809f836a01addbc378b60102a6bf66b43
   languageName: node
   linkType: hard
 
@@ -3352,6 +3361,13 @@ __metadata:
   version: 6.6.2
   resolution: "fuse.js@npm:6.6.2"
   checksum: 17ae758ce205276ebd88bd9c9f088a100be0b4896abac9f6b09847151269d1690f41d7f98ff5813d4a58973162dbd99d0072ce807020fee6f9de60170f6b08eb
+  languageName: node
+  linkType: hard
+
+"fuse.js@npm:7.0.0":
+  version: 7.0.0
+  resolution: "fuse.js@npm:7.0.0"
+  checksum: d15750efec1808370c0cae92ec9473aa7261c59bca1f15f1cf60039ba6f804b8f95340b5cabd83a4ef55839c1034764856e0128e443921f072aa0d8a20e4cacf
   languageName: node
   linkType: hard
 
@@ -7686,6 +7702,13 @@ __metadata:
   bin:
     uglifyjs: bin/uglifyjs
   checksum: 7b3897df38b6fc7d7d9f4dcd658599d81aa2b1fb0d074829dd4e5290f7318dbca1f4af2f45acb833b95b1fe0ed4698662ab61b87e94328eb4c0a0d3435baf924
+  languageName: node
+  linkType: hard
+
+"undici-types@npm:~5.26.4":
+  version: 5.26.5
+  resolution: "undici-types@npm:5.26.5"
+  checksum: 3192ef6f3fd5df652f2dc1cd782b49d6ff14dc98e5dced492aa8a8c65425227da5da6aafe22523c67f035a272c599bb89cfe803c1db6311e44bed3042fc25487
   languageName: node
   linkType: hard
 
