@@ -134,21 +134,20 @@ export class FormResponseStrategy implements ResponseStrategy {
         // If this isn't the first request and we still have missing data,
         // that's a problem, unless it's mid-form submit or a followup form is requested
 
+        const data: FormActionResponseData = request.attributes?.data as FormActionResponseData;
+        const stepFromData = getStepFromData(handler.data, data.form, data.step);
+
         if (nextRequiredData) {
             // Update the list on session
             context.session.set(Constants.CONTACT_CAPTURE_LIST, leadDataList);
-
-            const data: FormActionResponseData = request.attributes?.data as FormActionResponseData;
 
             // Send the requested form
             if (data.followupForm) {
                 return getFormResponse(handler.data, data.followupForm);
             }
 
-            const stepFromData = getStepFromData(handler.data, data.form, data.step);
-
             // Mid-form submit (not final)
-            if (!stepFromData.final) {
+            if (!stepFromData.crmSubmit) {
                 return {}; // form widget - no response (carry on)
             }
 
@@ -158,13 +157,15 @@ export class FormResponseStrategy implements ResponseStrategy {
 
         // Send the lead if we got here
 
+        const completed = !!stepFromData.final;
+        
         // For update
         const existingRefId = context.session.get(Constants.CONTACT_CAPTURE_EXISTING_REF_ID);
 
         const url: string = request.attributes?.currentUrl as string;
         const extras = {
             source: url || "unknown",
-            completed: true,
+            completed,
             externalId: hasSessionId(request) ? request.sessionId : "unknown",
             existingRefId
         };
