@@ -1,3 +1,10 @@
+## [1.5.3](https://github.com/xapp-ai/contact-capture-handler/compare/v1.5.2...v1.5.3) (2024-02-01)
+
+
+### Bug Fixes
+
+* Indroduced crmSubmit flag for the form widget ([#276](https://github.com/xapp-ai/contact-capture-handler/issues/276)) ([b0bc9de](https://github.com/xapp-ai/contact-capture-handler/commit/b0bc9de8b833152dc00a097b04bf2c9a81204ca3))
+
 ## [1.5.2](https://github.com/xapp-ai/contact-capture-handler/compare/v1.5.1...v1.5.2) (2024-01-19)
 
 
