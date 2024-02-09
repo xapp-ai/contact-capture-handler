@@ -176,7 +176,8 @@ const props: Handler<Content, ContactCaptureData> = {
         "chat": {
             "followUp": ""
         },
-        CAPTURE_MAIN_FORM: ""
+        CAPTURE_MAIN_FORM: "",
+        FUZZY_MATCH_FAQS: true
     }
 }
 
@@ -421,7 +422,8 @@ const propsWithNoCaptureAndContent: Handler<Content, ContactCaptureData> = {
         "chat": {
             "followUp": ""
         },
-        CAPTURE_MAIN_FORM: ""
+        CAPTURE_MAIN_FORM: "",
+        FUZZY_MATCH_FAQS: true
     }
 }
 
