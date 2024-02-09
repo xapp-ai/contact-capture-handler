@@ -1322,7 +1322,7 @@ __metadata:
     "@typescript-eslint/eslint-plugin": 6.19.0
     "@typescript-eslint/parser": 6.19.0
     "@xapp/config": 0.2.3
-    "@xapp/question-answering-handler": 2.4.3
+    "@xapp/question-answering-handler": 2.5.0
     aws-sdk: 2.1539.0
     chai: 4.4.1
     conventional-changelog-conventionalcommits: 7.0.2
@@ -1352,15 +1352,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@xapp/question-answering-handler@npm:2.4.3":
-  version: 2.4.3
-  resolution: "@xapp/question-answering-handler@npm:2.4.3"
+"@xapp/question-answering-handler@npm:2.5.0":
+  version: 2.5.0
+  resolution: "@xapp/question-answering-handler@npm:2.5.0"
   dependencies:
+    compromise: 14.11.2
     fuse.js: 7.0.0
     linkifyjs: 4.1.3
   peerDependencies:
     stentor: 1.X
-  checksum: a20661fcbdf4b1db023d45b989417b7c27099147b4844c25a067c08f6145fbf61a94d9130c4a0f78a0896295137e05252a70b1b897b609938b4bf3321170ae7e
+  checksum: f07568ca3338aef87e59b6ff81fd2b0f4886598d429934b033e904783fcd5df3c09357aff01e23fda986973c77a8ad8f62351e4c9b74b0e8ff99024cc6614f39
   languageName: node
   linkType: hard
 
@@ -2241,6 +2242,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"compromise@npm:14.11.2":
+  version: 14.11.2
+  resolution: "compromise@npm:14.11.2"
+  dependencies:
+    efrt: 2.7.0
+    grad-school: 0.0.5
+    suffix-thumb: 5.0.2
+  checksum: 9f42361e256a9e736d637e133c796bb705adff68d52d75ed46ff2656b8cf8f7b06898429ec1234f152a86551aaec97e54ea3de7e5e74f431dd29281670685ead
+  languageName: node
+  linkType: hard
+
 "concat-map@npm:0.0.1":
   version: 0.0.1
   resolution: "concat-map@npm:0.0.1"
@@ -2656,6 +2668,13 @@ __metadata:
   version: 1.1.1
   resolution: "ee-first@npm:1.1.1"
   checksum: 1b4cac778d64ce3b582a7e26b218afe07e207a0f9bfe13cc7395a6d307849cfe361e65033c3251e00c27dd060cab43014c2d6b2647676135e18b77d2d05b3f4f
+  languageName: node
+  linkType: hard
+
+"efrt@npm:2.7.0":
+  version: 2.7.0
+  resolution: "efrt@npm:2.7.0"
+  checksum: 649da95aa60adc411563e04d8f953e67a67ebafca6f3479d5768cab2d011068de4379ad978ba8a87d574d7ea2494a82ecbe3a8f9f8f9bca3ddcc3d5cb4ea11ae
   languageName: node
   linkType: hard
 
@@ -3580,6 +3599,13 @@ __metadata:
   version: 4.2.11
   resolution: "graceful-fs@npm:4.2.11"
   checksum: ac85f94da92d8eb6b7f5a8b20ce65e43d66761c55ce85ac96df6865308390da45a8d3f0296dd3a663de65d30ba497bd46c696cc1e248c72b13d6d567138a4fc7
+  languageName: node
+  linkType: hard
+
+"grad-school@npm:0.0.5":
+  version: 0.0.5
+  resolution: "grad-school@npm:0.0.5"
+  checksum: 1330b02b71ef37f9a507261c1219056d19caa46f99e65fe30fe9b5c98235b5dec23d74928ed166516054b30c4cf470903de482311d2d25d985e904989b53c69a
   languageName: node
   linkType: hard
 
@@ -7358,6 +7384,13 @@ __metadata:
   version: 2.0.1
   resolution: "strip-json-comments@npm:2.0.1"
   checksum: 1074ccb63270d32ca28edfb0a281c96b94dc679077828135141f27d52a5a398ef5e78bcf22809d23cadc2b81dfbe345eb5fd8699b385c8b1128907dec4a7d1e1
+  languageName: node
+  linkType: hard
+
+"suffix-thumb@npm:5.0.2":
+  version: 5.0.2
+  resolution: "suffix-thumb@npm:5.0.2"
+  checksum: 4c4f37168b9455c460451c9531fd2708dcd20aadbb3bc505901a0bb616fa9239a582661cd002625de3cf499ce747fbac45d074e75f0f1bccd7b88fb9c6f4fac9
   languageName: node
   linkType: hard
 
