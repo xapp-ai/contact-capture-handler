@@ -59,5 +59,9 @@
     "stentor": "1.x",
     "stentor-service-fetch": "1.x"
   },
-  "packageManager": "yarn@3.7.0"
+  "packageManager": "yarn@3.7.0",
+  "dependencies": {
+    "@types/sparkpost": "^2.1.8",
+    "sparkpost": "^2.1.4"
+  }
 }
