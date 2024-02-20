@@ -57,9 +57,11 @@
   },
   "peerDependencies": {
     "@xapp/question-answering-handler": "2.x",
-    "sparkpost": "^2.1.4",
     "stentor": "1.x",
     "stentor-service-fetch": "1.x"
   },
-  "packageManager": "yarn@3.8.0"
+  "packageManager": "yarn@3.8.0",
+  "dependencies": {
+    "sparkpost": "^2.1.4"
+  }
 }
