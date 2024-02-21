@@ -1,3 +1,10 @@
+## [1.5.4](https://github.com/xapp-ai/contact-capture-handler/compare/v1.5.3...v1.5.4) (2024-02-21)
+
+
+### Bug Fixes
+
+* Send incomplete lead  ([#291](https://github.com/xapp-ai/contact-capture-handler/issues/291)) ([1aa7e0b](https://github.com/xapp-ai/contact-capture-handler/commit/1aa7e0b71a32af6e1492de6526c2a6692be31a20))
+
 ## [1.5.3](https://github.com/xapp-ai/contact-capture-handler/compare/v1.5.2...v1.5.3) (2024-02-01)
 
 
