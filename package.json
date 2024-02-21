@@ -27,6 +27,7 @@
     "@types/node": "20.11.17",
     "@types/sinon": "17.0.3",
     "@types/sinon-chai": "3.2.12",
+    "@types/sparkpost": "^2.1.8",
     "@typescript-eslint/eslint-plugin": "7.0.1",
     "@typescript-eslint/parser": "7.0.1",
     "@xapp/config": "0.2.3",
@@ -59,5 +60,8 @@
     "stentor": "1.x",
     "stentor-service-fetch": "1.x"
   },
-  "packageManager": "yarn@3.8.0"
+  "packageManager": "yarn@3.8.0",
+  "dependencies": {
+    "sparkpost": "^2.1.4"
+  }
 }

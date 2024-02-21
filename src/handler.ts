@@ -32,6 +32,7 @@ import { generateAlternativeSlots, generatePseudoSlots, NOTE_COMPONENTS } from "
 import { LeadError } from "./model";
 import { ResponseStrategySelector } from "./strategies/ResponseStrategySelector";
 import { FormActionResponseData } from "./strategies/FormResponseStrategy";
+import { sendEmail } from "./services/EmailService";
 
 interface ComponentRequest extends IntentRequest {
     dateTime: string;
@@ -231,14 +232,42 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
 
         // Convert the form fields to RequestSlotMap so we handle it the rest of the way through
         const formSlots: RequestSlotMap = {};
-        if (isChannelActionRequest(request) && request.action === "FORM_SUBMIT") {
-            const data: FormActionResponseData = request.attributes?.data as FormActionResponseData;
-            for (const [name, value] of Object.entries(data.result)) {
-                formSlots[name] = {
-                    name, value
-                };
+        if (isChannelActionRequest(request)) {
+            if (request.action === "FORM_SUBMIT") {
+                const data: FormActionResponseData = request.attributes?.data as FormActionResponseData;
+                for (const [name, value] of Object.entries(data.result)) {
+                    formSlots[name] = {
+                        name,
+                        value,
+                    };
+                }
+            } 
+            
+            // TODO: This is WIP
+
+            if (request.action === "FORM_CLOSE") {
+                const slots: RequestSlotMap = context.session.get(Constants.CONTACT_CAPTURE_SLOTS);
+                const savedLeadMessage = requestSlotsToString(slots);
+
+                if (savedLeadMessage && savedLeadMessage.trim().length > 0) {
+                    const crmSave = (context.services.crmService as any).save;
+
+                    if (crmSave) {
+                        crmSave(savedLeadMessage);
+                    } else if (process.env.INCOMPLETE_LEAD_NOTIFICATION_EMAIL) {
+                        sendEmail(process.env.INCOMPLETE_LEAD_NOTIFICATION_EMAIL, { lead: savedLeadMessage });
+                    } else {
+                        log().info("Form closing was ignored (incomplete lead notification). No sender function.");
+                    }
+                } else {
+                    log().info("Form closing was ignored (incomplete lead notification). Too early.");
+                }
+
+                context.response.respond({});
+                return;
             }
         }
+
         // We keep track of special contact capture slots instead of using the slots field
         // because we may modify them based on this specific use case
         const sessionSlots = context.session.get(Constants.CONTACT_CAPTURE_SLOTS) as RequestSlotMap;
