@@ -1359,7 +1359,7 @@ __metadata:
     "@typescript-eslint/eslint-plugin": 7.1.0
     "@typescript-eslint/parser": 7.1.0
     "@xapp/config": 0.2.3
-    "@xapp/question-answering-handler": 2.5.0
+    "@xapp/question-answering-handler": 2.5.1
     aws-sdk: 2.1557.0
     chai: 4.4.1
     conventional-changelog-conventionalcommits: 7.0.2
@@ -1390,16 +1390,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@xapp/question-answering-handler@npm:2.5.0":
-  version: 2.5.0
-  resolution: "@xapp/question-answering-handler@npm:2.5.0"
+"@xapp/question-answering-handler@npm:2.5.1":
+  version: 2.5.1
+  resolution: "@xapp/question-answering-handler@npm:2.5.1"
   dependencies:
-    compromise: 14.11.2
+    compromise: 14.12.0
     fuse.js: 7.0.0
     linkifyjs: 4.1.3
   peerDependencies:
     stentor: 1.X
-  checksum: f07568ca3338aef87e59b6ff81fd2b0f4886598d429934b033e904783fcd5df3c09357aff01e23fda986973c77a8ad8f62351e4c9b74b0e8ff99024cc6614f39
+  checksum: 411eebbf289cc5fc56e9416b1e3816704f4ae520f412184e3025e5bde3e593ccd1bf63fd2d76b50dc3cf79db018d6fb5b072459822637e961944bfe405e7d989
   languageName: node
   linkType: hard
 
@@ -2346,14 +2346,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"compromise@npm:14.11.2":
-  version: 14.11.2
-  resolution: "compromise@npm:14.11.2"
+"compromise@npm:14.12.0":
+  version: 14.12.0
+  resolution: "compromise@npm:14.12.0"
   dependencies:
     efrt: 2.7.0
     grad-school: 0.0.5
     suffix-thumb: 5.0.2
-  checksum: 9f42361e256a9e736d637e133c796bb705adff68d52d75ed46ff2656b8cf8f7b06898429ec1234f152a86551aaec97e54ea3de7e5e74f431dd29281670685ead
+  checksum: 51545adc1223f87ad1b62e48a5dc1fbe408e12624ad71d56858bf127c386ef5463fce64d4505cc8cdee94e3f3b9f2ddb9b974f63f62fca83a30efad9ae2550b9
   languageName: node
   linkType: hard
 
