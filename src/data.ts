@@ -35,6 +35,10 @@ export interface ContactCaptureData extends QuestionAnsweringData, ResponseStrat
      * The name of the "main" capture form
      */
     CAPTURE_MAIN_FORM: string;
+    /**
+     * Extra flags for the CRM (the handler doesn't care - just passes on)
+     */
+    crmFlags?: unknown;
 }
 
 export interface ContactCaptureBlueprint {

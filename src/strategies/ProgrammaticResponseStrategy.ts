@@ -133,7 +133,8 @@ export class ProgrammaticResponseStrategy implements ResponseStrategy {
                 const extras: Record<string, unknown> = {
                     source: url || "unknown",
                     completed: true,
-                    externalId: hasSessionId(request) ? request.sessionId : "unknown"
+                    externalId: hasSessionId(request) ? request.sessionId : "unknown",
+                    crmFlags: handler.data?.crmFlags
                 }
 
                 const leadTranscript = context.session.transcript();
@@ -238,7 +239,8 @@ export class ProgrammaticResponseStrategy implements ResponseStrategy {
             const extras = {
                 source: url || "unknown",
                 completed: true,
-                externalId: hasSessionId(request) ? request.sessionId : "unknown"
+                externalId: hasSessionId(request) ? request.sessionId : "unknown",
+                crmFlags: handler.data?.crmFlags
             }
 
             const leadTranscript = context.session.transcript();

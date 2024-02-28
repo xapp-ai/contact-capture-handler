@@ -167,7 +167,8 @@ export class FormResponseStrategy implements ResponseStrategy {
             source: url || "unknown",
             completed,
             externalId: hasSessionId(request) ? request.sessionId : "unknown",
-            existingRefId
+            existingRefId,
+            crmFlags: handler.data?.crmFlags
         };
 
         // In case of a form, there is no transcript. The data is the "transcript".
