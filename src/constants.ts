@@ -39,6 +39,10 @@ export const CONTACT_CAPTURE_SLOTS = CONTACT_CAPTURE_PREFIX + "Slots";
  * Stores the response from an aside, like if the user asked a question in the middle of capturing their information.
  */
 export const CONTACT_CAPTURE_ASIDE = CONTACT_CAPTURE_PREFIX + "Aside";
+/**
+ * Was the session X-d (abandoned)
+ */
+export const CONTACT_CAPTURE_ABANDONED = CONTACT_CAPTURE_PREFIX + "Abandoned";
 
 // Intents/Handlers
 export const CONTACT_CAPTURE_HANDLER = CONTACT_CAPTURE_PREFIX + "Handler";

@@ -19,7 +19,7 @@ import {
 
 import * as Constants from "../constants";
 import { ContactDataType, CaptureRuntimeData } from "../data";
-import { concatenateAside, lookingForHelp, newLeadGenerationData, } from "../utils";
+import { concatenateAside, isSessionClosed, lookingForHelp, newLeadGenerationData, } from "../utils";
 import { ContactCaptureHandler } from "../handler";
 import { GooglePlacesService, PlacesService } from "../services";
 
@@ -31,6 +31,8 @@ export class ProgrammaticResponseStrategy implements ResponseStrategy {
 
         // TODO: Update this method to return what fields the form-widget should ask for based on the handler.data fields
 
+        const isAbandoned = isSessionClosed(request);
+        
         // Helpful data that will be used
         const asideResponse: Response = context.session.get(Constants.CONTACT_CAPTURE_ASIDE);
         const slots: RequestSlotMap = context.session.get(Constants.CONTACT_CAPTURE_SLOTS);
@@ -128,18 +130,28 @@ export class ProgrammaticResponseStrategy implements ResponseStrategy {
             // See if the lead data is stale
             const now = new Date().getTime();
             if (now - leadDataList.lastModifiedMs > Constants.LEAD_LIST_TTL_MS) {
+
                 // and send it off
                 const url: string = request.attributes?.currentUrl as string;
+
                 const extras: Record<string, unknown> = {
                     source: url || "unknown",
-                    completed: true,
                     externalId: hasSessionId(request) ? request.sessionId : "unknown",
-                    crmFlags: handler.data?.crmFlags
+                    crmFlags: handler.data?.crmFlags,
+                    isAbandoned
                 }
 
                 const leadTranscript = context.session.transcript();
                 // Save the old leads before re-starting
-                await ContactCaptureHandler.sendLead(slots, extras, leadDataList, leadTranscript, context.services.crmService, request, context.services.eventService);
+                await ContactCaptureHandler.sendLead(
+                    slots,
+                    extras,
+                    leadDataList,
+                    leadTranscript,
+                    context.services.crmService,
+                    request,
+                    context.services.eventService,
+                );
                 // Refresh the list
                 leadDataList = newLeadGenerationData(handler.data);
             }
@@ -238,21 +250,33 @@ export class ProgrammaticResponseStrategy implements ResponseStrategy {
             const url: string = request.attributes?.currentUrl as string;
             const extras = {
                 source: url || "unknown",
-                completed: true,
                 externalId: hasSessionId(request) ? request.sessionId : "unknown",
-                crmFlags: handler.data?.crmFlags
+                crmFlags: handler.data?.crmFlags,
+                isAbandoned
             }
 
             const leadTranscript = context.session.transcript();
             // Send the lead time!
-            const leadSendResult = await ContactCaptureHandler.sendLead(slots, extras, leadDataList, leadTranscript, context.services.crmService, request, context.services.eventService, compileResponse(response, request, context));
+            const leadSendResult = await ContactCaptureHandler.sendLead(
+                slots,
+                extras,
+                leadDataList,
+                leadTranscript,
+                context.services.crmService,
+                request,
+                context.services.eventService,
+                compileResponse(response, request, context),
+            );
+
             log().info(`Lead Sent ? ${leadSendResult.success} `);
+
+            context.session.set(Constants.CONTACT_CAPTURE_EXISTING_REF_ID, leadSendResult.id);
+            
             // Clean lead gathering list
             // context.session.set(Constants.LEAD_GENERATION_LIST, undefined);
             context.session.set(Constants.CONTACT_CAPTURE_SENT, leadSendResult.success);
         }
 
         return response;
-
     }
 }

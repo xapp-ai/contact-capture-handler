@@ -9,20 +9,12 @@ export interface ResponseStrategySelectorProps extends ResponseStrategyProps {
 }
 
 export class ResponseStrategySelector {
-    private programmaticStrategy: ResponseStrategy;
-    private formStrategy: ResponseStrategy;
-
-    public constructor() {
-        this.programmaticStrategy = new ProgrammaticResponseStrategy();
-        this.formStrategy = new FormResponseStrategy();
-    }
-
     // The strategy is driven by the things in the Request
     public getStrategy(request: Request): ResponseStrategy {
         if (request.channel === "form-widget") {
-            return this.formStrategy;
+            return new FormResponseStrategy();
         } 
 
-        return this.programmaticStrategy;
+        return new ProgrammaticResponseStrategy();
     }
 }

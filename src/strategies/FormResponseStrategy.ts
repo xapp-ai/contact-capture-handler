@@ -13,7 +13,7 @@ import {
 
 import * as Constants from "../constants";
 import { CaptureRuntimeData, ContactCaptureData } from "../data";
-import { newLeadGenerationData } from "../utils";
+import { isSessionClosed, newLeadGenerationData } from "../utils";
 import { ContactCaptureHandler } from "../handler";
 
 import { ResponseStrategy } from "./ResponseStrategy";
@@ -131,44 +131,53 @@ export class FormResponseStrategy implements ResponseStrategy {
             return !data.collectedValue;
         });
 
-        // If this isn't the first request and we still have missing data,
-        // that's a problem, unless it's mid-form submit or a followup form is requested
-
-        const data: FormActionResponseData = request.attributes?.data as FormActionResponseData;
-        const stepFromData = getStepFromData(handler.data, data.form, data.step);
 
         if (nextRequiredData) {
             // Update the list on session
             context.session.set(Constants.CONTACT_CAPTURE_LIST, leadDataList);
+
+            // This means the form finished but we still are missing data. Check the blueprint.
+            // log().warn(`Form widget didn't collect this attribute: "${nextRequiredData.slotName}"`);
+        }
+
+        const isAbandoned = isSessionClosed(request);
+
+        if (!isAbandoned) {
+            const data: FormActionResponseData = request.attributes?.data as FormActionResponseData;
+            const stepFromData = getStepFromData(handler.data, data.form, data.step);
 
             // Send the requested form
             if (data.followupForm) {
                 return getFormResponse(handler.data, data.followupForm);
             }
 
-            // Mid-form submit (not final)
+            // Don't submit until the form says so
             if (!stepFromData.crmSubmit) {
-                return {}; // form widget - no response (carry on)
+                return {}; 
             }
 
-            // This means the form finished but we still are missing data. Check the blueprint.
-            // log().warn(`Form widget didn't collect this attribute: "${nextRequiredData.slotName}"`);
+            // Form widget has to say we are fininshed (unless session is closed)
+            // if (!stepFromData.final) {
+            //     return {};
+            // }
+        }
+
+        const existingRefId = context.session.get(Constants.CONTACT_CAPTURE_EXISTING_REF_ID);
+
+        // if we created a CRM object and then closed, then we are done
+        if (isAbandoned && existingRefId) {
+            return {}; 
         }
 
         // Send the lead if we got here
 
-        const completed = !!stepFromData.final;
-        
-        // For update
-        const existingRefId = context.session.get(Constants.CONTACT_CAPTURE_EXISTING_REF_ID);
-
         const url: string = request.attributes?.currentUrl as string;
         const extras = {
             source: url || "unknown",
-            completed,
             externalId: hasSessionId(request) ? request.sessionId : "unknown",
             existingRefId,
-            crmFlags: handler.data?.crmFlags
+            crmFlags: handler.data?.crmFlags,
+            isAbandoned,
         };
 
         // In case of a form, there is no transcript. The data is the "transcript".
@@ -194,7 +203,7 @@ export class FormResponseStrategy implements ResponseStrategy {
         // Clean lead gathering list. This will restart the interview.
         // Correction. Widget will reset the session. Keep it.
         // context.session.set(Constants.CONTACT_CAPTURE_LIST, undefined);
-        
+
         // Never ends. We send partials
         // context.session.set(Constants.CONTACT_CAPTURE_SENT, leadSendResult.success);
 

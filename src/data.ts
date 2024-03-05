@@ -38,7 +38,7 @@ export interface ContactCaptureData extends QuestionAnsweringData, ResponseStrat
     /**
      * Extra flags for the CRM (the handler doesn't care - just passes on)
      */
-    crmFlags?: unknown;
+    crmFlags?: object;
 }
 
 export interface ContactCaptureBlueprint {
