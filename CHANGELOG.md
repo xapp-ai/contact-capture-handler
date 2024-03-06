@@ -1,3 +1,10 @@
+# [1.6.0](https://github.com/xapp-ai/contact-capture-handler/compare/v1.5.4...v1.6.0) (2024-03-06)
+
+
+### Features
+
+* Service titan job vs booking ([#304](https://github.com/xapp-ai/contact-capture-handler/issues/304)) ([0f0e1e3](https://github.com/xapp-ai/contact-capture-handler/commit/0f0e1e3d11f78c469e9554811733f3bf911c9209))
+
 ## [1.5.4](https://github.com/xapp-ai/contact-capture-handler/compare/v1.5.3...v1.5.4) (2024-02-21)
 
 
