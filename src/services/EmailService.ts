@@ -12,8 +12,8 @@ export async function sendEmail(to: string, wording?: {subject?: string, body?: 
     
     const from = process.env.SPARKPOST_SENDER;
 
-    const subject = wording?.subject || "You have a new lead";
-    const body = wording?.body || `You have an incomplete lead:\n${wording?.lead}`;
+    const subject = wording?.subject || "Incomplete scheduling";
+    const body = wording?.body || `This customer was scheduling a service call but didn’t complete it. You may want to follow up on this lead.\n\n${wording?.lead}`;
 
     const client = new SparkPost();
 

@@ -1151,6 +1151,7 @@ describe(`${ContactCaptureHandler.name}`, () => {
                 });
                 it("calls the CRMService.send function", async () => {
                     cc = new ContactCaptureHandler(props);
+                    cc.data.crmFlags = { foo: 3 };
 
                     await cc.handleRequest(request, context);
                     expect(crmService.send).to.have.been.calledOnce;
@@ -1164,7 +1165,7 @@ describe(`${ContactCaptureHandler.name}`, () => {
                         ],
                         transcript: [],
                         refId: undefined
-                    }, { source: 'unknown', completed: true, externalId: 'sessionId' });
+                    }, { source: 'unknown', externalId: 'sessionId', crmFlags: { foo: 3 }, isAbandoned: false });
 
                     const sessionStore = context.storage.sessionStore?.data;
                     const leadSent = sessionStore ? sessionStore[CONTACT_CAPTURE_SENT] : undefined;

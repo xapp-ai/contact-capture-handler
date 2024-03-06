@@ -1,7 +1,7 @@
 /*! Copyright (c) 2022, XAPP AI */
 import { Request, RequestSlotMap, Response } from "stentor-models";
 import { capitalize, getSlotValue, requestSlotValueToString, slotExists } from "stentor-utils";
-import { concatResponseOutput, isIntentRequest, keyFromRequest, toResponseOutput } from "stentor";
+import { concatResponseOutput, isChannelActionRequest, isIntentRequest, isSessionEndedRequest, keyFromRequest, toResponseOutput } from "stentor";
 
 import { CaptureRuntimeData, ContactCaptureData, ContactDataType } from "./data";
 import { PseudoSlots } from "./model";
@@ -306,6 +306,9 @@ function hasReprompt(response: Response): boolean {
     return false;
 }
 
+export function isSessionClosed(request: Request): boolean {
+    return isSessionEndedRequest(request) || isChannelActionRequest(request) && request.action === "FORM_CLOSE";
+}
 /**
  * Takes your current response and combines it with your aside response
  */

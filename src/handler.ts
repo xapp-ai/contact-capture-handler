@@ -23,16 +23,15 @@ import {
     ResponseOutput,
     responseToMessage,
     toResponseOutput,
-    isChannelActionRequest,
+    isChannelActionRequest
 } from "stentor";
 
 import * as Constants from "./constants";
 import { ContactDataType, ContactCaptureData, CaptureRuntimeData } from "./data";
-import { generateAlternativeSlots, generatePseudoSlots, NOTE_COMPONENTS } from "./utils";
+import { generateAlternativeSlots, generatePseudoSlots, isSessionClosed, NOTE_COMPONENTS } from "./utils";
 import { LeadError } from "./model";
 import { ResponseStrategySelector } from "./strategies/ResponseStrategySelector";
 import { FormActionResponseData } from "./strategies/FormResponseStrategy";
-import { sendEmail } from "./services/EmailService";
 
 interface ComponentRequest extends IntentRequest {
     dateTime: string;
@@ -198,7 +197,6 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
     }
 
     public async handleRequest(request: Request, context: Context): Promise<void> {
-
         log().info(`Running in ContactCaptureHandler`);
         const key = keyFromRequest(request);
 
@@ -232,39 +230,14 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
 
         // Convert the form fields to RequestSlotMap so we handle it the rest of the way through
         const formSlots: RequestSlotMap = {};
-        if (isChannelActionRequest(request)) {
-            if (request.action === "FORM_SUBMIT") {
-                const data: FormActionResponseData = request.attributes?.data as FormActionResponseData;
-                for (const [name, value] of Object.entries(data.result)) {
-                    formSlots[name] = {
-                        name,
-                        value,
-                    };
-                }
-            } 
-            
-            // TODO: This is WIP
 
-            if (request.action === "FORM_CLOSE") {
-                const slots: RequestSlotMap = context.session.get(Constants.CONTACT_CAPTURE_SLOTS);
-                const savedLeadMessage = requestSlotsToString(slots);
-
-                if (savedLeadMessage && savedLeadMessage.trim().length > 0) {
-                    const crmSave = (context.services.crmService as any).save;
-
-                    if (crmSave) {
-                        crmSave(savedLeadMessage);
-                    } else if (process.env.INCOMPLETE_LEAD_NOTIFICATION_EMAIL) {
-                        sendEmail(process.env.INCOMPLETE_LEAD_NOTIFICATION_EMAIL, { lead: savedLeadMessage });
-                    } else {
-                        log().info("Form closing was ignored (incomplete lead notification). No sender function.");
-                    }
-                } else {
-                    log().info("Form closing was ignored (incomplete lead notification). Too early.");
-                }
-
-                context.response.respond({});
-                return;
+        if (isChannelActionRequest(request) && request.action === "FORM_SUBMIT") {
+            const data: FormActionResponseData = request.attributes?.data as FormActionResponseData;
+            for (const [name, value] of Object.entries(data.result)) {
+                formSlots[name] = {
+                    name,
+                    value,
+                };
             }
         }
 
@@ -279,6 +252,7 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
         const slots: RequestSlotMap = { ...requestSlots, ...sessionSlots, ...pseudoSlots, ...alternativeSlots, ...formSlots };
         // Persist these new ones for reuse, we want to keep the modifications from the pseudo and alternative
         context.session.set(Constants.CONTACT_CAPTURE_SLOTS, slots);
+        
         log().info(`Contact capture slots: ${requestSlotsToString(slots)}`);
 
         // An asideResponse is used to handle quick knowledge base questions
@@ -314,6 +288,33 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
             log().warn(`'captureLead' is not set on handler data, currently defaulting to false which means it will not capture lead data. type:${typeof this.data.captureLead} value:${this.data.captureLead}`);
             log().debug(this.data);
         }
+
+        // Optional alert for closed widgets
+
+        // The action check is for backward compatibilty - can be deleted later
+        if (isSessionClosed(request)) {
+            // TODO: Make this prettier
+            const slots: RequestSlotMap = context.session.get(Constants.CONTACT_CAPTURE_SLOTS);
+            const savedLeadMessage = requestSlotsToString(slots);
+
+            if (savedLeadMessage && savedLeadMessage.trim().length > 0) {
+                const crmAlerter = (context.services.crmService as any).alerter;
+
+                if (crmAlerter) {
+                    crmAlerter(savedLeadMessage);
+                } 
+                
+                // if (process.env.INCOMPLETE_LEAD_NOTIFICATION_EMAIL) {
+                //     sendEmail(process.env.INCOMPLETE_LEAD_NOTIFICATION_EMAIL, { lead: savedLeadMessage });
+                // } else {
+                //     log().info("Form closing was ignored (incomplete lead notification). No sender function.");
+                // }
+            } else {
+                log().info("Form closing was ignored (incomplete lead notification). Too early.");
+            }
+
+            context.session.set(Constants.CONTACT_CAPTURE_ABANDONED, true);
+        } 
 
         // Determine our strategy
         const strategy = new ResponseStrategySelector().getStrategy(request);
