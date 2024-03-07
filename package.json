@@ -32,7 +32,7 @@
     "@typescript-eslint/parser": "7.1.1",
     "@xapp/config": "0.2.3",
     "@xapp/question-answering-handler": "2.5.1",
-    "aws-sdk": "2.1566.0",
+    "aws-sdk": "2.1572.0",
     "chai": "4.4.1",
     "conventional-changelog-conventionalcommits": "7.0.2",
     "dotenv": "16.4.5",
