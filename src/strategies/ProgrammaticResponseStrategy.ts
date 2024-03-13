@@ -8,7 +8,6 @@ import {
     findValueForKey,
     getResponseByTag,
     hasSessionId,
-    isIntentRequest,
     log,
     Request,
     RequestSlotMap,
@@ -32,11 +31,13 @@ export class ProgrammaticResponseStrategy implements ResponseStrategy {
         // TODO: Update this method to return what fields the form-widget should ask for based on the handler.data fields
 
         const isAbandoned = isSessionClosed(request);
-        
+
         // Helpful data that will be used
         const asideResponse: Response = context.session.get(Constants.CONTACT_CAPTURE_ASIDE);
         const slots: RequestSlotMap = context.session.get(Constants.CONTACT_CAPTURE_SLOTS);
-        const isLookingForHelp = isIntentRequest(request) ? lookingForHelp(request.intentId) : false;
+
+        const isLookingForHelp = lookingForHelp(request);
+
         const previousType = context.session.get(Constants.CONTACT_CAPTURE_CURRENT_DATA) as ContactDataType;
 
         // Our response that we will end up returning
@@ -271,7 +272,7 @@ export class ProgrammaticResponseStrategy implements ResponseStrategy {
             log().info(`Lead Sent ? ${leadSendResult.success} `);
 
             context.session.set(Constants.CONTACT_CAPTURE_EXISTING_REF_ID, leadSendResult.id);
-            
+
             // Clean lead gathering list
             // context.session.set(Constants.LEAD_GENERATION_LIST, undefined);
             context.session.set(Constants.CONTACT_CAPTURE_SENT, leadSendResult.success);

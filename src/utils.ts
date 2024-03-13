@@ -271,12 +271,39 @@ export function generateAlternativeSlots(slots: RequestSlotMap, request: Request
  * If the user is redirected from another intent like "i need help with my roof"
  * then 
  * 
- * @param overrideKey - The override key from the request
  * @returns 
  */
-export function lookingForHelp(intentId?: string): boolean {
+export function lookingForHelp(request: Request): boolean {
+
+    const intentId = isIntentRequest(request) ? request.intentId : undefined;
+
     const possibleIntents: string[] = ["OCAgent", "HelpIntent", "HelpWith"];
-    return possibleIntents.includes(intentId);
+    const isHelpIntentRequest = possibleIntents.includes(intentId);
+
+    if (isHelpIntentRequest) {
+        return true;
+    }
+
+    const isFromHelpIntentRequest = possibleIntents.includes(request.overrideKey);
+
+    if (isFromHelpIntentRequest) {
+        return true;
+    }
+
+    // another try, look in the attributes
+
+    const attributes = request.attributes;
+    interface ChatResult {
+        needsAssistance?: boolean;
+    }
+    const chatResult = attributes?.["CHAT_COMPLETION_RESULT"] as ChatResult;
+
+    if (chatResult) {
+        const needsAssistance = chatResult.needsAssistance;
+        return !!needsAssistance;
+    }
+
+    return false;
 }
 
 /**

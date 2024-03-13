@@ -2,7 +2,7 @@
 import { expect } from "chai";
 
 import { IntentRequestBuilder, RequestSlotMap } from "stentor";
-import { cleanCode, generateAlternativeSlots } from "../utils";
+import { cleanCode, generateAlternativeSlots, lookingForHelp } from "../utils";
 
 describe(`#${generateAlternativeSlots.name}()`, () => {
     describe('when asking for the LAST_NAME', () => {
@@ -183,5 +183,38 @@ describe(`#${cleanCode.name}()`, () => {
     it("cleans the code", () => {
         expect(cleanCode("\"C221276E-D3CF-4904-AE21-9B0289B7FA4A  \"")).to.equal("C221276E-D3CF-4904-AE21-9B0289B7FA4A");
         expect(cleanCode("C221276E-D3CF-4904-AE21-9B0289B7FA4A")).to.equal("C221276E-D3CF-4904-AE21-9B0289B7FA4A");
+    });
+});
+
+describe(`#${lookingForHelp.name}()`, () => {
+    it("returns true when the request is a HelpIntent", () => {
+        const request = new IntentRequestBuilder().withIntentId("HelpIntent").build();
+        const result = lookingForHelp(request);
+        expect(result).to.be.true;
+    });
+
+    it("returns true when the request is from a HelpIntent", () => {
+        const request = new IntentRequestBuilder().build();
+        request.overrideKey = "HelpIntent";
+        const result = lookingForHelp(request);
+        expect(result).to.be.true;
+    });
+
+    it("returns true when the request has CHAT_COMPLETION_RESULT attribute with needsAssistance set to true", () => {
+        const request = new IntentRequestBuilder().withAttributes({ CHAT_COMPLETION_RESULT: { needsAssistance: true } }).build();
+        const result = lookingForHelp(request);
+        expect(result).to.be.true;
+    });
+
+    it("returns true when the request has CHAT_COMPLETION_RESULT attribute with needsAssistance set to false", () => {
+        const request = new IntentRequestBuilder().withAttributes({ CHAT_COMPLETION_RESULT: { needsAssistance: false } }).build();
+        const result = lookingForHelp(request);
+        expect(result).to.be.false;
+    });
+
+    it("returns false when the request is not a HelpIntent and does not have CHAT_COMPLETION_RESULT attribute", () => {
+        const request = new IntentRequestBuilder().build();
+        const result = lookingForHelp(request);
+        expect(result).to.be.false;
     });
 });
