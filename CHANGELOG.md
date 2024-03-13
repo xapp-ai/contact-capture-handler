@@ -1,3 +1,10 @@
+## [1.6.2](https://github.com/xapp-ai/contact-capture-handler/compare/v1.6.1...v1.6.2) (2024-03-13)
+
+
+### Bug Fixes
+
+* Do not call strategy if the session is closed without usable data (widget killed) ([#316](https://github.com/xapp-ai/contact-capture-handler/issues/316)) ([2a06f38](https://github.com/xapp-ai/contact-capture-handler/commit/2a06f38885efdb0551b24bdb9e9a6342fe5dde47))
+
 ## [1.6.1](https://github.com/xapp-ai/contact-capture-handler/compare/v1.6.0...v1.6.1) (2024-03-13)
 
 
