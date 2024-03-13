@@ -60,7 +60,7 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
         request: Request,
         eventService: ErrorService,
         finalResponse?: Response
-    ): Promise<{success: boolean, id?: string}> {
+    ): Promise<{ success: boolean, id?: string }> {
         const fields: LeadFormField[] = [];
 
         for (const lead of leadList.data) {
@@ -115,7 +115,7 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
             transcript.push(finalMessage);
         }
 
-        const externalLead = { fields, transcript, refId: extras.existingRefId as string};
+        const externalLead = { fields, transcript, refId: extras.existingRefId as string };
         log().debug(`===\n${JSON.stringify(externalLead, null, 2)}\n===`);
 
         let sendLead = true;
@@ -133,24 +133,24 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
             try {
                 const response = await service.send(externalLead, extras);
                 if (response.status === "Success") {
-                    return {success: true, id: (response as any).refId}; // TODO: Type not published yet!
+                    return { success: true, id: (response as any).refId }; // TODO: Type not published yet!
                 } else {
                     log().error(`Lead not sent!`);
                     log().error(response.message);
                     eventService.error(new LeadError(`Lead not sent:${response.message}`));
-                    return {success: false};
+                    return { success: false };
                 }
             } catch (e) {
                 log().error(`Lead not sent!`);
                 log().error(e);
                 eventService.error(e);
-                return {success: false};
+                return { success: false };
             }
         } else {
             log().warn(`NOT SENDING LEADS.  Set environment variable SEND_LEAD=true to send.`);
             log().info(`===\n${JSON.stringify(externalLead, null, 2)}\n===`);
             // Do we fake it here?
-            return {success: false};
+            return { success: false };
         }
     }
 
@@ -159,7 +159,7 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
         const key = keyFromRequest(request);
 
         // Blacklisted, never respond to these
-        const NEVER_HANDLE: string[] = ["LaunchRequest", "CancelIntent", "StopIntent"];
+        const NEVER_HANDLE: string[] = ["LaunchRequest", "CancelIntent", "StopIntent", "ByeIntent"];
 
         if (NEVER_HANDLE.includes(key)) {
             return false;
@@ -252,7 +252,7 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
         const slots: RequestSlotMap = { ...requestSlots, ...sessionSlots, ...pseudoSlots, ...alternativeSlots, ...formSlots };
         // Persist these new ones for reuse, we want to keep the modifications from the pseudo and alternative
         context.session.set(Constants.CONTACT_CAPTURE_SLOTS, slots);
-        
+
         log().info(`Contact capture slots: ${requestSlotsToString(slots)}`);
 
         // An asideResponse is used to handle quick knowledge base questions
@@ -260,6 +260,11 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
         let asideResponse: Response;
 
         switch (key) {
+            case "CancelIntent":
+            case "StopIntent":
+            case "ByeIntent":
+                super.handleRequest(request, context);
+                break;
             case "OCSearch":
             case "KnowledgeAnswer":
                 // Get content from the super for the knowledge answer
@@ -302,8 +307,8 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
 
                 if (crmAlerter) {
                     crmAlerter(savedLeadMessage);
-                } 
-                
+                }
+
                 // if (process.env.INCOMPLETE_LEAD_NOTIFICATION_EMAIL) {
                 //     sendEmail(process.env.INCOMPLETE_LEAD_NOTIFICATION_EMAIL, { lead: savedLeadMessage });
                 // } else {
@@ -314,7 +319,7 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
             }
 
             context.session.set(Constants.CONTACT_CAPTURE_ABANDONED, true);
-        } 
+        }
 
         // Determine our strategy
         const strategy = new ResponseStrategySelector().getStrategy(request);
