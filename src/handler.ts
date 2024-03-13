@@ -297,6 +297,8 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
         // Optional alert for closed widgets
 
         // The action check is for backward compatibilty - can be deleted later
+
+        let closedEarly = false;
         if (isSessionClosed(request)) {
             // TODO: Make this prettier
             const slots: RequestSlotMap = context.session.get(Constants.CONTACT_CAPTURE_SLOTS);
@@ -316,6 +318,7 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
                 // }
             } else {
                 log().info("Form closing was ignored (incomplete lead notification). Too early.");
+                closedEarly = true;
             }
 
             context.session.set(Constants.CONTACT_CAPTURE_ABANDONED, true);
@@ -323,8 +326,8 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
 
         // Determine our strategy
         const strategy = new ResponseStrategySelector().getStrategy(request);
-        // Get the response
-        const response = await strategy.getResponse(this, request, context);
+        // Get the response. Finish, if it's an early close of the widget (no data)
+        const response = closedEarly? {} : await strategy.getResponse(this, request, context);
         // Compile and respond
         const compiled = compileResponse(response, request, context);
         // Change turnsToLive to 1
