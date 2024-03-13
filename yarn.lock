@@ -1505,7 +1505,7 @@ __metadata:
     "@typescript-eslint/eslint-plugin": 7.2.0
     "@typescript-eslint/parser": 7.2.0
     "@xapp/config": 0.2.3
-    "@xapp/question-answering-handler": 2.5.1
+    "@xapp/question-answering-handler": 2.5.4
     aws-sdk: 2.1572.0
     chai: 4.4.1
     conventional-changelog-conventionalcommits: 7.0.2
@@ -1536,16 +1536,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@xapp/question-answering-handler@npm:2.5.1":
-  version: 2.5.1
-  resolution: "@xapp/question-answering-handler@npm:2.5.1"
+"@xapp/question-answering-handler@npm:2.5.4":
+  version: 2.5.4
+  resolution: "@xapp/question-answering-handler@npm:2.5.4"
   dependencies:
     compromise: 14.12.0
     fuse.js: 7.0.0
     linkifyjs: 4.1.3
   peerDependencies:
     stentor: 1.X
-  checksum: 411eebbf289cc5fc56e9416b1e3816704f4ae520f412184e3025e5bde3e593ccd1bf63fd2d76b50dc3cf79db018d6fb5b072459822637e961944bfe405e7d989
+  checksum: 6f4352889fd3bd8930d2e82433c0485f29e08817c30a517631f78945a29e2284c1b277abc3216b571db461c9526ea8940c344331fde5962aef9641e1fb631ca4
   languageName: node
   linkType: hard
 
