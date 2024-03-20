@@ -255,7 +255,7 @@ export class ProgrammaticResponseStrategy implements ResponseStrategy {
                 } else {
                     leadStartResponse = getResponseByTag(responses, Constants.CONTACT_CAPTURE_START_CONTENT);
                 }
-                response.outputSpeech = concatResponseOutput(toResponseOutput(leadStartResponse.outputSpeech), toResponseOutput(response.outputSpeech));
+                response.outputSpeech = concatResponseOutput(toResponseOutput(leadStartResponse.outputSpeech), toResponseOutput(response.outputSpeech), { delimiter: "\n\n" });
                 // since this is a start, we lose a little bit of fidelity
                 // on what question we ask but we need to track the start
                 response.tag = leadStartResponse.tag;

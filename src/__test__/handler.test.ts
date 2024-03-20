@@ -540,8 +540,8 @@ describe(`${ContactCaptureHandler.name}`, () => {
                         tag: "ContactCaptureStart",
                         outputSpeech: {
                             // It concatenates the ContactCaptureStart & FirstNameQuestionContent question
-                            ssml: "<speak>Why hello!  What is your name?</speak>",
-                            displayText: "Why hello!  What is your name?",
+                            ssml: "<speak>Why hello!\n\nWhat is your name?</speak>",
+                            displayText: "Why hello!\n\nWhat is your name?",
                         },
                         reprompt: {
                             ssml: '<speak>May I have your name?</speak>',

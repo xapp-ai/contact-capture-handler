@@ -219,7 +219,7 @@ describe(`${ProgrammaticResponseStrategy.name}`, () => {
             // eslint-disable-next-line no-console
             expect(response).to.exist;
             const output = toResponseOutput(response.outputSpeech || "");
-            expect(output.displayText).to.include("We can help with that.  What is your name?");
+            expect(output.displayText).to.include("We can help with that.\n\nWhat is your name?");
         });
     });
     describe("with useChat set to true", () => {
