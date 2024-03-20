@@ -1,3 +1,10 @@
+## [1.6.4](https://github.com/xapp-ai/contact-capture-handler/compare/v1.6.3...v1.6.4) (2024-03-20)
+
+
+### Bug Fixes
+
+* new lines when concatenating responses ([8aba108](https://github.com/xapp-ai/contact-capture-handler/commit/8aba108746b440d1ae93e0daf0631c7d1cd15467))
+
 ## [1.6.3](https://github.com/xapp-ai/contact-capture-handler/compare/v1.6.2...v1.6.3) (2024-03-20)
 
 
