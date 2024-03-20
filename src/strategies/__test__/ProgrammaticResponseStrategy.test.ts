@@ -47,6 +47,14 @@ const props: Handler<Content, ContactCaptureData> = {
                     ssml: "<speak>Why hello!</speak>",
                     displayText: "Why hello!",
                 }
+            },
+            {
+                name: "Start",
+                tag: "ContactCaptureHelpStart",
+                outputSpeech: {
+                    ssml: "<speak>We can help with that.</speak>",
+                    displayText: "We can help with that.",
+                }
             }
         ],
         ["OCSearch"]: [
@@ -186,15 +194,56 @@ describe(`${ProgrammaticResponseStrategy.name}`, () => {
             })
             .build();
     })
-    describe("with useChat set to true", () => {
+    describe("with useChat set to false", () => {
+        beforeEach(() => {
+            context = new ContextBuilder()
+                .withResponse(response)
+                .withSessionData({
+                    id: "foo",
+                    data: {
+                        "CHAT_RESPONSE": {
+                            text: "Best you get in touch with us for that.",
+                            markdownText: "Best you get in touch with us for that.",
+                        }
+                    }
+                })
+                .build();
+        });
         it("returns a response with the session value", async () => {
 
-            const strategy = new ProgrammaticResponseStrategy(props.data);
+            const copy: ContactCaptureData = { ...props.data } as ContactCaptureData;
+            copy.useChatResponse = false;
+
+            const strategy = new ProgrammaticResponseStrategy(copy);
             const response = await strategy.getResponse(handler, request, context);
             // eslint-disable-next-line no-console
+            expect(response).to.exist;
+            const output = toResponseOutput(response.outputSpeech || "");
+            expect(output.displayText).to.include("We can help with that.  What is your name?");
+        });
+    });
+    describe("with useChat set to true", () => {
+        beforeEach(() => {
+            context = new ContextBuilder()
+                .withResponse(response)
+                .withSessionData({
+                    id: "foo",
+                    data: {
+                        "CHAT_RESPONSE": {
+                            text: "Best you get in touch with us for that.",
+                            markdownText: "Best you get in touch with us for that.",
+                        }
+                    }
+                })
+                .build();
+        });
+        it("returns a response with the session value", async () => {
+            const strategy = new ProgrammaticResponseStrategy(props.data);
+            const response = await strategy.getResponse(handler, request, context);
             expect(response).to.exist;
             const output = toResponseOutput(response.outputSpeech || "");
             expect(output.displayText).to.include("Best you get in touch with us for that.");
         });
     });
+
 });
