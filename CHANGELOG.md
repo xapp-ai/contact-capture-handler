@@ -1,3 +1,10 @@
+## [1.6.3](https://github.com/xapp-ai/contact-capture-handler/compare/v1.6.2...v1.6.3) (2024-03-20)
+
+
+### Bug Fixes
+
+* New option to useChatResponse in HelpWith Response ([#323](https://github.com/xapp-ai/contact-capture-handler/issues/323)) ([3326d82](https://github.com/xapp-ai/contact-capture-handler/commit/3326d82cb625520e353cc455980b98b456ea5580))
+
 ## [1.6.2](https://github.com/xapp-ai/contact-capture-handler/compare/v1.6.1...v1.6.2) (2024-03-13)
 
 
