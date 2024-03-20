@@ -17,14 +17,21 @@ import {
 } from "stentor";
 
 import * as Constants from "../constants";
-import { ContactDataType, CaptureRuntimeData } from "../data";
+import { ContactCaptureData, ContactDataType, CaptureRuntimeData } from "../data";
 import { concatenateAside, isSessionClosed, lookingForHelp, newLeadGenerationData, } from "../utils";
 import { ContactCaptureHandler } from "../handler";
 import { GooglePlacesService, PlacesService } from "../services";
 
 import { ResponseStrategy } from "./ResponseStrategy";
+import { ResultVariableGeneratedInformation } from "@xapp/question-answering-handler/lib/models";
 
 export class ProgrammaticResponseStrategy implements ResponseStrategy {
+
+    private data: ContactCaptureData;
+
+    public constructor(data?: ContactCaptureData) {
+        this.data = data;
+    }
 
     public async getResponse(handler: ContactCaptureHandler, request: Request, context: Context): Promise<Response> {
 
@@ -162,7 +169,7 @@ export class ProgrammaticResponseStrategy implements ResponseStrategy {
         // go through each and check on the slot
         leadDataList.data.forEach((data) => {
             // see if slot exists
-            const slot = slots[data.slotName];
+            const slot = slots ? slots[data.slotName] : undefined;
             if (slot && slot.value) {
                 // Ok, we have it!
                 data.collectedValue = requestSlotValueToString(slot.value);
@@ -226,7 +233,25 @@ export class ProgrammaticResponseStrategy implements ResponseStrategy {
             if (isFirstQuestion) {
                 let leadStartResponse: Response;
                 if (isLookingForHelp) {
-                    leadStartResponse = getResponseByTag(responses, Constants.CONTACT_CAPTURE_HELP_START_CONTENT);
+
+                    if (typeof this.data.useChatResponse === "boolean" && this.data.useChatResponse) {
+
+                        // See if we have the response on the session data
+                        const chatResponse: ResultVariableGeneratedInformation = context.session.get("CHAT_RESPONSE");
+
+                        if (chatResponse) {
+                            log().info(`Using chat response for help start content`);
+
+                            leadStartResponse = {
+                                outputSpeech: toResponseOutput(chatResponse.markdownText),
+                                tag: Constants.CONTACT_CAPTURE_HELP_START_CONTENT
+                            }
+                        }
+                    }
+                    if (!leadStartResponse) {
+                        leadStartResponse = getResponseByTag(responses, Constants.CONTACT_CAPTURE_HELP_START_CONTENT);
+                    }
+
                 } else {
                     leadStartResponse = getResponseByTag(responses, Constants.CONTACT_CAPTURE_START_CONTENT);
                 }
