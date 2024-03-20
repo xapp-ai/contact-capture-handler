@@ -27,6 +27,10 @@ export interface ContactCaptureData extends QuestionAnsweringData, ResponseStrat
      */
     responses?: "GENERATIVE_AI" | "PROGRAMMATIC";
     /**
+     * Use the chat response when it is a HelpWith response, this can lead to better transitions.
+     */
+    useChatResponse?: boolean;
+    /**
      * The form descriptions for the form widget
      */
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -34,7 +38,7 @@ export interface ContactCaptureData extends QuestionAnsweringData, ResponseStrat
     /**
      * The name of the "main" capture form
      */
-    CAPTURE_MAIN_FORM: string;
+    CAPTURE_MAIN_FORM?: string;
     /**
      * Extra flags for the CRM (the handler doesn't care - just passes on)
      */

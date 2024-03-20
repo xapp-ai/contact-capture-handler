@@ -1,7 +1,4 @@
-/*! Copyright (c) 2023, XAPP AI */
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-require("dotenv").config();
-
+/*! Copyright (c) 2024, XAPP AI */
 import * as chai from "chai";
 import * as sinonChai from "sinon-chai";
 
@@ -74,8 +71,9 @@ const props: Handler<Content, ContactCaptureData> = {
         ]
     },
     data: {
-        "places": [{ placeId: "ChIJMcF-qCTHt4kRku3nUycnN-M" }],
-        "captureLead": false,
+        "places": [],
+        "captureLead": true,
+        "useChatResponse": true,
         "inputUnknownStrategy": "REPROMPT",
         "capture": {
             "data": [
@@ -173,21 +171,30 @@ describe(`${ProgrammaticResponseStrategy.name}`, () => {
                 canSpeak: false
             }).build();
 
+        request.overrideKey = "HelpWith";
+
         context = new ContextBuilder()
             .withResponse(response)
-            .withSessionData({ id: "foo", data: {} })
+            .withSessionData({
+                id: "foo",
+                data: {
+                    "CHAT_RESPONSE": {
+                        text: "Best you get in touch with us for that.",
+                        markdownText: "Best you get in touch with us for that.",
+                    }
+                }
+            })
             .build();
     })
-    describe("with captureLead to false", () => {
-        it("returns a response with data from the places API", async () => {
+    describe("with useChat set to true", () => {
+        it("returns a response with the session value", async () => {
 
             const strategy = new ProgrammaticResponseStrategy(props.data);
             const response = await strategy.getResponse(handler, request, context);
             // eslint-disable-next-line no-console
-            console.log(response);
             expect(response).to.exist;
             const output = toResponseOutput(response.outputSpeech || "");
-            expect(output.displayText).to.include("202");
+            expect(output.displayText).to.include("Best you get in touch with us for that.");
         });
     });
 });

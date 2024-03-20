@@ -325,9 +325,9 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
         }
 
         // Determine our strategy
-        const strategy = new ResponseStrategySelector().getStrategy(request);
+        const strategy = new ResponseStrategySelector().getStrategy(request, this.data);
         // Get the response. Finish, if it's an early close of the widget (no data)
-        const response = closedEarly? {} : await strategy.getResponse(this, request, context);
+        const response = closedEarly ? {} : await strategy.getResponse(this, request, context);
         // Compile and respond
         const compiled = compileResponse(response, request, context);
         // Change turnsToLive to 1
