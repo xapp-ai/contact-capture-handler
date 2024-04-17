@@ -201,7 +201,7 @@ describe(`#${lookingForHelp.name}()`, () => {
     });
 
     it("returns true when the request has CHAT_COMPLETION_RESULT attribute with needsAssistance set to true", () => {
-        const request = new IntentRequestBuilder().withAttributes({ CHAT_COMPLETION_RESULT: { needsAssistance: true } }).build();
+        const request = new IntentRequestBuilder().withAttributes({ CHAT_COMPLETION_RESULT: { needsAssistance: "YES" } }).build();
         const result = lookingForHelp(request);
         expect(result).to.be.true;
     });

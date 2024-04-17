@@ -23,7 +23,7 @@ export interface ContactCaptureData extends QuestionAnsweringData, ResponseStrat
      */
     capture: ContactCaptureBlueprint;
     /**
-     * Default is PROGRAMMATIC
+     * Default is PROGRAMMATIC, setting to GENERATIVE_AI will use the response the LLM created.
      */
     responses?: "GENERATIVE_AI" | "PROGRAMMATIC";
     /**

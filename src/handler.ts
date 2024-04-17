@@ -168,6 +168,7 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
         const ALWAYS_HANDLE: string[] = [
             "InputUnknown",
             "Name",
+            "NameAnd",
             "NameOnly",
             "Address",
             "Email",
@@ -282,10 +283,14 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
                     context.response.response &&
                     Object.keys(context.response.response).length > 0
                 ) {
+                    // THE ASIDE CAN BE A PROBLEM IF WE ARE REPEATING IT
+                    // TODO: FIX SO WE DON"T REPEAT THE SAME ANSWER
+                    // WE CAN CHECK TO SEE IF IT IS THE SAME?
                     asideResponse = context.response.response;
                     context.session.set(Constants.CONTACT_CAPTURE_ASIDE, asideResponse);
                 }
             default:
+            // default falls through below where we perform the lead capture
         }
 
         // Alert people the new setting
@@ -296,7 +301,7 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
 
         // Optional alert for closed widgets
 
-        // The action check is for backward compatibilty - can be deleted later
+        // The action check is for backward compatibility - can be deleted later
 
         let closedEarly = false;
         if (isSessionClosed(request)) {
@@ -324,7 +329,7 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
             context.session.set(Constants.CONTACT_CAPTURE_ABANDONED, true);
         }
 
-        // Determine our strategy
+        // Determine our strategy, this is where the heavy lifting occurs
         const strategy = new ResponseStrategySelector().getStrategy(request, this.data);
         // Get the response. Finish, if it's an early close of the widget (no data)
         const response = closedEarly ? {} : await strategy.getResponse(this, request, context);
