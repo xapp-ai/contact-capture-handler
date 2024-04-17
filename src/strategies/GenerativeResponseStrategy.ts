@@ -103,6 +103,7 @@ export class GenerativeResponseStrategy implements ResponseStrategy {
 
         // TODO: what do we do when we don't have a chat result?
 
+        // eslint-disable-next-line no-console
         console.log(chatResult);
 
         const displayText = chatResult?.response;
