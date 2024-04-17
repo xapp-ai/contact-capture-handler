@@ -294,12 +294,12 @@ export function lookingForHelp(request: Request): boolean {
 
     const attributes = request.attributes;
     interface ChatResult {
-        needsAssistance?: boolean;
+        needsAssistance?: "YES" | "NO" | "MAYBE";
     }
     const chatResult = attributes?.["CHAT_COMPLETION_RESULT"] as ChatResult;
 
     if (chatResult) {
-        const needsAssistance = chatResult.needsAssistance;
+        const needsAssistance = chatResult.needsAssistance === "YES";
         return !!needsAssistance;
     }
 
