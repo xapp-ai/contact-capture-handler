@@ -1,3 +1,10 @@
+## [1.6.5](https://github.com/xapp-ai/contact-capture-handler/compare/v1.6.4...v1.6.5) (2024-04-17)
+
+
+### Bug Fixes
+
+* GenerativeAIStrategy for Testing ([#345](https://github.com/xapp-ai/contact-capture-handler/issues/345)) ([e06661e](https://github.com/xapp-ai/contact-capture-handler/commit/e06661e560720ef094a379d3792904ec1b7b0388))
+
 ## [1.6.4](https://github.com/xapp-ai/contact-capture-handler/compare/v1.6.3...v1.6.4) (2024-03-20)
 
 
