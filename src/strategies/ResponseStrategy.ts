@@ -12,6 +12,12 @@ export interface ResponseStrategyProps {
      */
     captureLead?: boolean;
     /**
+     * Form Widget channel only, it will enable scheduling within the form.  Otherwise the form widget will simply act as a contact us form. 
+     * 
+     * @note - This does nothing at the moment, we are reserving for future use.
+     */
+    enableFormScheduling?: boolean;
+    /**
      * Optional place IDs to look up information about the business
      */
     places?: { placeId?: string }[];
