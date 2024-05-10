@@ -23,8 +23,10 @@ import {
     ResponseOutput,
     responseToMessage,
     toResponseOutput,
-    isChannelActionRequest
+    isChannelActionRequest,
+    hasSessionId
 } from "stentor";
+import { ExternalLead } from "stentor-models";
 
 import * as Constants from "./constants";
 import { ContactDataType, ContactCaptureData, CaptureRuntimeData } from "./data";
@@ -115,7 +117,26 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
             transcript.push(finalMessage);
         }
 
-        const externalLead = { fields, transcript, refId: extras.existingRefId as string };
+        const externalLead: ExternalLead = {
+            fields,
+            transcript,
+            refId: extras.existingRefId as string
+        };
+
+        if (request) {
+            if (request.userId) {
+                externalLead.userId = request.userId;
+            }
+
+            if (hasSessionId(request)) {
+                externalLead.sessionId = request.sessionId;
+            }
+
+            if (request.channel) {
+                externalLead.source = request.channel
+            }
+        }
+
         log().debug(`===\n${JSON.stringify(externalLead, null, 2)}\n===`);
 
         let sendLead = true;
@@ -133,7 +154,7 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
             try {
                 const response = await service.send(externalLead, extras);
                 if (response.status === "Success") {
-                    return { success: true, id: (response as any).refId }; // TODO: Type not published yet!
+                    return { success: true, id: response.refId };
                 } else {
                     log().error(`Lead not sent!`);
                     log().error(response.message);

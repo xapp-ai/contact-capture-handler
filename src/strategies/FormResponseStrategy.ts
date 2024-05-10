@@ -153,7 +153,7 @@ export class FormResponseStrategy implements ResponseStrategy {
 
             // Don't submit until the form says so
             if (!stepFromData.crmSubmit) {
-                return {}; 
+                return {};
             }
 
             // Form widget has to say we are fininshed (unless session is closed)
@@ -166,14 +166,18 @@ export class FormResponseStrategy implements ResponseStrategy {
 
         // if we created a CRM object and then closed, then we are done
         if (isAbandoned && existingRefId) {
-            return {}; 
+            return {};
         }
 
         // Send the lead if we got here
 
         const url: string = request.attributes?.currentUrl as string;
         const extras = {
+            // this is a duplicate of source on ExternalLead
+            // leaving as is for now
             source: url || "unknown",
+            // adding this to be more descriptive
+            currentUrl: url,
             externalId: hasSessionId(request) ? request.sessionId : "unknown",
             existingRefId,
             crmFlags: handler.data?.crmFlags,
