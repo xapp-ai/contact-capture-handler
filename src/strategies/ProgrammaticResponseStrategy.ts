@@ -276,8 +276,13 @@ export class ProgrammaticResponseStrategy implements ResponseStrategy {
 
             // Send the lead
             const url: string = request.attributes?.currentUrl as string;
+
             const extras = {
+                // this is a duplicate of source on ExternalLead
+                // leaving as is for now
                 source: url || "unknown",
+                // adding this to be more descriptive
+                currentUrl: url,
                 externalId: hasSessionId(request) ? request.sessionId : "unknown",
                 crmFlags: handler.data?.crmFlags,
                 isAbandoned

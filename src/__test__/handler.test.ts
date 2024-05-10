@@ -1164,8 +1164,17 @@ describe(`${ContactCaptureHandler.name}`, () => {
                             { name: 'FULL_NAME', value: 'Michael Myers' }
                         ],
                         transcript: [],
-                        refId: undefined
-                    }, { source: 'unknown', externalId: 'sessionId', crmFlags: { foo: 3 }, isAbandoned: false });
+                        refId: undefined,
+                        userId: "userId",
+                        sessionId: "sessionId",
+                        source: "stentor"
+                    }, {
+                        source: 'unknown',
+                        currentUrl: undefined,
+                        externalId: 'sessionId',
+                        crmFlags: { foo: 3 },
+                        isAbandoned: false
+                    });
 
                     const sessionStore = context.storage.sessionStore?.data;
                     const leadSent = sessionStore ? sessionStore[CONTACT_CAPTURE_SENT] : undefined;
