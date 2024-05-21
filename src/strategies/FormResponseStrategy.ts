@@ -88,14 +88,6 @@ function getContactFormFallback(): Response {
             },
             {
                 "fields": [
-                    /* {
-                        "name": "thank_you_image",
-                        "type": "CARD",
-                        "media": {
-                            "alt": "Logo",
-                            "imageUrl": "https://xappaistaging.wpengine.com/wp-content/uploads/2024/04/XAPP_AI_STACKED_2COLOR_RGB-with-TM.png"
-                        }
-                    }, */
                     {
                         "name": "thank_you_text",
                         "header": {
