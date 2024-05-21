@@ -4,7 +4,7 @@
   "publishConfig": {
     "access": "public"
   },
-  "version": "1.6.6",
+  "version": "1.6.7",
   "description": "A data driven contact information collector for 📣 stentor",
   "types": "lib/index",
   "typings": "lib/index",
@@ -34,7 +34,7 @@
     "@xapp/question-answering-handler": "2.5.6",
     "aws-sdk": "2.1600.0",
     "chai": "4.4.1",
-    "conventional-changelog-conventionalcommits": "7.0.2",
+    "conventional-changelog-conventionalcommits": "8.0.0",
     "dotenv": "16.4.5",
     "eslint": "8.57.0",
     "eslint-plugin-notice": "0.9.10",
@@ -43,8 +43,8 @@
     "semantic-release": "23.0.8",
     "sinon": "17.0.1",
     "sinon-chai": "3.7.0",
-    "stentor": "1.59.47",
-    "stentor-service-fetch": "1.59.46",
+    "stentor": "1.59.48",
+    "stentor-service-fetch": "1.59.48",
     "ts-node": "10.9.2",
     "typescript": "5.4.5"
   },
