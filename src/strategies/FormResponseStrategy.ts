@@ -3,6 +3,7 @@
 import {
     compileResponse,
     Context,
+    CrmService,
     hasSessionId,
     log,
     Request,
@@ -17,6 +18,7 @@ import { isSessionClosed, newLeadGenerationData } from "../utils";
 import { ContactCaptureHandler } from "../handler";
 
 import { ResponseStrategy } from "./ResponseStrategy";
+import { CrmServiceAvailability, SessionStore } from "stentor-models";
 
 /**
  * Action response data object
@@ -94,6 +96,23 @@ function leadSummary(slots: RequestSlotMap, leadDataList: CaptureRuntimeData): s
     return summary;
 }
 
+/**
+ * 
+ * @param busyDays Format this for the widget for "easier" consumption
+ * @returns 
+ */
+function formatBusyDays(busyDays: CrmServiceAvailability): string {
+    const busyDates: string[] = [];
+    
+    busyDays.unavailabilities.forEach(value => {
+        if (!value.available) {
+            busyDates.push(value.date.date);
+        }
+    });
+
+    return busyDates.join(",");
+}
+
 export class FormResponseStrategy implements ResponseStrategy {
     public async getResponse(handler: ContactCaptureHandler, request: Request, context: Context): Promise<Response> {
         const slots: RequestSlotMap = context.session.get(Constants.CONTACT_CAPTURE_SLOTS);
@@ -112,6 +131,9 @@ export class FormResponseStrategy implements ResponseStrategy {
 
             // Update the list on session
             context.session.set(Constants.CONTACT_CAPTURE_LIST, leadDataList);
+
+            // First availabilty
+            await this.addAvalabilty(response, context.services.crmService, context.session);
 
             return response;
         }
@@ -148,12 +170,16 @@ export class FormResponseStrategy implements ResponseStrategy {
 
             // Send the requested form
             if (data.followupForm) {
-                return getFormResponse(handler.data, data.followupForm);
+                response = getFormResponse(handler.data, data.followupForm);
+                await this.addAvalabilty(response, context.services.crmService, context.session);
+                return response;
             }
 
             // Don't submit until the form says so
             if (!stepFromData.crmSubmit) {
-                return {};
+                response = {};
+                await this.addAvalabilty(response, context.services.crmService, context.session);
+                return response;
             }
 
             // Form widget has to say we are fininshed (unless session is closed)
@@ -213,6 +239,69 @@ export class FormResponseStrategy implements ResponseStrategy {
 
         context.session.set(Constants.CONTACT_CAPTURE_EXISTING_REF_ID, leadSendResult.id);
 
-        return {}; // form widget - no response
+        // form widget - no response
+        response = {};
+        await this.addAvalabilty(response, context.services.crmService, context.session);
+        return response;
+    }
+
+    private async addAvalabilty(response: Response, crmService: CrmService, session: SessionStore): Promise<Response> {
+        const leadDataList: CaptureRuntimeData = session.get(Constants.CONTACT_CAPTURE_LIST);
+
+        let busyDays: CrmServiceAvailability = session.get(Constants.CONTACT_CAPTURE_BUSY_DAYS) as CrmServiceAvailability;
+
+        // First time?
+        if (!busyDays) {
+            busyDays = await crmService.getAvailability({
+                start: null,
+                end: null,
+            });
+        } else {
+            // Try to augment if we have a description
+            const messageData = leadDataList.data.find((data) => {
+                return data.slotName?.toLowerCase() === "message";
+            });
+
+            if (messageData?.collectedValue) {
+                const description = messageData.collectedValue?.trim();
+
+                if (description) {
+                    const jobType = await crmService.getJobType(description);
+                    const existingJobType = session.get(Constants.CONTACT_CAPTURE_JOB_TYPE);
+
+                    // Only call if the jobType changed (visitor changed the description)
+                    if (jobType !== existingJobType) {
+                        session.set(Constants.CONTACT_CAPTURE_JOB_TYPE, jobType);
+
+                        busyDays = await crmService.getAvailability(
+                            {
+                                start: null,
+                                end: null,
+                            },
+                            {
+                                jobType,
+                            },
+                        );
+                    }
+                }
+            }
+        }
+
+        response.context = {
+            active: [
+                {
+                    name: "BusyDays",
+                    timeToLive: {},
+                    parameters: {
+                        busyDays: formatBusyDays(busyDays),
+                    }
+                },
+            ],
+        };
+
+        session.set(Constants.CONTACT_CAPTURE_BUSY_DAYS, busyDays);
+
+        return response;
     }
 }
+
