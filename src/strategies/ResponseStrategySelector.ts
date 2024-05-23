@@ -6,11 +6,7 @@ import { ContactCaptureData } from "../data";
 import { FormResponseStrategy } from "./FormResponseStrategy";
 import { GenerativeResponseStrategy } from "./GenerativeResponseStrategy";
 import { ProgrammaticResponseStrategy } from "./ProgrammaticResponseStrategy";
-import { ResponseStrategy, ResponseStrategyProps } from "./ResponseStrategy";
-
-export interface ResponseStrategySelectorProps extends ResponseStrategyProps {
-    strategy?: "GENERATIVE_AI" | "PROGRAMMATIC" | "FORM";
-}
+import { ResponseStrategy } from "./ResponseStrategy";
 
 export class ResponseStrategySelector {
     /**
@@ -21,6 +17,7 @@ export class ResponseStrategySelector {
      * Otherwise, we use GenerativeResponseStrategy.
      */
     public getStrategy(request: Request, data: ContactCaptureData): ResponseStrategy {
+        // form-widget always goes to the FormResponse
         if (request.channel === "form-widget") {
             return new FormResponseStrategy();
         } else if (data.responses === "GENERATIVE_AI" && data.captureLead) {

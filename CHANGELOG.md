@@ -1,3 +1,10 @@
+# [1.7.0](https://github.com/xapp-ai/contact-capture-handler/compare/v1.6.7...v1.7.0) (2024-05-21)
+
+
+### Features
+
+* Adds Contact Us Only Fallback when enableFormScheduling is not set to true ([#365](https://github.com/xapp-ai/contact-capture-handler/issues/365)) ([8dc3601](https://github.com/xapp-ai/contact-capture-handler/commit/8dc3601c47b0e16152bef1914bfe766ac657741f))
+
 ## [1.6.7](https://github.com/xapp-ai/contact-capture-handler/compare/v1.6.6...v1.6.7) (2024-05-15)
 
 

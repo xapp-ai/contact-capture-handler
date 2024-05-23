@@ -19,6 +19,7 @@ import { ContactCaptureHandler } from "../handler";
 
 import { ResponseStrategy } from "./ResponseStrategy";
 import { CrmServiceAvailability, SessionStore } from "stentor-models";
+import { MultistepForm } from "../form";
 
 /**
  * Action response data object
@@ -36,6 +37,81 @@ export interface FormActionResponseData {
 
     // When we need to respond with another (usually dynamic) form to continue
     followupForm?: string;
+}
+
+/**
+ * Get a simple contact us form.
+ * 
+ * @returns 
+ */
+function getContactFormFallback(): Response {
+
+    const contactUsForm: MultistepForm = {
+        "name": "contact_us_only",
+        type: "FORM",
+        "header": [
+            {
+                "step": "contact_info",
+                "label": "Contact"
+            }
+        ],
+        "labelHeader": true,
+        "steps": [
+            {
+                "crmSubmit": true,
+                "final": true,
+                "name": "contact_info",
+                "nextLabel": "Submit",
+                "nextAction": "submit",
+                "fields": [
+                    {
+                        "name": "full_name",
+                        "label": "Name",
+                        "type": "TEXT",
+                        "mandatory": true
+                    },
+                    {
+                        "format": "PHONE",
+                        "name": "phone",
+                        "label": "Phone",
+                        "placeholder": "Your 10 digit phone number",
+                        "type": "TEXT",
+                        "mandatory": true
+                    },
+                    {
+                        "name": "message",
+                        "label": "Tell us what you need help with",
+                        "rows": 6,
+                        "type": "TEXT",
+                        "multiline": true
+                    }
+                ],
+                "title": "Contact Information"
+            },
+            {
+                "fields": [
+                    {
+                        "name": "thank_you_text",
+                        "header": {
+                            "title": "Thank You"
+                        },
+                        "text": "Somebody will call you as soon as possible.",
+                        "type": "CARD"
+                    }
+                ],
+                "previousAction": "omit",
+                "nextAction": "omit",
+                "name": "Thanks"
+            }
+        ]
+    };
+
+    const response: Response = {
+        tag: "FORM",
+        displays: [{ ...contactUsForm }],
+    };
+
+    return response;
 }
 
 function getFormResponse(data: ContactCaptureData, formName: string): Response {
@@ -115,6 +191,13 @@ function formatBusyDays(busyDays: CrmServiceAvailability): string {
 
 export class FormResponseStrategy implements ResponseStrategy {
     public async getResponse(handler: ContactCaptureHandler, request: Request, context: Context): Promise<Response> {
+
+        if (!handler?.data?.enableFormScheduling) {
+            // remove this after a couple of releases
+            log().warn(`NEW FEATURE! You must enable scheduling if you are running this standalone.  Set enableFormScheduling to true in handler data.!`);
+            return getContactFormFallback()
+        }
+
         const slots: RequestSlotMap = context.session.get(Constants.CONTACT_CAPTURE_SLOTS);
 
         // Our response that we will end up returning

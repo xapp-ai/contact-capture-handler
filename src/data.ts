@@ -1,7 +1,8 @@
 /*! Copyright (c) 2022, XAPP AI */
-
 import { QuestionAnsweringData } from "@xapp/question-answering-handler";
-import { ResponseStrategyProps } from "./strategies/ResponseStrategy";
+
+import { PlacesService } from "./services/PlacesService/models";
+import { MultistepForm } from "./form";
 
 export type ContactDataType =
     "FIRST_NAME" |
@@ -17,7 +18,27 @@ export type ContactDataType =
     "MESSAGE" |
     "DATE_TIME";
 
-export interface ContactCaptureData extends QuestionAnsweringData, ResponseStrategyProps {
+export interface ContactCaptureData extends QuestionAnsweringData {
+    /**
+     * It will not capture the lead and instead provide contact information.
+     * 
+     * Defaults to false.
+     */
+    captureLead?: boolean;
+    /**
+     * Form Widget channel only, it will enable scheduling within the form.  Otherwise the form widget will simply act as a contact us form. 
+     * 
+     * @note - This does nothing at the moment, we are reserving for future use.
+     */
+    enableFormScheduling?: boolean;
+    /**
+     * Optional place IDs to look up information about the business
+     */
+    places?: { placeId?: string }[];
+    /**
+     * Optional PlaceService, used for testing, defaults to GooglePlaceService.  
+     */
+    placeService?: PlacesService;
     /**
      * Information related to lead capture.
      */
@@ -31,10 +52,11 @@ export interface ContactCaptureData extends QuestionAnsweringData, ResponseStrat
      */
     useChatResponse?: boolean;
     /**
-     * The form descriptions for the form widget
+     * The form descriptions for the form widget.
+     * 
+     * You must also set CAPTURE_MAIN_FORM
      */
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    forms?: any[]; //TODO: Once it works define the types
+    forms?: MultistepForm[];
     /**
      * The name of the "main" capture form
      */
