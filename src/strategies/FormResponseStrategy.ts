@@ -272,6 +272,7 @@ export class FormResponseStrategy implements ResponseStrategy {
         }
 
         const existingRefId = context.session.get(Constants.CONTACT_CAPTURE_EXISTING_REF_ID);
+        const jobTypeId = context.session.get(Constants.CONTACT_CAPTURE_JOB_TYPE);
 
         // if we created a CRM object and then closed, then we are done
         if (isAbandoned && existingRefId) {
@@ -289,6 +290,7 @@ export class FormResponseStrategy implements ResponseStrategy {
             currentUrl: url,
             externalId: hasSessionId(request) ? request.sessionId : "unknown",
             existingRefId,
+            jobTypeId,
             crmFlags: handler.data?.crmFlags,
             isAbandoned,
         };
