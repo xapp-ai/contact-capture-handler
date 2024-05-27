@@ -341,6 +341,8 @@ export class FormResponseStrategy implements ResponseStrategy {
                 start: null,
                 end: null,
             });
+
+            session.set(Constants.CONTACT_CAPTURE_BUSY_DAYS, busyDays);
         } else {
             // Try to augment if we have a description
             const messageData = leadDataList.data.find((data) => {
@@ -349,8 +351,12 @@ export class FormResponseStrategy implements ResponseStrategy {
 
             if (messageData?.collectedValue) {
                 const description = messageData.collectedValue?.trim();
+                const existingDescription = session.get(Constants.CONTACT_CAPTURE_DESCRIPTION);
 
-                if (description) {
+                // Only call if description changed
+                if (description !== existingDescription) {
+                    session.set(Constants.CONTACT_CAPTURE_DESCRIPTION, description);
+
                     const jobType = await crmService.getJobType(description);
                     const existingJobType = session.get(Constants.CONTACT_CAPTURE_JOB_TYPE);
 
@@ -367,11 +373,13 @@ export class FormResponseStrategy implements ResponseStrategy {
                                 jobType,
                             },
                         );
+
+                        session.set(Constants.CONTACT_CAPTURE_BUSY_DAYS, busyDays);
                     }
                 }
             }
         }
-
+        
         response.context = {
             active: [
                 {
@@ -384,7 +392,6 @@ export class FormResponseStrategy implements ResponseStrategy {
             ],
         };
 
-        session.set(Constants.CONTACT_CAPTURE_BUSY_DAYS, busyDays);
 
         return response;
     }

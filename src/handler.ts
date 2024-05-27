@@ -120,7 +120,8 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
         const externalLead: ExternalLead = {
             fields,
             transcript,
-            refId: extras.existingRefId as string
+            refId: extras.existingRefId as string,
+            jobTypeId: extras.jobTypeId as string
         };
 
         if (request) {
