@@ -1,3 +1,10 @@
+# [1.8.0](https://github.com/xapp-ai/contact-capture-handler/compare/v1.7.0...v1.8.0) (2024-05-28)
+
+
+### Features
+
+* Availability Support on Form Widget Channel ([#366](https://github.com/xapp-ai/contact-capture-handler/issues/366)) ([f0e761f](https://github.com/xapp-ai/contact-capture-handler/commit/f0e761fe8f07fa9611bab5f10ba1ea667a564091))
+
 # [1.7.0](https://github.com/xapp-ai/contact-capture-handler/compare/v1.6.7...v1.7.0) (2024-05-21)
 
 
