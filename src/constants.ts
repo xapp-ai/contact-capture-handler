@@ -43,6 +43,18 @@ export const CONTACT_CAPTURE_ASIDE = CONTACT_CAPTURE_PREFIX + "Aside";
  * Was the session X-d (abandoned)
  */
 export const CONTACT_CAPTURE_ABANDONED = CONTACT_CAPTURE_PREFIX + "Abandoned";
+/**
+ * Contains the availability info (from the CRM)
+ */
+export const CONTACT_CAPTURE_BUSY_DAYS = CONTACT_CAPTURE_PREFIX + "BusyDays";
+/**
+ * The job Id the CRM gave us for the description
+ */
+export const CONTACT_CAPTURE_JOB_TYPE = CONTACT_CAPTURE_PREFIX + "JobType";
+/**
+ * The description we used to get the job type
+ */
+export const CONTACT_CAPTURE_DESCRIPTION = CONTACT_CAPTURE_PREFIX + "Description";
 
 // Intents/Handlers
 export const CONTACT_CAPTURE_HANDLER = CONTACT_CAPTURE_PREFIX + "Handler";
