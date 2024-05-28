@@ -15,7 +15,7 @@ import {
     KnowledgeBaseResult,
     CrmService
 } from "stentor";
-import { CrmResponse } from "stentor-models";
+import { CrmResponse, CrmServiceAvailability } from "stentor-models";
 import { IntentRequestBuilder } from "stentor-request";
 import { ContextBuilder } from "stentor-context";
 
@@ -25,6 +25,15 @@ import { CONTACT_CAPTURE_CURRENT_DATA, CONTACT_CAPTURE_LIST, CONTACT_CAPTURE_SEN
 import { DetailParams, Place, PlacesService, SearchParams } from "../services";
 
 class MockCRM implements CrmService {
+    public update?(): Promise<CrmResponse> {
+        throw new Error("Method not implemented.");
+    }
+    public getAvailability(): Promise<CrmServiceAvailability> {
+        throw new Error("Method not implemented.");
+    }
+    public getJobType(): Promise<string> {
+        throw new Error("Method not implemented.");
+    }
     public async send(): Promise<CrmResponse> {
         return {
             status: "Success"
@@ -1165,6 +1174,7 @@ describe(`${ContactCaptureHandler.name}`, () => {
                         ],
                         transcript: [],
                         refId: undefined,
+                        jobTypeId: undefined,
                         userId: "userId",
                         sessionId: "sessionId",
                         source: "stentor"
