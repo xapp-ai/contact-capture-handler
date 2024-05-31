@@ -31,7 +31,8 @@ class MockCRM implements CrmService {
     public getAvailability(): Promise<CrmServiceAvailability> {
         throw new Error("Method not implemented.");
     }
-    public getJobType(): Promise<string> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    public getJobType(): Promise<any> {
         throw new Error("Method not implemented.");
     }
     public async send(): Promise<CrmResponse> {
