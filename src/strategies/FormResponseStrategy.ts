@@ -272,7 +272,7 @@ export class FormResponseStrategy implements ResponseStrategy {
         }
 
         const existingRefId = context.session.get(Constants.CONTACT_CAPTURE_EXISTING_REF_ID);
-        const jobTypeId = context.session.get(Constants.CONTACT_CAPTURE_JOB_TYPE);
+        const jobType = context.session.get(Constants.CONTACT_CAPTURE_JOB_TYPE);
 
         // if we created a CRM object and then closed, then we are done
         if (isAbandoned && existingRefId) {
@@ -290,7 +290,7 @@ export class FormResponseStrategy implements ResponseStrategy {
             currentUrl: url,
             externalId: hasSessionId(request) ? request.sessionId : "unknown",
             existingRefId,
-            jobTypeId,
+            jobTypeId: jobType?.id,
             crmFlags: handler.data?.crmFlags,
             isAbandoned,
         };
@@ -361,7 +361,7 @@ export class FormResponseStrategy implements ResponseStrategy {
                     const existingJobType = session.get(Constants.CONTACT_CAPTURE_JOB_TYPE);
 
                     // Only call if the jobType changed (visitor changed the description)
-                    if (jobType !== existingJobType) {
+                    if (jobType.id !== existingJobType?.id) {
                         session.set(Constants.CONTACT_CAPTURE_JOB_TYPE, jobType);
 
                         busyDays = await crmService.getAvailability(
@@ -370,8 +370,8 @@ export class FormResponseStrategy implements ResponseStrategy {
                                 end: null,
                             },
                             {
-                                jobType,
-                            },
+                                jobType
+                            }
                         );
 
                         session.set(Constants.CONTACT_CAPTURE_BUSY_DAYS, busyDays);
