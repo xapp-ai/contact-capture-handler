@@ -1,3 +1,10 @@
+## [1.8.1](https://github.com/xapp-ai/contact-capture-handler/compare/v1.8.0...v1.8.1) (2024-06-03)
+
+
+### Bug Fixes
+
+* Added class to jobType ([#369](https://github.com/xapp-ai/contact-capture-handler/issues/369)) ([78bf282](https://github.com/xapp-ai/contact-capture-handler/commit/78bf2822af77de3c5d4082774c2b96e0979732c8))
+
 # [1.8.0](https://github.com/xapp-ai/contact-capture-handler/compare/v1.7.0...v1.8.0) (2024-05-28)
 
 
