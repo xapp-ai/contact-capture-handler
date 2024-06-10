@@ -4,7 +4,7 @@
   "publishConfig": {
     "access": "public"
   },
-  "version": "1.6.7",
+  "version": "1.8.1",
   "description": "A data driven contact information collector for 📣 stentor",
   "types": "lib/index",
   "typings": "lib/index",
@@ -20,16 +20,16 @@
     "@semantic-release/changelog": "6.0.3",
     "@semantic-release/commit-analyzer": "12.0.0",
     "@semantic-release/git": "10.0.1",
-    "@semantic-release/npm": "12.0.0",
+    "@semantic-release/npm": "12.0.1",
     "@semantic-release/release-notes-generator": "13.0.0",
     "@types/chai": "4.3.14",
     "@types/mocha": "10.0.6",
-    "@types/node": "20.12.11",
+    "@types/node": "20.12.13",
     "@types/sinon": "17.0.3",
     "@types/sinon-chai": "3.2.12",
     "@types/sparkpost": "^2.1.8",
-    "@typescript-eslint/eslint-plugin": "7.8.0",
-    "@typescript-eslint/parser": "7.8.0",
+    "@typescript-eslint/eslint-plugin": "7.12.0",
+    "@typescript-eslint/parser": "7.12.0",
     "@xapp/config": "0.2.3",
     "@xapp/question-answering-handler": "2.5.6",
     "aws-sdk": "2.1600.0",
@@ -40,11 +40,11 @@
     "eslint-plugin-notice": "0.9.10",
     "mocha": "10.4.0",
     "prettier": "3.2.5",
-    "semantic-release": "23.0.8",
-    "sinon": "17.0.1",
+    "semantic-release": "23.1.1",
+    "sinon": "18.0.0",
     "sinon-chai": "3.7.0",
-    "stentor": "1.59.48",
-    "stentor-service-fetch": "1.59.48",
+    "stentor": "1.59.60",
+    "stentor-service-fetch": "1.59.59",
     "ts-node": "10.9.2",
     "typescript": "5.4.5"
   },
@@ -60,7 +60,7 @@
     "stentor": "1.x",
     "stentor-service-fetch": "1.x"
   },
-  "packageManager": "yarn@3.8.1",
+  "packageManager": "yarn@3.8.2",
   "dependencies": {
     "sparkpost": "^2.1.4"
   }

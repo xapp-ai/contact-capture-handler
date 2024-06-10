@@ -1,3 +1,24 @@
+## [1.8.1](https://github.com/xapp-ai/contact-capture-handler/compare/v1.8.0...v1.8.1) (2024-06-03)
+
+
+### Bug Fixes
+
+* Added class to jobType ([#369](https://github.com/xapp-ai/contact-capture-handler/issues/369)) ([78bf282](https://github.com/xapp-ai/contact-capture-handler/commit/78bf2822af77de3c5d4082774c2b96e0979732c8))
+
+# [1.8.0](https://github.com/xapp-ai/contact-capture-handler/compare/v1.7.0...v1.8.0) (2024-05-28)
+
+
+### Features
+
+* Availability Support on Form Widget Channel ([#366](https://github.com/xapp-ai/contact-capture-handler/issues/366)) ([f0e761f](https://github.com/xapp-ai/contact-capture-handler/commit/f0e761fe8f07fa9611bab5f10ba1ea667a564091))
+
+# [1.7.0](https://github.com/xapp-ai/contact-capture-handler/compare/v1.6.7...v1.7.0) (2024-05-21)
+
+
+### Features
+
+* Adds Contact Us Only Fallback when enableFormScheduling is not set to true ([#365](https://github.com/xapp-ai/contact-capture-handler/issues/365)) ([8dc3601](https://github.com/xapp-ai/contact-capture-handler/commit/8dc3601c47b0e16152bef1914bfe766ac657741f))
+
 ## [1.6.7](https://github.com/xapp-ai/contact-capture-handler/compare/v1.6.6...v1.6.7) (2024-05-15)
 
 

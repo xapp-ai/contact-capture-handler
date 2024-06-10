@@ -120,7 +120,8 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
         const externalLead: ExternalLead = {
             fields,
             transcript,
-            refId: extras.existingRefId as string
+            refId: extras.existingRefId as string,
+            jobTypeId: extras.jobTypeId as string
         };
 
         if (request) {
@@ -226,8 +227,8 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
             log().info(`Request: ${key} Channel: ${request.channel} Query: "${request.rawQuery}"`);
             log().info(`Request Slots: ${requestSlotsToString(request.slots)}`);
         } else if (isChannelActionRequest(request)) {
-            log().info(`Request: CHANNEL_ACTION_REQUEST Channel: ${request.channel} Action: "${request.action}"`);
             const data: FormActionResponseData = request.attributes?.data as FormActionResponseData;
+            log().info(`Request: CHANNEL_ACTION_REQUEST Channel: ${request.channel} Action: "${request.action}" Step: "${data?.step}"`);
             log().info(`Attributes: ${JSON.stringify(data?.result || {})}`)
         }
 
