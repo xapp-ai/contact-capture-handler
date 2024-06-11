@@ -24,6 +24,7 @@ import { GooglePlacesService, PlacesService } from "../services";
 
 import { ResponseStrategy } from "./ResponseStrategy";
 import { ResultVariableGeneratedInformation } from "@xapp/question-answering-handler/lib/models";
+import { ChatResult } from "./models/xnlu";
 
 export class ProgrammaticResponseStrategy implements ResponseStrategy {
 
@@ -234,14 +235,35 @@ export class ProgrammaticResponseStrategy implements ResponseStrategy {
                 let leadStartResponse: Response;
                 if (isLookingForHelp) {
 
+                    // we only use the chat response on the first response
                     if (typeof this.data.useChatResponse === "boolean" && this.data.useChatResponse) {
 
                         // See if we have the response on the session data
                         const chatResponse: ResultVariableGeneratedInformation = context.session.get("CHAT_RESPONSE");
 
-                        if (chatResponse) {
-                            log().info(`Using chat response for help start content`);
+                        const attributes = request.attributes;
+                        // lets get the 
+                        const chatResult = attributes?.["CHAT_COMPLETION_RESULT"] as ChatResult;
 
+                        if (chatResult?.askedForContactInfo) {
+
+                            log().info(`Asked for contact info, using chat response for help start content.`);
+
+                            if (chatResult.answer) {
+                                leadStartResponse = {
+                                    outputSpeech: toResponseOutput(chatResult.answer),
+                                    tag: Constants.CONTACT_CAPTURE_HELP_START_CONTENT,
+                                }
+                            }
+
+                            if (chatResult.followUpQuestion) {
+                                response = {
+                                    outputSpeech: toResponseOutput(chatResult.followUpQuestion),
+                                    tag: Constants.CONTACT_CAPTURE_HELP_START_CONTENT
+                                }
+                            }
+                        } else if (chatResponse) {
+                            log().info(`Using chat response for help start content`);
                             leadStartResponse = {
                                 outputSpeech: toResponseOutput(chatResponse.markdownText),
                                 tag: Constants.CONTACT_CAPTURE_HELP_START_CONTENT
@@ -258,9 +280,49 @@ export class ProgrammaticResponseStrategy implements ResponseStrategy {
                 // TODO: What happens when leadStartResponse is empty
 
                 response.outputSpeech = concatResponseOutput(toResponseOutput(leadStartResponse.outputSpeech), toResponseOutput(response.outputSpeech), { delimiter: "\n\n" });
+
                 // since this is a start, we lose a little bit of fidelity
                 // on what question we ask but we need to track the start
                 response.tag = leadStartResponse.tag;
+                // add all the contexts if not 
+                if (!existsAndNotEmpty(response.context?.active)) {
+                    response.context = {
+                        active: [
+                            {
+                                name: "expecting_name",
+                                parameters: null,
+                                timeToLive: {
+                                    timeToLiveInSeconds: 400,
+                                    turnsToLive: 2
+                                }
+                            },
+                            {
+                                name: "expecting_email",
+                                parameters: null,
+                                timeToLive: {
+                                    timeToLiveInSeconds: 400,
+                                    turnsToLive: 2
+                                }
+                            },
+                            {
+                                name: "expecting_phone",
+                                parameters: null,
+                                timeToLive: {
+                                    timeToLiveInSeconds: 400,
+                                    turnsToLive: 2
+                                }
+                            },
+                            {
+                                name: "expecting_contact_pref",
+                                parameters: null,
+                                timeToLive: {
+                                    timeToLiveInSeconds: 400,
+                                    turnsToLive: 2
+                                }
+                            }
+                        ]
+                    }
+                }
             }
 
             // Update the list on session
