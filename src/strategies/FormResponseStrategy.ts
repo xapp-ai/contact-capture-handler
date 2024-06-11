@@ -47,16 +47,16 @@ export interface FormActionResponseData {
 function getContactFormFallback(): Response {
 
     const contactUsForm: MultistepForm = {
-        "name": "contact_us_only",
+        name: "contact_us_only",
         type: "FORM",
-        "header": [
+        header: [
             {
                 "step": "contact_info",
                 "label": "Contact"
             }
         ],
-        "labelHeader": true,
-        "steps": [
+        labelHeader: true,
+        steps: [
             {
                 "crmSubmit": true,
                 "final": true,
@@ -65,43 +65,43 @@ function getContactFormFallback(): Response {
                 "nextAction": "submit",
                 "fields": [
                     {
-                        "name": "full_name",
-                        "label": "Name",
-                        "type": "TEXT",
-                        "mandatory": true
+                        name: "full_name",
+                        label: "Name",
+                        type: "TEXT",
+                        mandatory: true
                     },
                     {
-                        "format": "PHONE",
-                        "name": "phone",
-                        "label": "Phone",
-                        "placeholder": "Your 10 digit phone number",
-                        "type": "TEXT",
-                        "mandatory": true
+                        format: "PHONE",
+                        name: "phone",
+                        label: "Phone",
+                        placeholder: "Your 10 digit phone number",
+                        type: "TEXT",
+                        mandatory: true
                     },
                     {
-                        "name": "message",
-                        "label": "Tell us what you need help with",
-                        "rows": 6,
-                        "type": "TEXT",
-                        "multiline": true
+                        name: "message",
+                        label: "Tell us what you need help with",
+                        rows: 6,
+                        type: "TEXT",
+                        multiline: true
                     }
                 ],
-                "title": "Contact Information"
+                title: "Contact Information"
             },
             {
-                "fields": [
+                fields: [
                     {
-                        "name": "thank_you_text",
-                        "header": {
-                            "title": "Thank You"
+                        name: "thank_you_text",
+                        header: {
+                            title: "Thank You"
                         },
-                        "text": "Somebody will call you as soon as possible.",
-                        "type": "CARD"
+                        text: "Somebody will call you as soon as possible.",
+                        type: "CARD"
                     }
                 ],
-                "previousAction": "omit",
-                "nextAction": "omit",
-                "name": "Thanks"
+                previousAction: "omit",
+                nextAction: "omit",
+                name: "Thanks"
             }
         ]
     };
@@ -179,7 +179,7 @@ function leadSummary(slots: RequestSlotMap, leadDataList: CaptureRuntimeData): s
  */
 function formatBusyDays(busyDays: CrmServiceAvailability): string {
     const busyDates: string[] = [];
-    
+
     busyDays.unavailabilities.forEach(value => {
         if (!value.available) {
             busyDates.push(value.date.date);
@@ -216,7 +216,7 @@ export class FormResponseStrategy implements ResponseStrategy {
             context.session.set(Constants.CONTACT_CAPTURE_LIST, leadDataList);
 
             // First availabilty
-            await this.addAvalabilty(response, context.services.crmService, context.session);
+            await this.addAvailability(response, context.services.crmService, context.session);
 
             return response;
         }
@@ -254,14 +254,14 @@ export class FormResponseStrategy implements ResponseStrategy {
             // Send the requested form
             if (data.followupForm) {
                 response = getFormResponse(handler.data, data.followupForm);
-                await this.addAvalabilty(response, context.services.crmService, context.session);
+                await this.addAvailability(response, context.services.crmService, context.session);
                 return response;
             }
 
             // Don't submit until the form says so
             if (!stepFromData.crmSubmit) {
                 response = {};
-                await this.addAvalabilty(response, context.services.crmService, context.session);
+                await this.addAvailability(response, context.services.crmService, context.session);
                 return response;
             }
 
@@ -326,11 +326,11 @@ export class FormResponseStrategy implements ResponseStrategy {
 
         // form widget - no response
         response = {};
-        await this.addAvalabilty(response, context.services.crmService, context.session);
+        await this.addAvailability(response, context.services.crmService, context.session);
         return response;
     }
 
-    private async addAvalabilty(response: Response, crmService: CrmService, session: SessionStore): Promise<Response> {
+    private async addAvailability(response: Response, crmService: CrmService, session: SessionStore): Promise<Response> {
         const leadDataList: CaptureRuntimeData = session.get(Constants.CONTACT_CAPTURE_LIST);
 
         let busyDays: CrmServiceAvailability = session.get(Constants.CONTACT_CAPTURE_BUSY_DAYS) as CrmServiceAvailability;
@@ -379,7 +379,7 @@ export class FormResponseStrategy implements ResponseStrategy {
                 }
             }
         }
-        
+
         response.context = {
             active: [
                 {

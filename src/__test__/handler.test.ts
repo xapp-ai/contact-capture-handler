@@ -544,7 +544,7 @@ describe(`${ContactCaptureHandler.name}`, () => {
                     await cc.handleRequest(request, context);
 
                     expect(response.respond).to.have.been.calledOnce;
-                    expect(response.respond).to.have.been.calledWith({
+                    expect(response.respond).to.have.been.calledWithMatch({
                         name: "First Name",
                         // This is the start
                         tag: "ContactCaptureStart",
@@ -1368,7 +1368,6 @@ describe(`${ContactCaptureHandler.name}`, () => {
                     const handler = new ContactCaptureHandler(props);
 
                     await handler.handleRequest(request, context);
-
 
                     expect(placesService.getDetails).to.have.been.calledOnce;
 

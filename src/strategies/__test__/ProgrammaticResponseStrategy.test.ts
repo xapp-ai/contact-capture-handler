@@ -16,10 +16,12 @@ import {
     toResponseOutput,
 } from "stentor";
 
+import * as Constants from "../../constants";
 import { ContactCaptureData } from "../../data";
 import { ContactCaptureHandler } from "../../handler";
 
 import { ProgrammaticResponseStrategy } from "../ProgrammaticResponseStrategy";
+import { ChatResult } from "../models/xnlu";
 
 const props: Handler<Content, ContactCaptureData> = {
     intentId: "intentId",
@@ -244,6 +246,68 @@ describe(`${ProgrammaticResponseStrategy.name}`, () => {
             const output = toResponseOutput(response.outputSpeech || "");
             expect(output.displayText).to.include("Best you get in touch with us for that.");
         });
-    });
+        describe("with chat completion result on the request", () => {
 
+            beforeEach(() => {
+                context = new ContextBuilder()
+                    .withResponse(response)
+                    .withSessionData({
+                        id: "foo",
+                        data: {
+                            "CHAT_RESPONSE": {
+                                text: "Best you get in touch with us for that.",
+                                markdownText: "Best you get in touch with us for that.",
+                            }
+                        }
+                    })
+                    .build();
+
+                const chatResult: ChatResult = {
+                    "needsAssistance": "YES",
+                    "potentialLead": true,
+                    "messageType": "CONTACT_REQUEST",
+                    "answer": "**We can help with the installation of your Phase 2 EV charger.**",
+                    "followUpQuestion": "Could you please provide your name and the best way for a team member to get in touch with you?",
+                    "response": "**We can help with the installation of your Phase 2 EV charger.** Could you please provide your name and the best way for a team member to get in touch with you?",
+                    "answeredQuestion": true,
+                    "suggestions": [
+                        "Contact Information",
+                        "EV Charger Installation"
+                    ],
+                    "urgency": "HIGH",
+                    "askedForContactInfo": true,
+                    "documentIds": [
+                        "1"
+                    ],
+                    "model": "gpt-4o",
+                    "queryTime": 3942,
+                    "queries": [
+                        "hi, i need some help getting a phase 2 ev charger setup"
+                    ]
+                };
+
+                request = new IntentRequestBuilder()
+                    .withSlots({})
+                    .withAttributes({
+                        CHAT_COMPLETION_RESULT: chatResult
+                    })
+                    .withIntentId(props.intentId)
+                    .updateDevice({
+                        canSpeak: false
+                    }).build();
+
+                request.overrideKey = "HelpWith";
+            });
+            it("returns a response from the chat result on the request attributes", async () => {
+                const strategy = new ProgrammaticResponseStrategy(props.data);
+                const response = await strategy.getResponse(handler, request, context);
+                expect(response).to.exist;
+                expect(response.tag).to.equal(Constants.CONTACT_CAPTURE_HELP_START_CONTENT);
+                expect(response?.context?.active).to.have.length(4);
+                const output = toResponseOutput(response.outputSpeech || "");
+                expect(output.displayText).to.include("**We can help with the installation of your Phase 2 EV charger.**");
+                expect(output.displayText).to.include("Could you please provide your name and the best way for a team member to get in touch with you?");
+            });
+        });
+    });
 });
