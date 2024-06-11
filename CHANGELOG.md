@@ -1,3 +1,10 @@
+# [1.9.0](https://github.com/xapp-ai/contact-capture-handler/compare/v1.8.1...v1.9.0) (2024-06-11)
+
+
+### Features
+
+* Support for new XNLU 2.0.2 Features ([#376](https://github.com/xapp-ai/contact-capture-handler/issues/376)) ([5886e69](https://github.com/xapp-ai/contact-capture-handler/commit/5886e69a1ce1e79d688ec7081bd76390d1e95354))
+
 ## [1.8.1](https://github.com/xapp-ai/contact-capture-handler/compare/v1.8.0...v1.8.1) (2024-06-03)
 
 
