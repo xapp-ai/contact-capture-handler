@@ -120,8 +120,6 @@ export class ProgrammaticResponseStrategy implements ResponseStrategy {
         // We will use this later to concatenate the 'start' content.
         let isFirstQuestion = false;
 
-        // 
-
         let leadDataList: CaptureRuntimeData = context.session.get(Constants.CONTACT_CAPTURE_LIST);
         // Make sure we have one, if we don't then it is their first question and we generate a new list
         // the list keeps track of what we still need from the user.

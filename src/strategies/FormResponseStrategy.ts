@@ -215,7 +215,7 @@ export class FormResponseStrategy implements ResponseStrategy {
             // Update the list on session
             context.session.set(Constants.CONTACT_CAPTURE_LIST, leadDataList);
 
-            // First availabilty
+            // First availability
             await this.addAvailability(response, context.services.crmService, context.session);
 
             return response;
