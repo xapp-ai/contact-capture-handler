@@ -200,7 +200,17 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
             "PhoneNumberOnly",
             "AppointmentDate",
             "OptionSelect",
+            "ContactMethod",
+            "ContactMethodOnly"
         ];
+
+        // ThatsAllIntent
+        // OCNo
+        // OCYes?
+
+        // These a
+        // StopIntent
+        // CancelIntent
 
         if (this?.data?.captureLead) {
             // we add these if we are capturing the lead then we want to keep the
@@ -239,6 +249,8 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
         // TODO: What to do in the form widget?
         if (leadSent) {
             log().info(`Lead already sent, calling super.handleRequest for content`);
+            // what happens when we don't have lead sent content?
+            // so
             // short circuit to the super
             return super.handleRequest(request, context);
         }
@@ -305,11 +317,9 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
                     context.response.response &&
                     Object.keys(context.response.response).length > 0
                 ) {
-                    // THE ASIDE CAN BE A PROBLEM IF WE ARE REPEATING IT
-                    // TODO: FIX SO WE DON"T REPEAT THE SAME ANSWER
-                    // WE CAN CHECK TO SEE IF IT IS THE SAME?
                     asideResponse = context.response.response;
                     context.session.set(Constants.CONTACT_CAPTURE_ASIDE, asideResponse);
+
                 }
             default:
             // default falls through below where we perform the lead capture

@@ -36,12 +36,13 @@ export class ProgrammaticResponseStrategy implements ResponseStrategy {
 
     public async getResponse(handler: ContactCaptureHandler, request: Request, context: Context): Promise<Response> {
 
-        // TODO: Update this method to return what fields the form-widget should ask for based on the handler.data fields
-
         const isAbandoned = isSessionClosed(request);
 
         // Helpful data that will be used
         const asideResponse: Response = context.session.get(Constants.CONTACT_CAPTURE_ASIDE);
+        // And immediately clear it out so we don't use the same one again
+        context.session.set(Constants.CONTACT_CAPTURE_ASIDE, undefined);
+
         const slots: RequestSlotMap = context.session.get(Constants.CONTACT_CAPTURE_SLOTS);
 
         const isLookingForHelp = lookingForHelp(request);
@@ -110,6 +111,7 @@ export class ProgrammaticResponseStrategy implements ResponseStrategy {
                 }
             }
 
+            // concatenate the aside response if we have one, it is ignored if we don't have one
             response = concatenateAside(response, asideResponse);
 
             return response;
@@ -119,7 +121,8 @@ export class ProgrammaticResponseStrategy implements ResponseStrategy {
         let isFirstQuestion = false;
 
         let leadDataList: CaptureRuntimeData = context.session.get(Constants.CONTACT_CAPTURE_LIST);
-        // Make sure we have one
+        // Make sure we have one, if we don't then it is their first question and we generate a new list
+        // the list keeps track of what we still need from the user.
         if (!leadDataList) {
             // New potential lead!
             // Make an entry for the "lead sweeper"
