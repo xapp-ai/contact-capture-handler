@@ -27,6 +27,7 @@ import {
     hasSessionId
 } from "stentor";
 import { ExternalLead } from "stentor-models";
+import { splitTextIntoSentences, popLastQuestion, ssmlify } from "stentor-utils";
 
 import * as Constants from "./constants";
 import { ContactDataType, ContactCaptureData, CaptureRuntimeData } from "./data";
@@ -138,40 +139,23 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
             }
         }
 
+        log().debug(`Sending lead to FSM/CRM:`);
         log().debug(`===\n${JSON.stringify(externalLead, null, 2)}\n===`);
 
-        let sendLead = true;
-
-        const envSendLead = process.env.SEND_LEAD;
-        if (envSendLead && typeof envSendLead === "string") {
-            // if we have it, use it
-            if (envSendLead.toLowerCase() === "true") {
-                sendLead = true;
-            } else if (envSendLead.toLowerCase() === "false") {
-                sendLead = false;
-            }
-        }
-        if (sendLead) {
-            try {
-                const response = await service.send(externalLead, extras);
-                if (response.status === "Success") {
-                    return { success: true, id: response.refId };
-                } else {
-                    log().error(`Lead not sent!`);
-                    log().error(response.message);
-                    eventService.error(new LeadError(`Lead not sent:${response.message}`));
-                    return { success: false };
-                }
-            } catch (e) {
+        try {
+            const response = await service.send(externalLead, extras);
+            if (response.status === "Success") {
+                return { success: true, id: response.refId };
+            } else {
                 log().error(`Lead not sent!`);
-                log().error(e);
-                eventService.error(e);
+                log().error(response.message);
+                eventService.error(new LeadError(`Lead not sent:${response.message}`));
                 return { success: false };
             }
-        } else {
-            log().warn(`NOT SENDING LEADS.  Set environment variable SEND_LEAD=true to send.`);
-            log().info(`===\n${JSON.stringify(externalLead, null, 2)}\n===`);
-            // Do we fake it here?
+        } catch (e) {
+            log().error(`Lead not sent!`);
+            log().error(e);
+            eventService.error(e);
             return { success: false };
         }
     }
@@ -317,9 +301,23 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
                     context.response.response &&
                     Object.keys(context.response.response).length > 0
                 ) {
+
                     asideResponse = context.response.response;
 
-                    // TODO: clean off the question if it ends in one
+                    const asideResponseOutput = toResponseOutput(asideResponse.outputSpeech);
+
+                    const asideText = asideResponseOutput.displayText;
+                    const asideSentences: string[] = splitTextIntoSentences(asideText);
+
+                    if (asideSentences.length > 1) {
+                        // Pop the last question off the end
+                        const [newAsideText] = popLastQuestion(asideText);
+
+                        asideResponseOutput.displayText = newAsideText;
+                        asideResponseOutput.ssml = ssmlify(newAsideText);
+
+                        asideResponse.outputSpeech = asideResponseOutput;
+                    }
 
                     context.session.set(Constants.CONTACT_CAPTURE_ASIDE, asideResponse);
 
@@ -330,7 +328,7 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
 
         // Alert people the new setting
         if (typeof this.data.captureLead !== "boolean") {
-            log().warn(`'captureLead' is not set on handler data, currently defaulting to false which means it will not capture lead data. type:${typeof this.data.captureLead} value:${this.data.captureLead}`);
+            log().warn(`'captureLead' is not set on handler data, currently defaulting to false which means it will not capture lead data.type: ${typeof this.data.captureLead} value: ${this.data.captureLead}`);
             log().debug(this.data);
         }
 
