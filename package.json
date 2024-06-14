@@ -31,7 +31,7 @@
     "@typescript-eslint/eslint-plugin": "7.13.0",
     "@typescript-eslint/parser": "7.13.0",
     "@xapp/config": "0.2.3",
-    "@xapp/question-answering-handler": "2.5.9",
+    "@xapp/question-answering-handler": "2.5.10",
     "aws-sdk": "2.1600.0",
     "chai": "4.4.1",
     "conventional-changelog-conventionalcommits": "8.0.0",
@@ -43,7 +43,7 @@
     "semantic-release": "23.1.1",
     "sinon": "18.0.0",
     "sinon-chai": "3.7.0",
-    "stentor": "1.59.64",
+    "stentor": "1.59.65",
     "stentor-service-fetch": "1.59.63",
     "ts-node": "10.9.2",
     "typescript": "5.4.5"
