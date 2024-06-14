@@ -1,3 +1,10 @@
+## [1.9.2](https://github.com/xapp-ai/contact-capture-handler/compare/v1.9.1...v1.9.2) (2024-06-14)
+
+
+### Bug Fixes
+
+* Support for environment variable on useChatResponse([#383](https://github.com/xapp-ai/contact-capture-handler/issues/383)) ([b247289](https://github.com/xapp-ai/contact-capture-handler/commit/b247289b3c63f305a762e39e8f73e7d116196f15))
+
 ## [1.9.1](https://github.com/xapp-ai/contact-capture-handler/compare/v1.9.0...v1.9.1) (2024-06-12)
 
 
