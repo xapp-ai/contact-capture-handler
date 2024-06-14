@@ -318,6 +318,9 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
                     Object.keys(context.response.response).length > 0
                 ) {
                     asideResponse = context.response.response;
+
+                    // TODO: clean off the question if it ends in one
+
                     context.session.set(Constants.CONTACT_CAPTURE_ASIDE, asideResponse);
 
                 }

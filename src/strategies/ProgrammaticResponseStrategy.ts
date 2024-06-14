@@ -238,15 +238,29 @@ export class ProgrammaticResponseStrategy implements ResponseStrategy {
                 let leadStartResponse: Response;
                 if (isLookingForHelp) {
 
+                    // useChatResponse allows us to use the chat response for the help start content
+                    // we look for it on the data object first and then an environment variable
+                    let useChatResponse = false;
+
+                    const hasUseChatResponseOnData = typeof this.data.useChatResponse === "boolean";
+
+                    if (hasUseChatResponseOnData) {
+                        useChatResponse = this.data.useChatResponse;
+                    } else if (process.env.USE_CHAT_RESPONSE === "true") {
+                        useChatResponse = true;
+                    }
+
+                    const attributes = request.attributes;
+
                     // we only use the chat response on the first response
-                    if (typeof this.data.useChatResponse === "boolean" && this.data.useChatResponse) {
+                    if (useChatResponse && attributes) {
+
 
                         // See if we have the response on the session data
-                        const chatResponse: ResultVariableGeneratedInformation = context.session.get("CHAT_RESPONSE");
+                        const chatResponse: ResultVariableGeneratedInformation = attributes["CHAT_RESPONSE"];
 
-                        const attributes = request.attributes;
                         // lets get the 
-                        const chatResult = attributes?.["CHAT_COMPLETION_RESULT"] as ChatResult;
+                        const chatResult = attributes["CHAT_COMPLETION_RESULT"] as ChatResult;
 
                         if (chatResult?.askedForContactInfo) {
 
@@ -276,7 +290,6 @@ export class ProgrammaticResponseStrategy implements ResponseStrategy {
                     if (!leadStartResponse) {
                         leadStartResponse = getResponseByTag(responses, Constants.CONTACT_CAPTURE_HELP_START_CONTENT);
                     }
-
                 } else {
                     leadStartResponse = getResponseByTag(responses, Constants.CONTACT_CAPTURE_START_CONTENT);
                 }

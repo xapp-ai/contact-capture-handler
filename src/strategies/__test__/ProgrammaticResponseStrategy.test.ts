@@ -183,17 +183,15 @@ describe(`${ProgrammaticResponseStrategy.name}`, () => {
 
         request.overrideKey = "HelpWith";
 
+        request.attributes = {
+            "CHAT_RESPONSE": {
+                text: "Best you get in touch with us for that.",
+                markdownText: "Best you get in touch with us for that.",
+            }
+        };
+
         context = new ContextBuilder()
             .withResponse(response)
-            .withSessionData({
-                id: "foo",
-                data: {
-                    "CHAT_RESPONSE": {
-                        text: "Best you get in touch with us for that.",
-                        markdownText: "Best you get in touch with us for that.",
-                    }
-                }
-            })
             .build();
     })
     describe("with useChat set to false", () => {
@@ -247,7 +245,6 @@ describe(`${ProgrammaticResponseStrategy.name}`, () => {
             expect(output.displayText).to.include("Best you get in touch with us for that.");
         });
         describe("with chat completion result on the request", () => {
-
             beforeEach(() => {
                 context = new ContextBuilder()
                     .withResponse(response)
