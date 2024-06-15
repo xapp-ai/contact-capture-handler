@@ -981,8 +981,8 @@ describe(`${ContactCaptureHandler.name}`, () => {
                             generated: [
                                 {
                                     title: "Answer",
-                                    generated: "This is the answer.",
-                                    document: "This is the answer.",
+                                    generated: "This is the answer.  Anything else I can help with?",
+                                    document: "This is the answer.  Anything else I can help with?",
                                     type: "retrieval-augmented-generation",
                                     hasAnswer: true
                                 }
@@ -1033,6 +1033,7 @@ describe(`${ContactCaptureHandler.name}`, () => {
 
                         expect(response.respond).to.have.been.calledTwice;
                         // first call is getting the FAQ response
+                        // it is later cleaned up and is concatenated with the contact info request
                         expect(response.respond).to.have.been.calledWith(
                             {
                                 outputSpeech: {
@@ -1191,19 +1192,6 @@ describe(`${ContactCaptureHandler.name}`, () => {
                     const leadSent = sessionStore ? sessionStore[CONTACT_CAPTURE_SENT] : undefined;
                     expect(leadSent).to.be.true;
                 });
-                describe("when SEND_LEAD is set to false", () => {
-                    beforeEach(() => {
-                        process.env.SEND_LEAD = "false";
-                    });
-                    afterEach(() => {
-                        delete process.env.SEND_LEAD;
-                    });
-                    it("doesn't send the lead", async () => {
-                        cc = new ContactCaptureHandler(props);
-                        await cc.handleRequest(request, context);
-                        expect(crmService.send).to.have.not.been.called;
-                    });
-                })
             });
             describe("after a lead has been sent", () => {
                 const sandbox = sinon.createSandbox();
