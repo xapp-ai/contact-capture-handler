@@ -1,3 +1,10 @@
+## [1.9.3](https://github.com/xapp-ai/contact-capture-handler/compare/v1.9.2...v1.9.3) (2024-06-15)
+
+
+### Bug Fixes
+
+* Clear off follow up question on aside response ([#385](https://github.com/xapp-ai/contact-capture-handler/issues/385)) ([06df368](https://github.com/xapp-ai/contact-capture-handler/commit/06df368063cfcbc28abe59c7c84854023c763c33))
+
 ## [1.9.2](https://github.com/xapp-ai/contact-capture-handler/compare/v1.9.1...v1.9.2) (2024-06-14)
 
 
