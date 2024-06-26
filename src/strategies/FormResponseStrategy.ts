@@ -81,7 +81,7 @@ function getContactFormFallback(): Response {
                     {
                         name: "message",
                         label: "Tell us what you need help with",
-                        rows: 6,
+                        rows: 3,
                         type: "TEXT",
                         multiline: true
                     }
