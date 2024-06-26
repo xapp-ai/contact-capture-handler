@@ -1,3 +1,10 @@
+## [1.9.4](https://github.com/xapp-ai/contact-capture-handler/compare/v1.9.3...v1.9.4) (2024-06-26)
+
+
+### Bug Fixes
+
+* Lower Default Lines to 3 (from 6) on non-scheduling Form ([#394](https://github.com/xapp-ai/contact-capture-handler/issues/394)) ([48b0d74](https://github.com/xapp-ai/contact-capture-handler/commit/48b0d74cdc78aef7325c757f48ff970511e839bb))
+
 ## [1.9.3](https://github.com/xapp-ai/contact-capture-handler/compare/v1.9.2...v1.9.3) (2024-06-15)
 
 
