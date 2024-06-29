@@ -122,7 +122,8 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
             fields,
             transcript,
             refId: extras.existingRefId as string,
-            jobTypeId: extras.jobTypeId as string
+            jobTypeId: extras.jobTypeId as string,
+            availabilityClassId: extras.avalabilityClassId as string
         };
 
         if (request) {

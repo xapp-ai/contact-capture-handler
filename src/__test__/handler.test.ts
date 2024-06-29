@@ -1177,6 +1177,7 @@ describe(`${ContactCaptureHandler.name}`, () => {
                         transcript: [],
                         refId: undefined,
                         jobTypeId: undefined,
+                        availabilityClassId: undefined,
                         userId: "userId",
                         sessionId: "sessionId",
                         source: "stentor"

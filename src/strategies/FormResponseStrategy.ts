@@ -291,6 +291,7 @@ export class FormResponseStrategy implements ResponseStrategy {
             externalId: hasSessionId(request) ? request.sessionId : "unknown",
             existingRefId,
             jobTypeId: jobType?.id,
+            avalabilityClassId: jobType?.class,
             crmFlags: handler.data?.crmFlags,
             isAbandoned,
         };
