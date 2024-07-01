@@ -1,3 +1,10 @@
+## [1.9.5](https://github.com/xapp-ai/contact-capture-handler/compare/v1.9.4...v1.9.5) (2024-07-01)
+
+
+### Bug Fixes
+
+* update dependency mocha to v10.5.2 ([#396](https://github.com/xapp-ai/contact-capture-handler/issues/396)) ([9931c17](https://github.com/xapp-ai/contact-capture-handler/commit/9931c17b011247f8793315eea9a61afdcf4dcf93))
+
 ## [1.9.4](https://github.com/xapp-ai/contact-capture-handler/compare/v1.9.3...v1.9.4) (2024-06-26)
 
 

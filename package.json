@@ -4,7 +4,7 @@
   "publishConfig": {
     "access": "public"
   },
-  "version": "1.9.4",
+  "version": "1.9.5",
   "description": "A data driven contact information collector for 📣 stentor",
   "types": "lib/index",
   "typings": "lib/index",
