@@ -60,7 +60,7 @@
     "stentor": "1.x",
     "stentor-service-fetch": "1.x"
   },
-  "packageManager": "yarn@3.8.2",
+  "packageManager": "yarn@3.8.3",
   "dependencies": {
     "sparkpost": "^2.1.4"
   }
