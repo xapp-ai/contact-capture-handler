@@ -1,3 +1,10 @@
+# [1.10.0](https://github.com/xapp-ai/contact-capture-handler/compare/v1.9.5...v1.10.0) (2024-07-16)
+
+
+### Features
+
+* Appending Google Action Tracking to Extras ([#406](https://github.com/xapp-ai/contact-capture-handler/issues/406)) ([65183d3](https://github.com/xapp-ai/contact-capture-handler/commit/65183d32bd95a42a965dc359f763eea16d819198))
+
 ## [1.9.5](https://github.com/xapp-ai/contact-capture-handler/compare/v1.9.4...v1.9.5) (2024-07-01)
 
 
