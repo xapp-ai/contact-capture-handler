@@ -115,6 +115,13 @@ function getContactFormFallback(): Response {
 }
 
 function getFormResponse(data: ContactCaptureData, formName: string): Response {
+
+    if (data?.enableFormScheduling) {
+        // remove this after a couple of releases
+        log().warn(`NEW FEATURE! You must enable scheduling if you are running this standalone.  Set enableFormScheduling to true in handler data.!`);
+        return getContactFormFallback();
+    }
+
     const formDeclaration = data.forms.find((form) => {
         return (form.name = formName);
     });
@@ -192,12 +199,6 @@ function formatBusyDays(busyDays: CrmServiceAvailability): string {
 export class FormResponseStrategy implements ResponseStrategy {
     public async getResponse(handler: ContactCaptureHandler, request: Request, context: Context): Promise<Response> {
 
-        if (!handler?.data?.enableFormScheduling) {
-            // remove this after a couple of releases
-            log().warn(`NEW FEATURE! You must enable scheduling if you are running this standalone.  Set enableFormScheduling to true in handler data.!`);
-            return getContactFormFallback()
-        }
-
         const slots: RequestSlotMap = context.session.get(Constants.CONTACT_CAPTURE_SLOTS);
 
         // Our response that we will end up returning
@@ -265,7 +266,7 @@ export class FormResponseStrategy implements ResponseStrategy {
                 return response;
             }
 
-            // Form widget has to say we are fininshed (unless session is closed)
+            // Form widget has to say we are finished (unless session is closed)
             // if (!stepFromData.final) {
             //     return {};
             // }
@@ -276,6 +277,7 @@ export class FormResponseStrategy implements ResponseStrategy {
 
         // if we created a CRM object and then closed, then we are done
         if (isAbandoned && existingRefId) {
+            log().info(`Abandoned and has existingRefEd ${existingRefId}, returning`);
             return {};
         }
 
