@@ -1,3 +1,10 @@
+## [1.10.1](https://github.com/xapp-ai/contact-capture-handler/compare/v1.10.0...v1.10.1) (2024-07-16)
+
+
+### Bug Fixes
+
+* Only return default form at first request to allow lead capture to complete ([#407](https://github.com/xapp-ai/contact-capture-handler/issues/407)) ([8673d84](https://github.com/xapp-ai/contact-capture-handler/commit/8673d848fbf8006c714512d29d782124eed95f24))
+
 # [1.10.0](https://github.com/xapp-ai/contact-capture-handler/compare/v1.9.5...v1.10.0) (2024-07-16)
 
 
