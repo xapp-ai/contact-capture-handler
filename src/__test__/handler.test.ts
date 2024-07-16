@@ -7,22 +7,21 @@ chai.use(sinonChai);
 const expect = chai.expect;
 
 import {
-    Content,
     Context,
     IntentRequest,
-    Handler,
     ResponseBuilder,
     KnowledgeBaseResult,
     CrmService
 } from "stentor";
-import { CrmResponse, CrmServiceAvailability } from "stentor-models";
+import { CrmResponse, CrmServiceAvailability, ErrorEvent, ErrorService } from "stentor-models";
 import { IntentRequestBuilder } from "stentor-request";
 import { ContextBuilder } from "stentor-context";
 
-import { ContactCaptureData } from "../data";
 import { ContactCaptureHandler } from "../handler";
 import { CONTACT_CAPTURE_CURRENT_DATA, CONTACT_CAPTURE_LIST, CONTACT_CAPTURE_SENT, CONTACT_CAPTURE_SLOTS } from "../constants";
 import { DetailParams, Place, PlacesService, SearchParams } from "../services";
+
+import { props, propsWithAnyInputQuestion, propsWithNoCapture, propsWithNoCaptureAndContent } from "./assets";
 
 class MockCRM implements CrmService {
     public update?(): Promise<CrmResponse> {
@@ -55,385 +54,9 @@ class MockPlacesService implements PlacesService {
     }
 }
 
-const props: Handler<Content, ContactCaptureData> = {
-    intentId: "intentId",
-    type: "ContactCaptureHandler",
-    appId: "appId",
-    organizationId: "organizationId",
-    content: {
-        ["intentId"]: [
-            {
-                name: "First Name",
-                tag: "FirstNameQuestionContent",
-                outputSpeech: {
-                    ssml: "<speak>What is your name?</speak>",
-                    displayText: "What is your name?",
-                },
-                reprompt: {
-                    ssml: "<speak>May I have your name?</speak>",
-                    displayText: "May I have your name?"
-                }
-            },
-            {
-                name: "Start",
-                tag: "ContactCaptureStart",
-                outputSpeech: {
-                    ssml: "<speak>Why hello!</speak>",
-                    displayText: "Why hello!",
-                }
-            }
-        ],
-        ["OCSearch"]: [
-            {
-                name: "FAQ",
-                tag: "KB_TOP_FAQ",
-                outputSpeech: {
-                    ssml: "<speak>${TOP_FAQ.text}</speak>",
-                    displayText: "${TOP_FAQ.text}",
-                },
-                conditions: "!!session('TOP_FAQ')"
-            }
-        ],
-        ["Thanks"]: [
-            {
-                name: "No Problem",
-                outputSpeech: {
-                    ssml: "<speak>No Problem</speak>",
-                    displayText: "No problem",
-                }
-            }
-        ]
-    },
-    data: {
-        "inputUnknownStrategy": "REPROMPT",
-        "captureLead": true,
-        "capture": {
-            "data": [
-                {
-                    "slotName": "first_name",
-                    "active": true,
-                    "type": "FIRST_NAME",
-                    "questionContentKey": "FirstNameQuestionContent"
-                },
-                {
-                    "slotName": "last_name",
-                    "active": true,
-                    "type": "LAST_NAME",
-                    "questionContentKey": "LastNameQuestionContent"
-                },
-                {
-                    "slotName": "phone",
-                    "active": true,
-                    "type": "PHONE",
-                    "questionContentKey": "PhoneQuestionContent"
-                },
-                {
-                    "slotName": "full_name",
-                    "active": false,
-                    "type": "FULL_NAME",
-                    "questionContentKey": "FullNameQuestionContent"
-                },
-                {
-                    "slotName": "zip",
-                    "active": false,
-                    "type": "ZIP",
-                    "questionContentKey": "ZipQuestionContent"
-                },
-                {
-                    "slotName": "address",
-                    "active": true,
-                    "type": "ADDRESS",
-                    "questionContentKey": "AddressQuestionContent"
-                },
-                {
-                    "slotName": "email",
-                    "active": false,
-                    "type": "EMAIL",
-                    "questionContentKey": "EmailQuestionContent"
-                },
-                {
-                    "slotName": "dateTime",
-                    "active": false,
-                    "type": "DATE_TIME",
-                    "questionContentKey": "DateTimeQuestionContent"
-                },
-                {
-                    "slotName": "organization",
-                    "active": true,
-                    "acceptAnyInput": true,
-                    "type": "ORGANIZATION",
-                    "questionContentKey": "OrganizationQuestionContent"
-                },
-                {
-                    "slotName": "selection",
-                    "enums": [
-                        "Solar",
-                        "Roofing"
-                    ],
-                    "active": false,
-                    "type": "SELECTION",
-                    "questionContentKey": "SelectionQuestionContent"
-                },
-                {
-                    "slotName": "message",
-                    "acceptAnyInput": true,
-                    "active": false,
-                    "type": "MESSAGE",
-                    "questionContentKey": "MessageQuestionContent"
-                }
-            ]
-        },
-        "chat": {
-            "followUp": ""
-        },
-        CAPTURE_MAIN_FORM: "",
-        FUZZY_MATCH_FAQS: true
-    }
-}
-
-const propsWithAnyInputQuestion: Handler<Content, ContactCaptureData> = {
-    intentId: "intentId",
-    type: "ContactCaptureHandler",
-    appId: "appId",
-    organizationId: "organizationId",
-    content: {
-        ["intentId"]: [
-            {
-                name: "First Name",
-                tag: "FirstNameQuestionContent",
-                outputSpeech: {
-                    ssml: "<speak>What is your name?</speak>",
-                    displayText: "What is your name?",
-                }
-            },
-            {
-                name: "Organization",
-                tag: "OrganizationQuestionContent",
-                outputSpeech: {
-                    ssml: "<speak>What is your organization?</speak>",
-                    displayText: "What is your organization?",
-                }
-            },
-            {
-                name: "Start",
-                tag: "ContactCaptureStart",
-                outputSpeech: {
-                    ssml: "<speak>Why hello!</speak>",
-                    displayText: "Why hello!",
-                }
-            }
-        ]
-    },
-    data: {
-        "inputUnknownStrategy": "REPROMPT",
-        "capture": {
-            "data": [
-                {
-                    "slotName": "first_name",
-                    "active": true,
-                    "type": "FIRST_NAME",
-                    "questionContentKey": "FirstNameQuestionContent"
-                },
-                {
-                    "slotName": "last_name",
-                    "active": false,
-                    "type": "LAST_NAME",
-                    "questionContentKey": "LastNameQuestionContent"
-                },
-                {
-                    "slotName": "phone",
-                    "active": false,
-                    "type": "PHONE",
-                    "questionContentKey": "PhoneQuestionContent"
-                },
-                {
-                    "slotName": "full_name",
-                    "active": false,
-                    "type": "FULL_NAME",
-                    "questionContentKey": "FullNameQuestionContent"
-                },
-                {
-                    "slotName": "zip",
-                    "active": false,
-                    "type": "ZIP",
-                    "questionContentKey": "ZipQuestionContent"
-                },
-                {
-                    "slotName": "address",
-                    "active": false,
-                    "type": "ADDRESS",
-                    "questionContentKey": "AddressQuestionContent"
-                },
-                {
-                    "slotName": "email",
-                    "active": false,
-                    "type": "EMAIL",
-                    "questionContentKey": "EmailQuestionContent"
-                },
-                {
-                    "slotName": "dateTime",
-                    "active": false,
-                    "type": "DATE_TIME",
-                    "questionContentKey": "DateTimeQuestionContent"
-                },
-                {
-                    "slotName": "organization",
-                    "active": true,
-                    "acceptAnyInput": true,
-                    "type": "ORGANIZATION",
-                    "questionContentKey": "OrganizationQuestionContent"
-                },
-                {
-                    "slotName": "selection",
-                    "enums": [
-                        "Solar",
-                        "Roofing"
-                    ],
-                    "active": false,
-                    "type": "SELECTION",
-                    "questionContentKey": "SelectionQuestionContent"
-                },
-                {
-                    "slotName": "message",
-                    "acceptAnyInput": true,
-                    "active": false,
-                    "type": "MESSAGE",
-                    "questionContentKey": "MessageQuestionContent"
-                }
-            ]
-        },
-        "captureLead": true,
-        CAPTURE_MAIN_FORM: ""
-    }
-}
-
-const propsWithNoCapture: Handler<Content, ContactCaptureData> = {
-    intentId: "intentId",
-    type: "ContactCaptureHandler",
-    appId: "appId",
-    organizationId: "organizationId",
-    content: {
-        ["intentId"]: [
-            {
-                name: "First Name",
-                tag: "FirstNameQuestionContent",
-                outputSpeech: {
-                    ssml: "<speak>What is your name?</speak>",
-                    displayText: "What is your name?",
-                },
-                reprompt: {
-                    ssml: "<speak>May I have your name?</speak>",
-                    displayText: "May I have your name?"
-                }
-            },
-            {
-                name: "Start",
-                tag: "ContactCaptureStart",
-                outputSpeech: {
-                    ssml: "<speak>Why hello!</speak>",
-                    displayText: "Why hello!",
-                }
-            }
-        ],
-        ["OCSearch"]: [
-            {
-                name: "FAQ",
-                tag: "KB_TOP_FAQ",
-                outputSpeech: {
-                    ssml: "<speak>${TOP_FAQ.text}</speak>",
-                    displayText: "${TOP_FAQ.text}",
-                },
-                conditions: "!!session('TOP_FAQ')"
-            }
-        ],
-        ["Thanks"]: [
-            {
-                name: "No Problem",
-                outputSpeech: {
-                    ssml: "<speak>No Problem</speak>",
-                    displayText: "No problem",
-                }
-            }
-        ]
-    },
-    data: {
-        "inputUnknownStrategy": "REPROMPT",
-        "capture": {
-            "data": []
-        },
-        "chat": {
-            "followUp": ""
-        },
-        CAPTURE_MAIN_FORM: ""
-    }
-}
-
-const propsWithNoCaptureAndContent: Handler<Content, ContactCaptureData> = {
-    intentId: "intentId",
-    type: "ContactCaptureHandler",
-    appId: "appId",
-    organizationId: "organizationId",
-    content: {
-        ["intentId"]: [
-            {
-                name: "First Name",
-                tag: "FirstNameQuestionContent",
-                outputSpeech: {
-                    ssml: "<speak>What is your name?</speak>",
-                    displayText: "What is your name?",
-                },
-                reprompt: {
-                    ssml: "<speak>May I have your name?</speak>",
-                    displayText: "May I have your name?"
-                }
-            },
-            {
-                name: "Start",
-                tag: "ContactCaptureStart",
-                outputSpeech: {
-                    ssml: "<speak>Why hello!</speak>",
-                    displayText: "Why hello!",
-                }
-            },
-            {
-                name: "No Capture",
-                tag: "ContactCaptureNoCaptureStart",
-                outputSpeech: {
-                    displayText: "Please call us ASAP!"
-                }
-            }
-        ],
-        ["OCSearch"]: [
-            {
-                name: "FAQ",
-                tag: "KB_TOP_FAQ",
-                outputSpeech: {
-                    ssml: "<speak>${TOP_FAQ.text}</speak>",
-                    displayText: "${TOP_FAQ.text}",
-                },
-                conditions: "!!session('TOP_FAQ')"
-            }
-        ],
-        ["Thanks"]: [
-            {
-                name: "No Problem",
-                outputSpeech: {
-                    ssml: "<speak>No Problem</speak>",
-                    displayText: "No problem",
-                }
-            }
-        ]
-    },
-    data: {
-        "inputUnknownStrategy": "REPROMPT",
-        "capture": {
-            "data": []
-        },
-        "chat": {
-            "followUp": ""
-        },
-        CAPTURE_MAIN_FORM: "",
-        FUZZY_MATCH_FAQS: true
+class MockErrorService implements ErrorService {
+    error(error: Error): ErrorEvent {
+        throw error;
     }
 }
 
@@ -501,6 +124,50 @@ describe(`${ContactCaptureHandler.name}`, () => {
                 });
             });
         });
+    });
+    describe(`#${ContactCaptureHandler.sendLead.name}()`, () => {
+        const sandbox = sinon.createSandbox();
+
+        afterEach(() => {
+            sandbox.restore();
+        });
+        describe("for a request with tracking", () => {
+            it("adds it to the extras", () => {
+
+                const request = new IntentRequestBuilder().withAttributes({
+                    rwg_token: "123",
+                    merchant_id: "456"
+                }).build();
+
+                const crmService = new MockCRM();
+                sandbox.spy(crmService, "send");
+
+                ContactCaptureHandler.sendLead(
+                    {},
+                    {},
+                    { data: [] },
+                    [],
+                    crmService,
+                    request,
+                    new MockErrorService()
+                );
+
+                expect(crmService.send).to.have.been.calledOnce;
+                expect(crmService.send).to.have.been.calledWith({
+                    fields: [],
+                    transcript: [],
+                    refId: undefined,
+                    jobTypeId: undefined,
+                    availabilityClassId: undefined,
+                    userId: "userId",
+                    sessionId: "sessionId",
+                    source: "stentor"
+                }, {
+                    rwg_token: "123",
+                    merchant_id: "456",
+                });
+            });
+        })
     });
     describe(`#${ContactCaptureHandler.prototype.handleRequest.name}()`, () => {
         describe("with captureLead set to true", () => {

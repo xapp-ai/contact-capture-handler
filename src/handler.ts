@@ -138,6 +138,16 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
             if (request.channel) {
                 externalLead.source = request.channel
             }
+
+            if (request.attributes && Object.keys(request.attributes).length > 0) {
+                if (request.attributes.rwg_token) {
+                    extras.rwg_token = request.attributes.rwg_token;
+                }
+
+                if (request.attributes.merchant_id) {
+                    extras.merchant_id = request.attributes.merchant_id;
+                }
+            }
         }
 
         log().debug(`Sending lead to FSM/CRM:`);
