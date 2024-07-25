@@ -1,3 +1,10 @@
+# [1.11.0](https://github.com/xapp-ai/contact-capture-handler/compare/v1.10.1...v1.11.0) (2024-07-25)
+
+
+### Features
+
+* Enable Preferred Time on Reserve with Google ([#414](https://github.com/xapp-ai/contact-capture-handler/issues/414)) ([fb6e739](https://github.com/xapp-ai/contact-capture-handler/commit/fb6e73944a2543e57fb01eadb7eaafb0b61cb07c))
+
 ## [1.10.1](https://github.com/xapp-ai/contact-capture-handler/compare/v1.10.0...v1.10.1) (2024-07-16)
 
 
