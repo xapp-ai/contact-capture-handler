@@ -11,15 +11,16 @@ import {
     requestSlotValueToString,
     Response,
 } from "stentor";
+import { CrmServiceAvailability, SessionStore } from "stentor-models";
 
 import * as Constants from "../constants";
-import { CaptureRuntimeData, ContactCaptureData } from "../data";
+import { CaptureRuntimeData } from "../data";
 import { isSessionClosed, newLeadGenerationData } from "../utils";
 import { ContactCaptureHandler } from "../handler";
 
 import { ResponseStrategy } from "./ResponseStrategy";
-import { CrmServiceAvailability, SessionStore } from "stentor-models";
-import { MultistepForm } from "../form";
+import { getFormResponse, getStepFromData } from "./utils/forms";
+
 
 /**
  * Action response data object
@@ -39,121 +40,7 @@ export interface FormActionResponseData {
     followupForm?: string;
 }
 
-/**
- * Get a simple contact us form.
- * 
- * @returns 
- */
-function getContactFormFallback(): Response {
 
-    const contactUsForm: MultistepForm = {
-        name: "contact_us_only",
-        type: "FORM",
-        header: [
-            {
-                "step": "contact_info",
-                "label": "Contact"
-            }
-        ],
-        labelHeader: true,
-        steps: [
-            {
-                "crmSubmit": true,
-                "final": true,
-                "name": "contact_info",
-                "nextLabel": "Submit",
-                "nextAction": "submit",
-                "fields": [
-                    {
-                        name: "full_name",
-                        label: "Name",
-                        type: "TEXT",
-                        mandatory: true
-                    },
-                    {
-                        format: "PHONE",
-                        name: "phone",
-                        label: "Phone",
-                        placeholder: "Your 10 digit phone number",
-                        type: "TEXT",
-                        mandatory: true
-                    },
-                    {
-                        name: "message",
-                        label: "Tell us what you need help with",
-                        rows: 3,
-                        type: "TEXT",
-                        multiline: true
-                    }
-                ],
-                title: "Contact Information"
-            },
-            {
-                fields: [
-                    {
-                        name: "thank_you_text",
-                        header: {
-                            title: "Thank You"
-                        },
-                        text: "Somebody will call you as soon as possible.",
-                        type: "CARD"
-                    }
-                ],
-                previousAction: "omit",
-                nextAction: "omit",
-                name: "Thanks"
-            }
-        ]
-    };
-
-    const response: Response = {
-        tag: "FORM",
-        displays: [{ ...contactUsForm }],
-    };
-
-    return response;
-}
-
-function getFormResponse(data: ContactCaptureData, formName: string): Response {
-
-    if (data?.enableFormScheduling) {
-        // remove this after a couple of releases
-        log().warn(`NEW FEATURE! You must enable scheduling if you are running this standalone.  Set enableFormScheduling to true in handler data.!`);
-        return getContactFormFallback();
-    }
-
-    const formDeclaration = data.forms.find((form) => {
-        return (form.name = formName);
-    });
-
-    // The form is a DISPLAY of type "FORM"
-    const response: Response = {
-        tag: "FORM",
-        displays: [{ type: "FORM", ...formDeclaration }],
-    };
-
-    return response;
-}
-
-function getStepFromData(data: ContactCaptureData, formName: string, stepName: string): any {
-    const formDeclaration = data.forms.find((form) => {
-        return (form.name == formName);
-    });
-
-    if (!formDeclaration) {
-        throw new Error(`FormResponseStrategy: Unknown form: "${formName}"`);
-    }
-
-    const formStep = formDeclaration.steps.find((step: any) => {
-        return (step.name == stepName);
-    });
-
-    if (!formStep) {
-        throw new Error(`FormResponseStrategy: Unknown step: "${stepName}". Form: "${formName}"`);
-    }
-
-    return formStep;
-}
 
 function leadSummary(slots: RequestSlotMap, leadDataList: CaptureRuntimeData): string {
     if (!leadDataList?.data) {
@@ -206,12 +93,18 @@ export class FormResponseStrategy implements ResponseStrategy {
 
         let leadDataList: CaptureRuntimeData = context.session.get(Constants.CONTACT_CAPTURE_LIST);
 
+
+        const origin = request.attributes?.origin || "unknown";
+        // Always use enablePreferredTime from the request if it's there, otherwise use origin and if it is rwg
+        const enablePreferredTime: boolean = typeof request?.attributes?.enablePreferredTime === "boolean" ? request.attributes.enablePreferredTime : origin === "rwg";
+        const service: string | undefined = typeof request?.attributes?.service === "string" ? request.attributes.service : undefined;
+
         // Make sure we have one
         if (!leadDataList) {
             leadDataList = newLeadGenerationData(handler.data);
 
             // First call - send the main form
-            response = getFormResponse(handler.data, handler.data.CAPTURE_MAIN_FORM);
+            response = getFormResponse(handler.data, { formName: handler.data.CAPTURE_MAIN_FORM, fallback: { enablePreferredTime, service } });
 
             // Update the list on session
             context.session.set(Constants.CONTACT_CAPTURE_LIST, leadDataList);
@@ -254,7 +147,7 @@ export class FormResponseStrategy implements ResponseStrategy {
 
             // Send the requested form
             if (data.followupForm) {
-                response = getFormResponse(handler.data, data.followupForm);
+                response = getFormResponse(handler.data, { formName: data.followupForm, fallback: { enablePreferredTime, service } });
                 await this.addAvailability(response, context.services.crmService, context.session);
                 return response;
             }
