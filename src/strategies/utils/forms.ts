@@ -110,6 +110,10 @@ export function getContactFormFallback(props: FormResponseProps): Response {
 
     const SERVICE_CHIP_ITEMS: SelectableItem[] = [
         {
+            id: "schedule_now",
+            label: "Schedule Now"
+        },
+        {
             id: "get_quote",
             label: "Get Quote"
         },
@@ -120,18 +124,26 @@ export function getContactFormFallback(props: FormResponseProps): Response {
     ];
 
     if (props.fallback?.service) {
-        // add it to the items
-        // we need to replace _ with space
-        // and capitalize first letter of each word
-        const serviceRaw = props.fallback.service.replace("_", " ");
-        // split by words and capitalize and recombine
-        const service = serviceRaw.split(" ").map((word) => capitalize(word)).join(" ");
 
-        SERVICE_CHIP_ITEMS.unshift({
-            id: props.fallback.service,
-            label: service,
-            selected: true
-        });
+        // see if it is already in the items, match by id
+        const found = SERVICE_CHIP_ITEMS.findIndex((item) => item.id === props.fallback.service);
+        if (found >= 0) {
+            // if found, set it to selected
+            SERVICE_CHIP_ITEMS[found].selected = true;
+        } else {
+            // add it to the items
+            // we need to replace _ with space
+            // and capitalize first letter of each word
+            const serviceRaw = props.fallback.service.replace("_", " ");
+            // split by words and capitalize and recombine
+            const service = serviceRaw.split(" ").map((word) => capitalize(word)).join(" ");
+
+            SERVICE_CHIP_ITEMS.unshift({
+                id: props.fallback.service,
+                label: service,
+                selected: true
+            });
+        }
     }
 
     const PREFERRED_TIME_STEPS: FormStep[] = [
