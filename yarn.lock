@@ -974,12 +974,21 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:*, @types/node@npm:20.14.12":
+"@types/node@npm:*":
   version: 20.14.12
   resolution: "@types/node@npm:20.14.12"
   dependencies:
     undici-types: ~5.26.4
   checksum: 1dd493d9e27da43fc374b17cf4b956dbd1dfe20ecf4749408a1db046c79b5a39261a2aa7a3f59b79fd1b5632b861ba72837779d812e0d3b6cf5b22f1650fe722
+  languageName: node
+  linkType: hard
+
+"@types/node@npm:20.14.14":
+  version: 20.14.14
+  resolution: "@types/node@npm:20.14.14"
+  dependencies:
+    undici-types: ~5.26.4
+  checksum: cb2199123efca94908ee7191cc7b7abc11b26bf1fbb93c2948d5537a6594eedc35d4748d9fa998078fdc2eb5cc3a11d6d87b2fea20a05bda9d304e37d3c3282a
   languageName: node
   linkType: hard
 
@@ -1250,7 +1259,7 @@ __metadata:
     "@semantic-release/release-notes-generator": 14.0.1
     "@types/chai": 4.3.16
     "@types/mocha": 10.0.7
-    "@types/node": 20.14.12
+    "@types/node": 20.14.14
     "@types/sinon": 17.0.3
     "@types/sinon-chai": 3.2.12
     "@types/sparkpost": ^2.1.8
