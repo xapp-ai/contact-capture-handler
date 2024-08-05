@@ -30,7 +30,7 @@ interface FormResponseProps {
  * 
  * @returns 
  */
-export function getContactFormFallback(props: FormResponseProps): Response {
+export function getContactFormFallback(props: FormResponseProps): MultistepForm {
 
     const CONTACT_ONLY_STEPS: FormStep[] = [
         {
@@ -334,17 +334,17 @@ export function getContactFormFallback(props: FormResponseProps): Response {
         contactUsForm.steps = CONTACT_ONLY_STEPS;
     }
 
-    const response: Response = {
-        tag: "FORM",
-        displays: [{ ...contactUsForm }],
-    };
-
-    return response;
+    return contactUsForm;
 }
 
-
-export function getFormResponse(data: ContactCaptureData, props: FormResponseProps): Response {
-
+/**
+ * Gets the current form in use
+ * 
+ * @param data 
+ * @param props 
+ * @returns 
+ */
+function getForm(data: ContactCaptureData, props: FormResponseProps): MultistepForm {
     // check if scheduling is enabled, otherwise use the fallback form
     if (data?.enableFormScheduling) {
         // remove this after a couple of releases
@@ -370,11 +370,16 @@ export function getFormResponse(data: ContactCaptureData, props: FormResponsePro
         log().warn(`No form found with name: ${formName}.  Using default form.`);
         return getContactFormFallback(props);
     }
+}
+
+export function getFormResponse(data: ContactCaptureData, props: FormResponseProps): Response {
+
+    const form = getForm(data, props);
 
     // The form is a DISPLAY of type "FORM"
     const response: Response = {
         tag: "FORM",
-        displays: [{ type: "FORM", ...formDeclaration }],
+        displays: [{ type: "FORM", ...form }],
     };
 
     // TODO: look through the form, at each step, see if we have chips and we need to preselect based on service
@@ -383,21 +388,27 @@ export function getFormResponse(data: ContactCaptureData, props: FormResponsePro
     return response;
 }
 
-export function getStepFromData(data: ContactCaptureData, formName: string, stepName: string): any {
-    const formDeclaration = data.forms.find((form) => {
-        return (form.name == formName);
-    });
+/**
+ * Gets the next step
+ * @param data 
+ * @param formName 
+ * @param stepName 
+ * @returns 
+ */
+export function getStepFromData(data: ContactCaptureData, props: FormResponseProps, stepName: string): FormStep {
+
+    const formDeclaration = getForm(data, props);
 
     if (!formDeclaration) {
-        throw new Error(`FormResponseStrategy: Unknown form: "${formName}"`);
+        throw new Error(`FormResponseStrategy: Unknown form: "${props.formName}"`);
     }
 
-    const formStep = formDeclaration.steps.find((step: any) => {
+    const formStep = formDeclaration.steps.find((step) => {
         return (step.name == stepName);
     });
 
     if (!formStep) {
-        throw new Error(`FormResponseStrategy: Unknown step: "${stepName}". Form: "${formName}"`);
+        throw new Error(`FormResponseStrategy: Unknown step: "${stepName}". Form: "${props.formName}"`);
     }
 
     return formStep;

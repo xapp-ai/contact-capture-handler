@@ -140,7 +140,7 @@ export class FormResponseStrategy implements ResponseStrategy {
 
         if (!isAbandoned) {
             const data: FormActionResponseData = request.attributes?.data as FormActionResponseData;
-            const stepFromData = getStepFromData(handler.data, data.form, data.step);
+            const stepFromData = getStepFromData(handler.data, { formName: data.form, fallback: { enablePreferredTime, service } }, data.step);
 
             // Send the requested form
             if (data.followupForm) {
