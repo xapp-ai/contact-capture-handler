@@ -41,7 +41,6 @@ export interface FormActionResponseData {
 }
 
 
-
 function leadSummary(slots: RequestSlotMap, leadDataList: CaptureRuntimeData): string {
     if (!leadDataList?.data) {
         return "";
@@ -93,7 +92,6 @@ export class FormResponseStrategy implements ResponseStrategy {
 
         let leadDataList: CaptureRuntimeData = context.session.get(Constants.CONTACT_CAPTURE_LIST);
 
-
         const origin = request.attributes?.origin || "unknown";
         // Always use enablePreferredTime from the request if it's there, otherwise use origin and if it is rwg
         const enablePreferredTime: boolean = typeof request?.attributes?.enablePreferredTime === "boolean" ? request.attributes.enablePreferredTime : origin === "rwg";
@@ -129,7 +127,6 @@ export class FormResponseStrategy implements ResponseStrategy {
         const nextRequiredData = leadDataList.data.find((data) => {
             return !data.collectedValue;
         });
-
 
         if (nextRequiredData) {
             // Update the list on session

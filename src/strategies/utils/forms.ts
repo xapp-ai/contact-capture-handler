@@ -32,7 +32,6 @@ interface FormResponseProps {
  */
 export function getContactFormFallback(props: FormResponseProps): Response {
 
-
     const CONTACT_ONLY_STEPS: FormStep[] = [
         {
             crmSubmit: true,
@@ -82,9 +81,6 @@ export function getContactFormFallback(props: FormResponseProps): Response {
         }
     ];
 
-    // Items 
-    // look for service
-
     const PREFERRED_TIME_HEADER = [
         {
             step: "service_request",
@@ -110,6 +106,10 @@ export function getContactFormFallback(props: FormResponseProps): Response {
 
     const SERVICE_CHIP_ITEMS: SelectableItem[] = [
         {
+            id: "schedule_visit",
+            label: "Schedule Visit"
+        },
+        {
             id: "get_quote",
             label: "Get Quote"
         },
@@ -120,18 +120,27 @@ export function getContactFormFallback(props: FormResponseProps): Response {
     ];
 
     if (props.fallback?.service) {
-        // add it to the items
-        // we need to replace _ with space
-        // and capitalize first letter of each word
-        const serviceRaw = props.fallback.service.replace("_", " ");
-        // split by words and capitalize and recombine
-        const service = serviceRaw.split(" ").map((word) => capitalize(word)).join(" ");
 
-        SERVICE_CHIP_ITEMS.unshift({
-            id: props.fallback.service,
-            label: service,
-            selected: true
-        });
+        // see if it is already in the items, match by id
+        const found = SERVICE_CHIP_ITEMS.findIndex((item) => item.id === props.fallback.service);
+
+        if (found >= 0) {
+            // if found, set it to selected
+            SERVICE_CHIP_ITEMS[found].selected = true;
+        } else {
+            // add it to the items
+            // we need to replace _ with space
+            // and capitalize first letter of each word
+            const serviceRaw = props.fallback.service.replace("_", " ");
+            // split by words and capitalize and recombine
+            const service = serviceRaw.split(" ").map((word) => capitalize(word)).join(" ");
+
+            SERVICE_CHIP_ITEMS.unshift({
+                id: props.fallback.service,
+                label: service,
+                selected: true
+            });
+        }
     }
 
     const PREFERRED_TIME_STEPS: FormStep[] = [
@@ -336,6 +345,7 @@ export function getContactFormFallback(props: FormResponseProps): Response {
 
 export function getFormResponse(data: ContactCaptureData, props: FormResponseProps): Response {
 
+    // check if scheduling is enabled, otherwise use the fallback form
     if (data?.enableFormScheduling) {
         // remove this after a couple of releases
         log().warn(`NEW FEATURE! You must enable scheduling if you are running this standalone.  Set enableFormScheduling to true in handler data.!`);
@@ -344,15 +354,31 @@ export function getFormResponse(data: ContactCaptureData, props: FormResponsePro
 
     const { formName } = props;
 
-    const formDeclaration = data.forms.find((form) => {
+    // no form name, use the default form
+    if (!formName) {
+        log().warn(`No form name provided.  Using default form.`);
+        return getContactFormFallback(props);
+    }
+
+    // forms can be empty
+    const formDeclaration = (data?.forms || []).find((form) => {
         return (form.name === formName);
     });
+
+    // if we don't have a form, use the default form
+    if (!formDeclaration) {
+        log().warn(`No form found with name: ${formName}.  Using default form.`);
+        return getContactFormFallback(props);
+    }
 
     // The form is a DISPLAY of type "FORM"
     const response: Response = {
         tag: "FORM",
         displays: [{ type: "FORM", ...formDeclaration }],
     };
+
+    // TODO: look through the form, at each step, see if we have chips and we need to preselect based on service
+    // chips field name could be help_type or service_type
 
     return response;
 }

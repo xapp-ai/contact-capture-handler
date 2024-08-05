@@ -28,7 +28,6 @@ export interface ContactCaptureData extends QuestionAnsweringData {
     /**
      * Form Widget channel only, it will enable scheduling within the form.  Otherwise the form widget will simply act as a contact us form. 
      * 
-     * @note - This does nothing at the moment, we are reserving for future use.
      */
     enableFormScheduling?: boolean;
     /**
