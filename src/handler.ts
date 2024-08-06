@@ -343,6 +343,11 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
             log().debug(this.data);
         }
 
+        if (typeof this.data.enableFormScheduling !== "boolean") {
+            log().warn(`'enableFormScheduling' is not set on handler data, currently defaulting to false which means it will not enable scheduling within the form. data.type: ${typeof this.data.enableFormScheduling} value: ${this.data.enableFormScheduling}`);
+            log().debug(this.data);
+        }
+
         // Optional alert for closed widgets
 
         // The action check is for backward compatibility - can be deleted later
@@ -372,7 +377,6 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
 
             context.session.set(Constants.CONTACT_CAPTURE_ABANDONED, true);
         }
-
         // Determine our strategy, this is where the heavy lifting occurs
         const strategy = new ResponseStrategySelector().getStrategy(request, this.data);
         // Get the response. Finish, if it's an early close of the widget (no data)

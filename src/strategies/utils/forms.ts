@@ -346,9 +346,9 @@ export function getContactFormFallback(props: FormResponseProps): MultistepForm 
  */
 function getForm(data: ContactCaptureData, props: FormResponseProps): MultistepForm {
     // check if scheduling is enabled, otherwise use the fallback form
-    if (data?.enableFormScheduling) {
+    if (!data?.enableFormScheduling) {
         // remove this after a couple of releases
-        log().warn(`NEW FEATURE! You must enable scheduling if you are running this standalone.  Set enableFormScheduling to true in handler data.!`);
+        log().warn(`NEW FEATURE! You must enable scheduling if you are running this standalone.  Set enableFormScheduling to true in handler data.`);
         return getContactFormFallback(props);
     }
 
