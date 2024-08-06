@@ -385,3 +385,35 @@ export const propsWithNoCaptureAndContent: Handler<Content, ContactCaptureData> 
         FUZZY_MATCH_FAQS: true
     }
 }
+
+export const propsWithCustomForm: Handler<Content, ContactCaptureData> = {
+    ...propsWithNoCaptureAndContent,
+    data: {
+        capture: {
+            data: []
+        },
+        // captureLead: true,
+        enableFormScheduling: true,
+        CAPTURE_MAIN_FORM: "main",
+        forms: [
+            {
+                name: "main",
+                type: "FORM",
+                labelHeader: false,
+                header: [],
+                steps: [
+                    {
+                        name: "one",
+                        fields: [
+                            {
+                                type: "TEXT",
+                                name: "first_name",
+                                label: "First Name",
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    }
+}

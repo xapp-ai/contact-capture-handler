@@ -229,7 +229,7 @@ export class FormResponseStrategy implements ResponseStrategy {
         let busyDays: CrmServiceAvailability = session.get(Constants.CONTACT_CAPTURE_BUSY_DAYS) as CrmServiceAvailability;
 
         // First time?
-        if (!busyDays) {
+        if (!busyDays && typeof crmService?.getAvailability === "function") {
             busyDays = await crmService.getAvailability({
                 start: null,
                 end: null,

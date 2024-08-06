@@ -8,6 +8,7 @@ const expect = chai.expect;
 
 import {
     Context,
+    DateTimeRange,
     IntentRequest,
     ResponseBuilder,
     KnowledgeBaseResult,
@@ -21,14 +22,18 @@ import { ContactCaptureHandler } from "../handler";
 import { CONTACT_CAPTURE_CURRENT_DATA, CONTACT_CAPTURE_LIST, CONTACT_CAPTURE_SENT, CONTACT_CAPTURE_SLOTS } from "../constants";
 import { DetailParams, Place, PlacesService, SearchParams } from "../services";
 
-import { props, propsWithAnyInputQuestion, propsWithNoCapture, propsWithNoCaptureAndContent } from "./assets";
+import { props, propsWithAnyInputQuestion, propsWithCustomForm, propsWithNoCapture, propsWithNoCaptureAndContent } from "./assets";
 
 class MockCRM implements CrmService {
     public update?(): Promise<CrmResponse> {
         throw new Error("Method not implemented.");
     }
-    public getAvailability(): Promise<CrmServiceAvailability> {
-        throw new Error("Method not implemented.");
+    public async getAvailability(range: DateTimeRange): Promise<CrmServiceAvailability> {
+        // throw new Error("Method not implemented.");
+        return {
+            range,
+            unavailabilities: [],
+        };
     }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public getJobType(): Promise<any> {
@@ -1129,6 +1134,97 @@ describe(`${ContactCaptureHandler.name}`, () => {
                         reprompt: undefined,
                         displays: undefined
                     });
+                });
+            });
+        });
+        describe("for a form request", () => {
+            const sandbox = sinon.createSandbox();
+            beforeEach(() => {
+                response = new ResponseBuilder({
+                    device: {
+                        audioSupported: false,
+                        channel: "test",
+                        canPlayAudio: false,
+                        canPlayVideo: false,
+                        canSpeak: false,
+                        canThrowCard: false,
+                        canTransferCall: false,
+                        hasScreen: true,
+                        hasWebBrowser: true,
+                        videoSupported: false
+                    }
+                });
+                sandbox.spy(response, "respond");
+
+                request = new IntentRequestBuilder()
+                    .withSlots({})
+                    .withIntentId(props.intentId)
+                    .updateDevice({
+                        canSpeak: false
+                    }).build();
+
+                request.channel = "form-widget";
+
+                context = new ContextBuilder()
+                    .withResponse(response)
+                    .withSessionData({ id: "foo", data: {} })
+                    .build();
+
+                const crmService = new MockCRM();
+                sandbox.spy(crmService, "send");
+                context.services.crmService = crmService;
+
+                placesService = new MockPlacesService();
+                sandbox.spy(placesService, "getDetails");
+            });
+            afterEach(() => {
+                sandbox.restore();
+            });
+            describe("with enableScheduling set to true", () => {
+                it("returns the custom form", async () => {
+                    const handler = new ContactCaptureHandler(propsWithCustomForm);
+
+                    await handler.handleRequest(request, context);
+
+                    expect(response.respond).to.have.been.calledOnce;
+
+                    // pull off the first call
+                    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                    // @ts-ignore
+                    const args = response.respond.getCall(0).args[0];
+
+                    expect(args.tag).to.equal("FORM");
+                    expect(args.displays).to.have.length(1);
+                    expect(args.displays[0].type).to.equal("FORM");
+                    expect(args.displays[0].name).to.be.undefined;
+                });
+            });
+            describe("with enableScheduling set to false", () => {
+                it("returns the default form", async () => {
+                    const handler = new ContactCaptureHandler({
+                        ...propsWithCustomForm,
+                        data: {
+                            ...propsWithCustomForm.data,
+                            enableFormScheduling: false,
+                            capture: {
+                                data: []
+                            }
+                        }
+                    });
+
+                    await handler.handleRequest(request, context);
+
+                    expect(response.respond).to.have.been.calledOnce;
+
+                    // pull off the first call
+                    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                    // @ts-ignore
+                    const args = response.respond.getCall(0).args[0];
+
+                    expect(args.tag).to.equal("FORM");
+                    expect(args.displays).to.have.length(1);
+                    expect(args.displays[0].type).to.equal("FORM");
+                    expect(args.displays[0].name).to.equal("contact_us_only");
                 });
             });
         });
