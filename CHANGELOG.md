@@ -1,3 +1,10 @@
+## [1.11.2](https://github.com/xapp-ai/contact-capture-handler/compare/v1.11.1...v1.11.2) (2024-08-06)
+
+
+### Bug Fixes
+
+* Flipped logic for enableFormScheduling ([#424](https://github.com/xapp-ai/contact-capture-handler/issues/424)) ([00b1af3](https://github.com/xapp-ai/contact-capture-handler/commit/00b1af3d8c7d15b915c62956efee551c540a3e20))
+
 ## [1.11.1](https://github.com/xapp-ai/contact-capture-handler/compare/v1.11.0...v1.11.1) (2024-08-06)
 
 
