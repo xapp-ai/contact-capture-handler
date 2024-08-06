@@ -1,3 +1,10 @@
+## [1.11.1](https://github.com/xapp-ai/contact-capture-handler/compare/v1.11.0...v1.11.1) (2024-08-06)
+
+
+### Bug Fixes
+
+* update dependency chai to v4.5.0 ([#415](https://github.com/xapp-ai/contact-capture-handler/issues/415)) ([2514d9f](https://github.com/xapp-ai/contact-capture-handler/commit/2514d9fe80ebeb70add6203c43f0afe7f308307e))
+
 # [1.11.0](https://github.com/xapp-ai/contact-capture-handler/compare/v1.10.1...v1.11.0) (2024-07-25)
 
 
