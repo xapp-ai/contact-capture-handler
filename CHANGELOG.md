@@ -1,3 +1,10 @@
+## [1.11.3](https://github.com/xapp-ai/contact-capture-handler/compare/v1.11.2...v1.11.3) (2024-08-07)
+
+
+### Bug Fixes
+
+* return form ([d7b68fe](https://github.com/xapp-ai/contact-capture-handler/commit/d7b68fe5a9b957ac5869836be221450e4402d432))
+
 ## [1.11.2](https://github.com/xapp-ai/contact-capture-handler/compare/v1.11.1...v1.11.2) (2024-08-06)
 
 
