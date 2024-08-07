@@ -369,12 +369,15 @@ function getForm(data: ContactCaptureData, props: FormResponseProps): MultistepF
     if (!formDeclaration) {
         log().warn(`No form found with name: ${formName}.  Using default form.`);
         return getContactFormFallback(props);
+    } else {
+        return formDeclaration;
     }
 }
 
 export function getFormResponse(data: ContactCaptureData, props: FormResponseProps): Response {
 
     const form = getForm(data, props);
+
 
     // The form is a DISPLAY of type "FORM"
     const response: Response = {
