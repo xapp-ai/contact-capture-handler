@@ -1192,11 +1192,13 @@ describe(`${ContactCaptureHandler.name}`, () => {
                     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                     // @ts-ignore
                     const args = response.respond.getCall(0).args[0];
-
+                    // console.log(args);
                     expect(args.tag).to.equal("FORM");
                     expect(args.displays).to.have.length(1);
                     expect(args.displays[0].type).to.equal("FORM");
-                    expect(args.displays[0].name).to.be.undefined;
+                    expect(args.displays[0].name).to.equal("main");
+                    expect(args.displays[0].header).to.have.length(2);
+                    expect(args.displays[0].steps).to.have.length(2);
                 });
             });
             describe("with enableScheduling set to false", () => {
