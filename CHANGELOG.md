@@ -1,3 +1,10 @@
+## [1.11.4](https://github.com/xapp-ai/contact-capture-handler/compare/v1.11.3...v1.11.4) (2024-08-16)
+
+
+### Bug Fixes
+
+* Support for enablePreferredTime ([#430](https://github.com/xapp-ai/contact-capture-handler/issues/430)) ([e24a64b](https://github.com/xapp-ai/contact-capture-handler/commit/e24a64b270ea1c466d27b86e5736e08a6a199f72))
+
 ## [1.11.3](https://github.com/xapp-ai/contact-capture-handler/compare/v1.11.2...v1.11.3) (2024-08-07)
 
 
