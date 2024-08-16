@@ -11,7 +11,7 @@ import {
     requestSlotValueToString,
     Response,
 } from "stentor";
-import { CrmServiceAvailability, SessionStore } from "stentor-models";
+import { CrmServiceAvailability, CrmServiceAvailabilityOptions, CrmServiceAvailabilitySettings, SessionStore } from "stentor-models";
 
 import * as Constants from "../constants";
 import { CaptureRuntimeData } from "../data";
@@ -20,7 +20,6 @@ import { ContactCaptureHandler } from "../handler";
 
 import { ResponseStrategy } from "./ResponseStrategy";
 import { getFormResponse, getStepFromData } from "./utils/forms";
-
 
 /**
  * Action response data object
@@ -94,7 +93,17 @@ export class FormResponseStrategy implements ResponseStrategy {
 
         const origin = request.attributes?.origin || "unknown";
         // Always use enablePreferredTime from the request if it's there, otherwise use origin and if it is rwg
-        const enablePreferredTime: boolean = typeof request?.attributes?.enablePreferredTime === "boolean" ? request.attributes.enablePreferredTime : origin === "rwg";
+        // const enablePreferredTime: boolean = typeof request?.attributes?.enablePreferredTime === "boolean" ? request.attributes.enablePreferredTime : origin === "rwg";
+        // A couple ways to determine enablePreferredTime
+        let enablePreferredTime = false;
+        if (typeof handler.data.enablePreferredTime === "boolean") {
+            enablePreferredTime = handler.data.enablePreferredTime;
+        } else if (typeof request?.attributes?.enablePreferredTime === "boolean") {
+            enablePreferredTime = request.attributes.enablePreferredTime;
+        } else if (origin === "rwg") {
+            enablePreferredTime = true;
+        }
+
         const service: string | undefined = typeof request?.attributes?.service === "string" ? request.attributes.service : undefined;
 
         // Make sure we have one
@@ -102,13 +111,13 @@ export class FormResponseStrategy implements ResponseStrategy {
             leadDataList = newLeadGenerationData(handler.data);
 
             // First call - send the main form
-            response = getFormResponse(handler.data, { formName: handler.data.CAPTURE_MAIN_FORM, fallback: { enablePreferredTime, service } });
+            response = getFormResponse(handler.data, { formName: handler.data.CAPTURE_MAIN_FORM, service, enablePreferredTime });
 
             // Update the list on session
             context.session.set(Constants.CONTACT_CAPTURE_LIST, leadDataList);
 
             // First availability
-            await this.addAvailability(response, context.services.crmService, context.session);
+            await this.addAvailability(response, context.services.crmService, context.session, handler.data?.availabilitySettings);
 
             return response;
         }
@@ -140,19 +149,19 @@ export class FormResponseStrategy implements ResponseStrategy {
 
         if (!isAbandoned) {
             const data: FormActionResponseData = request.attributes?.data as FormActionResponseData;
-            const stepFromData = getStepFromData(handler.data, { formName: data?.form, fallback: { enablePreferredTime, service } }, data?.step);
+            const stepFromData = getStepFromData(handler.data, { formName: data?.form, enablePreferredTime, service }, data?.step);
 
             // Send the requested form
             if (data.followupForm) {
-                response = getFormResponse(handler.data, { formName: data.followupForm, fallback: { enablePreferredTime, service } });
-                await this.addAvailability(response, context.services.crmService, context.session);
+                response = getFormResponse(handler.data, { formName: data.followupForm, enablePreferredTime, service });
+                await this.addAvailability(response, context.services.crmService, context.session, handler.data?.availabilitySettings);
                 return response;
             }
 
             // Don't submit until the form says so
             if (!stepFromData.crmSubmit) {
                 response = {};
-                await this.addAvailability(response, context.services.crmService, context.session);
+                await this.addAvailability(response, context.services.crmService, context.session, handler.data?.availabilitySettings);
                 return response;
             }
 
@@ -219,21 +228,24 @@ export class FormResponseStrategy implements ResponseStrategy {
 
         // form widget - no response
         response = {};
-        await this.addAvailability(response, context.services.crmService, context.session);
+        await this.addAvailability(response, context.services.crmService, context.session, handler.data?.availabilitySettings);
         return response;
     }
 
-    private async addAvailability(response: Response, crmService: CrmService, session: SessionStore): Promise<Response> {
+    private async addAvailability(response: Response, crmService: CrmService, session: SessionStore, settings?: CrmServiceAvailabilitySettings): Promise<Response> {
         const leadDataList: CaptureRuntimeData = session.get(Constants.CONTACT_CAPTURE_LIST);
 
         let busyDays: CrmServiceAvailability = session.get(Constants.CONTACT_CAPTURE_BUSY_DAYS) as CrmServiceAvailability;
 
         // First time?
         if (!busyDays && typeof crmService?.getAvailability === "function") {
+
+            const options: CrmServiceAvailabilityOptions = { ...settings };
+
             busyDays = await crmService.getAvailability({
                 start: null,
                 end: null,
-            });
+            }, options);
 
             session.set(Constants.CONTACT_CAPTURE_BUSY_DAYS, busyDays);
         } else {
@@ -254,17 +266,26 @@ export class FormResponseStrategy implements ResponseStrategy {
                     const existingJobType = session.get(Constants.CONTACT_CAPTURE_JOB_TYPE);
 
                     // Only call if the jobType changed (visitor changed the description)
-                    if (jobType.id !== existingJobType?.id) {
+                    if (jobType.id !== existingJobType?.id && typeof crmService?.getAvailability === "function") {
                         session.set(Constants.CONTACT_CAPTURE_JOB_TYPE, jobType);
+
+                        let options: CrmServiceAvailabilityOptions = {
+                            jobType
+                        };
+
+                        if (settings) {
+                            options = {
+                                ...options,
+                                ...settings,
+                            };
+                        }
 
                         busyDays = await crmService.getAvailability(
                             {
                                 start: null,
                                 end: null,
                             },
-                            {
-                                jobType
-                            }
+                            options
                         );
 
                         session.set(Constants.CONTACT_CAPTURE_BUSY_DAYS, busyDays);
