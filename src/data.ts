@@ -1,8 +1,8 @@
 /*! Copyright (c) 2022, XAPP AI */
+import { CrmServiceAvailabilitySettings, MultistepForm } from "stentor-models";
 import { QuestionAnsweringData } from "@xapp/question-answering-handler";
 
 import { PlacesService } from "./services/PlacesService/models";
-import { MultistepForm } from "./form";
 
 export type ContactDataType =
     "FIRST_NAME" |
@@ -18,6 +18,19 @@ export type ContactDataType =
     "MESSAGE" |
     "DATE_TIME";
 
+export interface ContactCaptureService {
+    /**
+     * ID for the service option, typically slugified label
+     */
+    id: string;
+    /**
+     * Label displayed to the user
+     */
+    label: string;
+    description?: string;
+    price?: string;
+}
+
 export interface ContactCaptureData extends QuestionAnsweringData {
     /**
      * It will not capture the lead and instead provide contact information.
@@ -25,6 +38,10 @@ export interface ContactCaptureData extends QuestionAnsweringData {
      * Defaults to false.
      */
     captureLead?: boolean;
+    /**
+     * It can take preferred time for an appointment, without confirming if the time is available through an FSM.
+     */
+    enablePreferredTime?: boolean;
     /**
      * Form Widget channel only, it will enable scheduling within the form.  Otherwise the form widget will simply act as a contact us form. 
      * 
@@ -64,6 +81,18 @@ export interface ContactCaptureData extends QuestionAnsweringData {
      * Extra flags for the CRM (the handler doesn't care - just passes on)
      */
     crmFlags?: object;
+    /**
+     * Optional services that
+     */
+    serviceOptions?: ContactCaptureService[];
+    /**
+     * Option to override the default message description in the multiline text field.
+     */
+    messageDescription?: string;
+    /**
+     * Optional availability settings to be used when calling CRMService.getAvailability()
+     */
+    availabilitySettings?: CrmServiceAvailabilitySettings;
 }
 
 export interface ContactCaptureBlueprint {

@@ -1,9 +1,7 @@
 /*! Copyright (c) 2024, XAPP AI */
-import { Handler, Content } from "stentor-models";
+import { Handler, Content, FormFieldTextAddressInput } from "stentor-models";
 
 import { ContactCaptureData } from "../data";
-import { FormFieldTextAddressInput } from "../form";
-
 
 export const props: Handler<Content, ContactCaptureData> = {
     intentId: "intentId",

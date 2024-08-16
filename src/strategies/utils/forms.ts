@@ -1,28 +1,47 @@
 /*! Copyright (c) 2024, XAPP AI */
 import { log } from "stentor";
 import { FormStep, FormFieldTextAddressInput, MultistepForm, Response, SelectableItem } from "stentor-models";
-import { capitalize } from "stentor-utils";
+import { capitalize, existsAndNotEmpty } from "stentor-utils";
 
-import { ContactCaptureData } from "../../data";
+import { ContactCaptureData, ContactCaptureService } from "../../data";
+
+// THE DEFAULT CHIPS
+const SERVICE_CHIP_ITEMS: SelectableItem[] = [
+    {
+        id: "schedule_visit",
+        label: "Schedule Visit"
+    },
+    {
+        id: "get_quote",
+        label: "Get Quote"
+    },
+    {
+        id: "contact_us",
+        label: "Contact Us"
+    }
+];
 
 interface FormResponseProps {
-    /**
-     * Fallback settings
-     */
-    fallback?: {
-        /**
-         * Do we enable preferred time in the booking, this is typically used for Reserve with Google.
-         */
-        enablePreferredTime?: boolean;
-        /**
-         * Is there a preselected service
-         */
-        service?: string;
-    }
     /**
      * Name of the form to return
      */
     formName?: string;
+    /**
+     * Optional service options to display in the fallback form
+     */
+    serviceOptions?: ContactCaptureService[];
+    /**
+     * Optional message description to help people leave meaningful messages
+     */
+    messageDescription?: string;
+    /**
+     * Is there a preselected service
+     */
+    service?: string;
+    /**
+     * Enables preferred time form
+     */
+    enablePreferredTime?: boolean;
 }
 
 /**
@@ -30,7 +49,19 @@ interface FormResponseProps {
  * 
  * @returns 
  */
-export function getContactFormFallback(props: FormResponseProps): MultistepForm {
+export function getContactFormFallback(data: ContactCaptureData, props: FormResponseProps): MultistepForm {
+
+    if (typeof data.enablePreferredTime === "boolean") {
+        props.enablePreferredTime = data.enablePreferredTime;
+    }
+
+    if (existsAndNotEmpty(data.serviceOptions)) {
+        props.serviceOptions = data.serviceOptions;
+    }
+
+    if (data.messageDescription) {
+        props.messageDescription = data.messageDescription
+    }
 
     const CONTACT_ONLY_STEPS: FormStep[] = [
         {
@@ -104,44 +135,53 @@ export function getContactFormFallback(props: FormResponseProps): MultistepForm 
         }
     ];
 
-    const SERVICE_CHIP_ITEMS: SelectableItem[] = [
-        {
-            id: "schedule_visit",
-            label: "Schedule Visit"
-        },
-        {
-            id: "get_quote",
-            label: "Get Quote"
-        },
-        {
-            id: "contact_us",
-            label: "Contact Us"
-        }
-    ];
+    let chips: SelectableItem[] = [...SERVICE_CHIP_ITEMS];
+    // this is the default one
+    let contactUsChip = "contact_us";
 
-    if (props.fallback?.service) {
+    if (existsAndNotEmpty(props.serviceOptions)) {
+        chips = props.serviceOptions;
+
+        // make sure it has a contact_us chip by determining if the label has "Contact" or "Get in Touch"
+        const found = chips.find((item) => {
+            return (item.label.toLowerCase().includes("contact") || item.label.toLowerCase().includes("touch"));
+        });
+
+        if (found) {
+            contactUsChip = found.id;
+        } else {
+            chips.push({
+                id: contactUsChip,
+                label: "Contact Us"
+            })
+        }
+    }
+
+    if (props?.service) {
 
         // see if it is already in the items, match by id
-        const found = SERVICE_CHIP_ITEMS.findIndex((item) => item.id === props.fallback.service);
+        const found = chips.findIndex((item) => item.id === props.service);
 
         if (found >= 0) {
             // if found, set it to selected
-            SERVICE_CHIP_ITEMS[found].selected = true;
+            chips[found].selected = true;
         } else {
             // add it to the items
             // we need to replace _ with space
             // and capitalize first letter of each word
-            const serviceRaw = props.fallback.service.replace("_", " ");
+            const serviceRaw = props.service.replace("_", " ");
             // split by words and capitalize and recombine
             const service = serviceRaw.split(" ").map((word) => capitalize(word)).join(" ");
 
-            SERVICE_CHIP_ITEMS.unshift({
-                id: props.fallback.service,
+            chips.unshift({
+                id: props.service,
                 label: service,
                 selected: true
             });
         }
     }
+
+    // make sure there is some kind of "contact" chip
 
     const PREFERRED_TIME_STEPS: FormStep[] = [
         {
@@ -152,13 +192,13 @@ export function getContactFormFallback(props: FormResponseProps): MultistepForm 
                     name: "help_type",
                     title: "What can we help you with?",
                     type: "CHIPS",
-                    items: SERVICE_CHIP_ITEMS,
+                    items: chips,
                     mandatory: true,
                     radio: true
                 },
                 {
                     name: "message",
-                    label: "Please provide us with more details about your request",
+                    label: props.messageDescription || "Please provide us with more details about your request",
                     rows: 6,
                     type: "TEXT",
                     multiline: true,
@@ -198,7 +238,7 @@ export function getContactFormFallback(props: FormResponseProps): MultistepForm 
         {
             name: "preferred_time",
             nextAction: "submit",
-            condition: "!help_type.includes('contact_us')",
+            condition: `!help_type.includes('${contactUsChip}')`,
             fields: [
                 {
                     name: "dateTime",
@@ -273,10 +313,19 @@ export function getContactFormFallback(props: FormResponseProps): MultistepForm 
                 },
                 {
                     name: "confirmation_card2",
+                    condition: "!!dateTime && preferred_time.length > 0",
                     text: "Somebody will call you as soon as possible to finalize the time and collect final details.",
                     align: "left",
                     type: "CARD"
-                }
+                },
+                /*
+                {
+                    name: "confirmation_card_no_date",
+                    condition: "!dateTime || preferred_time.length === 0",
+                    text: "Thank you so much for getting in touch.  Somebody will reach out to you as soon as possible.",
+                    align: "left",
+                    type: "CARD"
+                } */
             ]
         },
         {
@@ -324,9 +373,7 @@ export function getContactFormFallback(props: FormResponseProps): MultistepForm 
         steps: []
     };
 
-    const enableBooking = props.fallback?.enablePreferredTime;
-
-    if (enableBooking) {
+    if (props.enablePreferredTime) {
         contactUsForm.name = "booking_preferred_time";
         contactUsForm.header = PREFERRED_TIME_HEADER;
         contactUsForm.steps = PREFERRED_TIME_STEPS;
@@ -349,35 +396,49 @@ function getForm(data: ContactCaptureData, props: FormResponseProps): MultistepF
     if (!data?.enableFormScheduling) {
         // remove this after a couple of releases
         log().warn(`NEW FEATURE! You must enable scheduling if you are running this standalone.  Set enableFormScheduling to true in handler data.`);
-        return getContactFormFallback(props);
+
+        return getContactFormFallback(data, props);
     }
 
     const { formName } = props;
+    const hasCustomForm = existsAndNotEmpty(data.forms);
 
-    // no form name, use the default form
-    if (!formName) {
-        log().warn(`No form name provided.  Using default form.`);
-        return getContactFormFallback(props);
+    if (!hasCustomForm) {
+        log().warn(`No custom forms found.  Using default form.`);
+        return getContactFormFallback({
+            ...data,
+            enablePreferredTime: true
+        }, props);
     }
 
     // forms can be empty
-    const formDeclaration = (data?.forms || []).find((form) => {
+    let formDeclaration = (data?.forms || []).find((form) => {
         return (form.name === formName);
     });
 
-    // if we don't have a form, use the default form
     if (!formDeclaration) {
-        log().warn(`No form found with name: ${formName}.  Using default form.`);
-        return getContactFormFallback(props);
-    } else {
-        return formDeclaration;
+        log().warn(`No form found with name: ${formName}.  Using first custom form.`);
+        formDeclaration = data.forms[0];
     }
+
+    // look through each step, see if there are any chips we need to preselect based on service passed in 
+    if (props?.service) {
+        formDeclaration.steps.forEach((step) => {
+            if (existsAndNotEmpty(step.fields)) {
+
+            }
+
+        });
+    }
+
+
+    return formDeclaration;
+
 }
 
 export function getFormResponse(data: ContactCaptureData, props: FormResponseProps): Response {
 
     const form = getForm(data, props);
-
 
     // The form is a DISPLAY of type "FORM"
     const response: Response = {
