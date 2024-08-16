@@ -27,7 +27,13 @@ export interface ContactCaptureService {
      * Label displayed to the user
      */
     label: string;
+    /**
+     * Reserving these for future use, a description of the service
+     */
     description?: string;
+    /**
+     * Optional price for the service
+     */
     price?: string;
 }
 
