@@ -920,10 +920,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/chai@npm:4.3.17":
-  version: 4.3.17
-  resolution: "@types/chai@npm:4.3.17"
-  checksum: 56661c74c76df06547e3584be4a2b85eec60e7de4c0f6e7bbf7bf492a0ce96ce5bfc30f52a8889a7b35e24161d225e4a57041d4fa80f6e5592fea78e45dfd34c
+"@types/chai@npm:4.3.19":
+  version: 4.3.19
+  resolution: "@types/chai@npm:4.3.19"
+  checksum: abd4d3239735054f3b6e8163e45bc6495f66469729fbcf4784c9f2b82361a6845d45ab9c518818c78eafa46d015e3a72306e9949d1333e10d7eaedf426af4261
   languageName: node
   linkType: hard
 
@@ -1264,7 +1264,7 @@ __metadata:
     "@semantic-release/git": 10.0.1
     "@semantic-release/npm": 12.0.1
     "@semantic-release/release-notes-generator": 14.0.1
-    "@types/chai": 4.3.17
+    "@types/chai": 4.3.19
     "@types/mocha": 10.0.7
     "@types/node": 20.14.14
     "@types/sinon": 17.0.3
