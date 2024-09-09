@@ -82,17 +82,19 @@ describe(`#${getFormResponse.name}()`, () => {
             it("returns a preferred time form with the service options", () => {
                 const response = getFormResponse({
                     enablePreferredTime: true,
-                    capture: SIMPLE_BLUEPRINT,
-                    serviceOptions: [
-                        {
-                            id: "schedule_maintenance",
-                            label: "Schedule Maintenance"
-                        },
-                        {
-                            id: "emergency_service",
-                            label: "Emergency Service"
-                        }
-                    ]
+                    capture: {
+                        ...SIMPLE_BLUEPRINT,
+                        serviceOptions: [
+                            {
+                                id: "schedule_maintenance",
+                                label: "Schedule Maintenance"
+                            },
+                            {
+                                id: "emergency_service",
+                                label: "Emergency Service"
+                            }
+                        ]
+                    }
                 }, {});
 
                 expect(response).to.exist;
@@ -132,17 +134,19 @@ describe(`#${getFormResponse.name}()`, () => {
         it("returns a fallback form when no custom form is provided", () => {
             const response = getFormResponse({
                 enableFormScheduling: true,
-                capture: SIMPLE_BLUEPRINT,
-                serviceOptions: [
-                    {
-                        id: "schedule_maintenance",
-                        label: "Schedule Maintenance"
-                    },
-                    {
-                        id: "emergency_service",
-                        label: "Emergency Service"
-                    }
-                ]
+                capture: {
+                    ...SIMPLE_BLUEPRINT,
+                    serviceOptions: [
+                        {
+                            id: "schedule_maintenance",
+                            label: "Schedule Maintenance"
+                        },
+                        {
+                            id: "emergency_service",
+                            label: "Emergency Service"
+                        }
+                    ]
+                }
             }, {});
 
             expect(response).to.exist;
@@ -179,18 +183,20 @@ describe(`#${getFormResponse.name}()`, () => {
         it("returns a custom form", () => {
             const response = getFormResponse({
                 enableFormScheduling: true,
-                capture: SIMPLE_BLUEPRINT,
+                capture: {
+                    ...SIMPLE_BLUEPRINT,
+                    serviceOptions: [
+                        {
+                            id: "schedule_maintenance",
+                            label: "Schedule Maintenance"
+                        },
+                        {
+                            id: "emergency_service",
+                            label: "Emergency Service"
+                        }
+                    ]
+                },
                 forms: [CUSTOM_FORM],
-                serviceOptions: [
-                    {
-                        id: "schedule_maintenance",
-                        label: "Schedule Maintenance"
-                    },
-                    {
-                        id: "emergency_service",
-                        label: "Emergency Service"
-                    }
-                ]
             }, {});
 
             expect(response).to.exist;

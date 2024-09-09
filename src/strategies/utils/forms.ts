@@ -3,7 +3,7 @@ import { log } from "stentor";
 import { FormStep, FormFieldTextAddressInput, MultistepForm, Response, SelectableItem } from "stentor-models";
 import { capitalize, existsAndNotEmpty } from "stentor-utils";
 
-import { ContactCaptureData, ContactCaptureService } from "../../data";
+import { ContactCaptureData, ContactCaptureService, DataDescriptorBase } from "../../data";
 
 // THE DEFAULT CHIPS
 const SERVICE_CHIP_ITEMS: SelectableItem[] = [
@@ -21,7 +21,16 @@ const SERVICE_CHIP_ITEMS: SelectableItem[] = [
     }
 ];
 
-interface FormResponseProps {
+export interface FieldSettings {
+
+    required?: boolean;
+}
+
+export interface FormResponseProps {
+    /**
+     * Enables preferred time form
+     */
+    enablePreferredTime?: boolean;
     /**
      * Name of the form to return
      */
@@ -39,9 +48,9 @@ interface FormResponseProps {
      */
     service?: string;
     /**
-     * Enables preferred time form
+     * The fields to capture
      */
-    enablePreferredTime?: boolean;
+    fields?: DataDescriptorBase[];
 }
 
 /**
@@ -55,12 +64,13 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
         props.enablePreferredTime = data.enablePreferredTime;
     }
 
-    if (existsAndNotEmpty(data.serviceOptions)) {
-        props.serviceOptions = data.serviceOptions;
+
+    if (existsAndNotEmpty(data.capture?.serviceOptions)) {
+        props.serviceOptions = data.capture?.serviceOptions;
     }
 
-    if (data.messageDescription) {
-        props.messageDescription = data.messageDescription
+    if (data.capture?.messageDescription) {
+        props.messageDescription = data.capture?.messageDescription;
     }
 
     const CONTACT_ONLY_STEPS: FormStep[] = [
