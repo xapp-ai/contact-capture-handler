@@ -2,7 +2,7 @@
 import * as chai from "chai";
 import * as sinonChai from "sinon-chai";
 
-import { FormChipsInput } from "stentor-models";
+import { FormChipsInput, FormFieldTextAddressInput } from "stentor-models";
 
 import { isMultistepForm } from "../../../guards";
 import { getFormResponse, getContactFormFallback } from "../forms";
@@ -42,7 +42,7 @@ describe(`#${getFormResponse.name}()`, () => {
         it("returns a preferred time form", () => {
             const response = getFormResponse({
                 enablePreferredTime: true,
-                capture: SIMPLE_BLUEPRINT
+                capture: { data: [] }
             }, {
 
             });
@@ -76,6 +76,20 @@ describe(`#${getFormResponse.name}()`, () => {
                 const chip3 = chips[2];
                 expect(chip3.id).to.equal("contact_us");
                 expect(chip3.label).to.equal("Contact Us");
+
+                // Get step 2, make sure we have the default fields
+                const step2 = form.steps[1];
+                expect(step2).to.exist;
+                expect(step2.fields).to.have.length(3);
+                // we need to have name, phone, address
+                const nameField = step2.fields[0];
+                expect(nameField.name).to.equal("full_name");
+
+                const phoneField = step2.fields[1];
+                expect(phoneField.name).to.equal("phone");
+
+                const addressField = step2.fields[2];
+                expect(addressField.name).to.equal("address");
             }
         });
         describe("when passes serviceOptions", () => {
@@ -126,6 +140,145 @@ describe(`#${getFormResponse.name}()`, () => {
                     const chip3 = chips[2];
                     expect(chip3.id).to.equal("contact_us");
                     expect(chip3.label).to.equal("Contact Us");
+                }
+            });
+        });
+        describe("when passed bluepint data", () => {
+            it("sets the appropriate fields", () => {
+                const response = getFormResponse({
+                    enablePreferredTime: true,
+                    capture: SIMPLE_BLUEPRINT
+                }, {
+
+                });
+
+                expect(response).to.exist;
+                const form = response && Array.isArray(response.displays) && response?.displays?.length > 0 ? response.displays[0] : undefined;
+                expect(form).to.exist;
+
+                expect(isMultistepForm(form)).to.be.true;
+
+                if (isMultistepForm(form)) {
+                    //console.log(form);
+                    expect(form.name).to.equal("booking_preferred_time");
+                    expect(form.header).to.have.length(5);
+                    expect(form.steps).to.have.length(5);
+
+                    const contactInfoStep = form.steps[1];
+                    expect(contactInfoStep).to.exist;
+
+                    expect(contactInfoStep.fields).to.have.length(3);
+
+                    // first is name, second is email, third is phone
+                    const nameField = contactInfoStep.fields[0];
+                    expect(nameField.name).to.equal("full_name");
+                    expect(nameField.mandatory).to.be.true;
+
+                    const emailField = contactInfoStep.fields[1];
+                    expect(emailField.name).to.equal("email");
+                    expect(emailField.mandatory).to.be.false;
+
+                    const phoneField = contactInfoStep.fields[2];
+                    expect(phoneField.name).to.equal("phone");
+                    expect(phoneField.mandatory).to.be.true;
+                }
+            });
+        });
+        describe("when passed serviceOptions & blueprint data", () => {
+            it("sets the appropriate fields", () => {
+                const response = getFormResponse({
+                    enablePreferredTime: true,
+                    capture: {
+                        data: [
+                            ...SIMPLE_BLUEPRINT.data,
+                            {
+                                questionContentKey: "address",
+                                slotName: "address",
+                                type: "ADDRESS",
+                                required: true,
+                            }
+                        ],
+                        addressAutocompleteParams: {
+                            components: "country:us",
+                        },
+                        serviceOptions: [
+                            {
+                                id: "free_quote",
+                                label: "Free Quote",
+                                requiresDate: false,
+                            },
+                            {
+                                id: "schedule_maintenance",
+                                label: "Schedule Maintenance",
+                                requiresDate: true
+                            },
+                            {
+                                id: "emergency_service",
+                                label: "Emergency Service"
+                            },
+                            {
+                                id: "service_repair",
+                                label: "Service/Repair",
+                                requiresDate: true
+                            }
+                        ]
+                    }
+                }, {
+
+                });
+
+                expect(response).to.exist;
+                const form = response && Array.isArray(response.displays) && response?.displays?.length > 0 ? response.displays[0] : undefined;
+                expect(form).to.exist;
+
+                /// Helpful for copy pasting and testing
+                //console.log(JSON.stringify(form, null, 2));
+
+                expect(isMultistepForm(form)).to.be.true;
+
+                if (isMultistepForm(form)) {
+                    //console.log(form);
+                    expect(form.name).to.equal("booking_preferred_time");
+                    expect(form.header).to.have.length(5);
+                    expect(form.steps).to.have.length(5);
+
+                    // check services on first step
+                    const step = form.steps[0];
+                    expect(step).to.exist;
+
+                    const chips = (step.fields[0] as FormChipsInput).items;
+                    expect(chips).to.have.length(5);
+
+
+                    const contactInfoStep = form.steps[1];
+                    expect(contactInfoStep).to.exist;
+
+                    expect(contactInfoStep.fields).to.have.length(4);
+
+                    // first is name, second is email, third is phone
+                    const nameField = contactInfoStep.fields[0];
+                    expect(nameField.name).to.equal("full_name");
+                    expect(nameField.mandatory).to.be.true;
+
+                    const emailField = contactInfoStep.fields[1];
+                    expect(emailField.name).to.equal("email");
+                    expect(emailField.mandatory).to.be.false;
+
+                    const phoneField = contactInfoStep.fields[2];
+                    expect(phoneField.name).to.equal("phone");
+                    expect(phoneField.mandatory).to.be.true;
+
+                    const addressField: FormFieldTextAddressInput = contactInfoStep.fields[3] as FormFieldTextAddressInput;
+                    expect(addressField.name).to.equal("address");
+                    expect(addressField.mandatory).to.be.true;
+                    expect(addressField.mapsUrlQueryParams).to.deep.equal({ components: "country:us" });
+
+                    // check the preferredTime step and check the conditional
+                    const preferredTimeStep = form.steps[2];
+                    expect(preferredTimeStep).to.exist;
+                    expect(preferredTimeStep.name).to.equal("preferred_time");
+                    const condition = preferredTimeStep.condition;
+                    expect(condition).to.equal("help_type.includes('schedule_maintenance') || help_type.includes('service_repair')");
                 }
             });
         });
