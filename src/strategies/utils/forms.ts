@@ -1,10 +1,11 @@
 /*! Copyright (c) 2024, XAPP AI */
 import { log } from "stentor";
 import {
-    FormStep,
+    FormChipsInput,
     FormField,
-    FormTextInput,
     FormFieldTextAddressInput,
+    FormStep,
+    FormTextInput,
     MultistepForm,
     Response,
     SelectableItem
@@ -592,9 +593,22 @@ function getForm(data: ContactCaptureData, props: FormResponseProps): MultistepF
     if (props?.service) {
         formDeclaration.steps.forEach((step) => {
             if (existsAndNotEmpty(step.fields)) {
+                // look for chip type
+                const chipField: FormChipsInput = step.fields.find((field) => {
+                    return field.type === "CHIPS";
+                }) as FormChipsInput;
 
+                if (chipField) {
+                    // find the service chip
+                    const serviceChip = chipField.items.find((item) => {
+                        return item.id === props.service;
+                    });
+
+                    if (serviceChip) {
+                        serviceChip.selected = true;
+                    }
+                }
             }
-
         });
     }
 

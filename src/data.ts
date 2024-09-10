@@ -50,6 +50,10 @@ export interface ContactCaptureData extends QuestionAnsweringData, Pick<FormResp
      */
     captureLead?: boolean;
     /**
+     * It can take preferred time for an appointment, without confirming if the time is available through an FSM.
+     */
+    enablePreferredTime?: boolean;
+    /**
      * Form Widget channel only, it will enable scheduling within the form.  Otherwise the form widget will simply act as a contact us form. 
      * 
      */

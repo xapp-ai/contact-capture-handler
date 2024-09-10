@@ -43,9 +43,7 @@ describe(`#${getFormResponse.name}()`, () => {
             const response = getFormResponse({
                 enablePreferredTime: true,
                 capture: { data: [] }
-            }, {
-
-            });
+            }, {});
 
             expect(response).to.exist;
 
