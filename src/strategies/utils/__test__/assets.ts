@@ -6,22 +6,40 @@ import { ContactCaptureBlueprint } from "../../../data";
 export const SIMPLE_BLUEPRINT: ContactCaptureBlueprint = {
     data: [
         {
+            slotName: "full_name",
             questionContentKey: "name",
             type: "FULL_NAME",
             required: true,
             active: true
         },
         {
+            slotName: "email",
             questionContentKey: "email",
             type: "EMAIL",
-            required: true,
+            required: false,
             active: true
         },
         {
+            slotName: "phone",
             questionContentKey: "phone",
             type: "PHONE",
             required: true,
             active: true
+        },
+        {
+            slotName: "address",
+            questionContentKey: "address",
+            type: "ADDRESS",
+            required: true,
+            active: false
+        },
+        {
+            slotName: "address",
+            questionContentKey: "address",
+            type: "ADDRESS",
+            required: true,
+            active: true,
+            channel: "CHAT"
         }
     ]
 };

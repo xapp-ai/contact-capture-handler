@@ -1,8 +1,9 @@
 /*! Copyright (c) 2022, XAPP AI */
-import { CrmServiceAvailabilitySettings, MultistepForm } from "stentor-models";
+import { AddressAutocompleteParameters, CrmServiceAvailabilitySettings, MultistepForm } from "stentor-models";
 import { QuestionAnsweringData } from "@xapp/question-answering-handler";
 
 import { PlacesService } from "./services/PlacesService/models";
+import { FormResponseProps } from "./strategies/utils/forms";
 
 export type ContactDataType =
     "FIRST_NAME" |
@@ -35,9 +36,13 @@ export interface ContactCaptureService {
      * Optional price for the service
      */
     price?: string;
+    /**
+     * Does the service require the user to provide a date
+     */
+    requiresDate?: boolean;
 }
 
-export interface ContactCaptureData extends QuestionAnsweringData {
+export interface ContactCaptureData extends QuestionAnsweringData, Pick<FormResponseProps, "enablePreferredTime"> {
     /**
      * It will not capture the lead and instead provide contact information.
      * 
@@ -56,7 +61,9 @@ export interface ContactCaptureData extends QuestionAnsweringData {
     /**
      * Optional place IDs to look up information about the business
      */
-    places?: { placeId?: string }[];
+    places?: {
+        placeId?: string
+    }[];
     /**
      * Optional PlaceService, used for testing, defaults to GooglePlaceService.  
      */
@@ -88,26 +95,37 @@ export interface ContactCaptureData extends QuestionAnsweringData {
      */
     crmFlags?: object;
     /**
-     * Optional services that
-     */
-    serviceOptions?: ContactCaptureService[];
-    /**
-     * Option to override the default message description in the multiline text field.
-     */
-    messageDescription?: string;
-    /**
      * Optional availability settings to be used when calling CRMService.getAvailability()
      */
     availabilitySettings?: CrmServiceAvailabilitySettings;
 }
 
 export interface ContactCaptureBlueprint {
+    /**
+     * The items to capture from the user.
+     */
     data: DataDescriptorBase[];
+    /**
+     * Optional services that will be displayed to the user in the form widget.
+     * 
+     * For example: "Get Quote", "Request HVAC Service", "Schedule Appointment"
+     */
+    serviceOptions?: ContactCaptureService[];
+    /**
+    * Option to override the default message description in the multiline text field.
+    */
+    messageDescription?: string;
+    /**
+     * Autocomplete parameters for any address fields.
+     */
+    addressAutocompleteParams?: AddressAutocompleteParameters;
 }
 
 export interface DataDescriptorBase {
     /**
      * The tag matching to the response that will be used to ask for this data.
+     * 
+     * This is for chat channels only.
      */
     questionContentKey: string;
     /**
@@ -139,6 +157,10 @@ export interface DataDescriptorBase {
      * Is the value being collected or not
      */
     active?: boolean;
+    /**
+     * If the data is only asked for a certain channels, by default it is "ALL"
+     */
+    channel?: "CHAT" | "FORM" | "ALL";
 }
 
 export interface DataDescriptorRuntime extends DataDescriptorBase {

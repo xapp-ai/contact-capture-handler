@@ -65,9 +65,9 @@ function leadSummary(slots: RequestSlotMap, leadDataList: CaptureRuntimeData): s
 }
 
 /**
+ * Turns the busy days to date strings comma delimited for easier widget consumption.
  * 
- * @param busyDays Format this for the widget for "easier" consumption
- * @returns 
+ * @param busyDays
  */
 function formatBusyDays(busyDays: CrmServiceAvailability): string {
     const busyDates: string[] = [];
@@ -305,7 +305,6 @@ export class FormResponseStrategy implements ResponseStrategy {
                 },
             ],
         };
-
 
         return response;
     }

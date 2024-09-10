@@ -147,6 +147,10 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
                 if (request.attributes.merchant_id) {
                     extras.merchant_id = request.attributes.merchant_id;
                 }
+
+                if (request.attributes.environment) {
+                    extras.environment = request.attributes.environment;
+                }
             }
         }
 
