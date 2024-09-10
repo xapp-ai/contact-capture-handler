@@ -1,3 +1,10 @@
+## [1.11.6](https://github.com/xapp-ai/contact-capture-handler/compare/v1.11.5...v1.11.6) (2024-09-10)
+
+
+### Bug Fixes
+
+* Configuration options on Services & Fields ([#439](https://github.com/xapp-ai/contact-capture-handler/issues/439)) ([404399f](https://github.com/xapp-ai/contact-capture-handler/commit/404399f70638bf6da558df20d82988fd81f9444c))
+
 ## [1.11.5](https://github.com/xapp-ai/contact-capture-handler/compare/v1.11.4...v1.11.5) (2024-08-19)
 
 
