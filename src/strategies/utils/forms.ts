@@ -148,7 +148,7 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
             chips.push({
                 id: contactUsChip,
                 label: "Contact Us"
-            })
+            });
         }
     }
 
@@ -176,6 +176,9 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
         }
     }
 
+    // we display this on the first page
+    let requiredMessage = true;
+
     // Setup the contact information capture
     let CONTACT_FIELDS: FormField[] = [...DEFAULT_CONTACT_FIELDS];
 
@@ -189,6 +192,7 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
         });
 
         CONTACT_FIELDS = [];
+
 
         // find full_name, email, phone, address
         // message is already included by default
@@ -240,6 +244,10 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
                     addressField.mapsUrlQueryParams = data.capture.addressAutocompleteParams;
                 }
                 CONTACT_FIELDS.push(addressField);
+            } else if (dataField.slotName === "message") {
+                if (typeof dataField.required === "boolean") {
+                    requiredMessage = dataField.required;
+                }
             }
         });
     }
@@ -287,7 +295,7 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
                     rows: 6,
                     type: "TEXT",
                     multiline: true,
-                    mandatory: true
+                    mandatory: requiredMessage
                 }
             ]
         },
@@ -306,7 +314,9 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
                     name: "dateTime",
                     title: "Preferred date",
                     type: "DATE",
-                    mandatory: false
+                    mandatory: false,
+                    // pass through busy day information
+                    defaultBusyDays: data.availabilitySettings?.defaultBusyDays,
                 },
                 {
                     name: "card_time_preference",

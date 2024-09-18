@@ -1,5 +1,5 @@
 /*! Copyright (c) 2022, XAPP AI */
-import { AddressAutocompleteParameters, CrmServiceAvailabilitySettings, MultistepForm } from "stentor-models";
+import { AddressAutocompleteParameters, BusyDayDescription, CrmServiceAvailabilitySettings, MultistepForm } from "stentor-models";
 import { QuestionAnsweringData } from "@xapp/question-answering-handler";
 
 import { PlacesService } from "./services/PlacesService/models";
@@ -40,6 +40,13 @@ export interface ContactCaptureService {
      * Does the service require the user to provide a date
      */
     requiresDate?: boolean;
+}
+
+export interface AvailabilitySettings extends CrmServiceAvailabilitySettings {
+    /**
+     * Used when no availability service is available.
+     */
+    defaultBusyDays?: BusyDayDescription;
 }
 
 export interface ContactCaptureData extends QuestionAnsweringData, Pick<FormResponseProps, "enablePreferredTime"> {
@@ -97,7 +104,7 @@ export interface ContactCaptureData extends QuestionAnsweringData, Pick<FormResp
     /**
      * Optional availability settings to be used when calling CRMService.getAvailability()
      */
-    availabilitySettings?: CrmServiceAvailabilitySettings;
+    availabilitySettings?: AvailabilitySettings;
 }
 
 export interface ContactCaptureBlueprint {
