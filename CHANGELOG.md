@@ -1,3 +1,10 @@
+## [1.11.7](https://github.com/xapp-ai/contact-capture-handler/compare/v1.11.6...v1.11.7) (2024-09-18)
+
+
+### Bug Fixes
+
+* Pass through Busy Days ([#443](https://github.com/xapp-ai/contact-capture-handler/issues/443)) ([fbb5628](https://github.com/xapp-ai/contact-capture-handler/commit/fbb5628950e6d12c85b14b5700dc126b6314234c))
+
 ## [1.11.6](https://github.com/xapp-ai/contact-capture-handler/compare/v1.11.5...v1.11.6) (2024-09-10)
 
 
