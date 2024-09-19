@@ -60,5 +60,5 @@
     "stentor": "1.x",
     "stentor-service-fetch": "1.x"
   },
-  "packageManager": "yarn@3.8.5"
+  "packageManager": "yarn@4.5.0"
 }
