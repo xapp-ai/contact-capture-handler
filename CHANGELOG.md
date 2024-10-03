@@ -1,3 +1,10 @@
+## [1.11.8](https://github.com/xapp-ai/contact-capture-handler/compare/v1.11.7...v1.11.8) (2024-10-03)
+
+
+### Bug Fixes
+
+* Export Form Fallback Function ([#447](https://github.com/xapp-ai/contact-capture-handler/issues/447)) ([c713e2f](https://github.com/xapp-ai/contact-capture-handler/commit/c713e2f3d38bfbac7ea40a74351fe5cf19ab60e1))
+
 ## [1.11.7](https://github.com/xapp-ai/contact-capture-handler/compare/v1.11.6...v1.11.7) (2024-09-18)
 
 
