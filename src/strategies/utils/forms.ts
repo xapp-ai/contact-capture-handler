@@ -15,7 +15,7 @@ import { capitalize, existsAndNotEmpty } from "stentor-utils";
 import { ContactCaptureData, ContactCaptureService, DataDescriptorBase } from "../../data";
 
 // THE DEFAULT CHIPS
-const DEFAULT_SERVICE_CHIP_ITEMS: SelectableItem[] = [
+export const DEFAULT_SERVICE_CHIP_ITEMS: SelectableItem[] = [
     {
         id: "schedule_visit",
         label: "Schedule Visit"
@@ -30,7 +30,7 @@ const DEFAULT_SERVICE_CHIP_ITEMS: SelectableItem[] = [
     }
 ];
 
-const DEFAULT_CONTACT_FIELDS: FormField[] = [
+export const DEFAULT_CONTACT_FIELDS: FormField[] = [
     {
         name: "full_name",
         label: "Name",
