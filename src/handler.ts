@@ -2,39 +2,41 @@
 
 import { QuestionAnsweringHandler } from "@xapp/question-answering-handler";
 
-import {
-    compileResponse,
+import { log } from "stentor-logger";
+import type {
     Content,
     Context,
     CrmService,
     ErrorService,
-    existsAndNotEmpty,
-    isIntentRequest,
+    ExternalLead,
     IntentRequest,
-    keyFromRequest,
-    LeadFormField,
-    log,
     Message,
     Request,
     RequestSlotMap,
-    requestSlotsToString,
-    requestSlotValueToString,
     Response,
     ResponseOutput,
-    responseToMessage,
+    LeadFormField,
+} from "stentor-models";
+import { isChannelActionRequest, isIntentRequest, hasSessionId } from "stentor-guards";
+import { compileResponse } from "stentor-response";
+import {
+    existsAndNotEmpty,
+    splitTextIntoSentences,
+    popLastQuestion,
+    ssmlify,
     toResponseOutput,
-    isChannelActionRequest,
-    hasSessionId
-} from "stentor";
-import { ExternalLead } from "stentor-models";
-import { splitTextIntoSentences, popLastQuestion, ssmlify } from "stentor-utils";
+    responseToMessage,
+    keyFromRequest,
+    requestSlotsToString,
+    requestSlotValueToString,
+} from "stentor-utils";
 
 import * as Constants from "./constants";
-import { ContactDataType, ContactCaptureData, CaptureRuntimeData } from "./data";
+import type { ContactDataType, ContactCaptureData, CaptureRuntimeData } from "./data";
 import { generateAlternativeSlots, generatePseudoSlots, isSessionClosed, NOTE_COMPONENTS } from "./utils";
 import { LeadError } from "./model";
 import { ResponseStrategySelector } from "./strategies/ResponseStrategySelector";
-import { FormActionResponseData } from "./strategies/FormResponseStrategy";
+import type { FormActionResponseData } from "./strategies/FormResponseStrategy";
 
 interface ComponentRequest extends IntentRequest {
     dateTime: string;

@@ -31,8 +31,7 @@
     "@typescript-eslint/eslint-plugin": "7.18.0",
     "@typescript-eslint/parser": "7.18.0",
     "@xapp/config": "0.2.3",
-    "@xapp/question-answering-handler": "2.5.12",
-    "aws-sdk": "2.1691.0",
+    "@xapp/question-answering-handler": "2.5.13",
     "chai": "4.5.0",
     "conventional-changelog-conventionalcommits": "8.0.0",
     "dotenv": "16.4.5",
@@ -43,8 +42,15 @@
     "semantic-release": "24.1.2",
     "sinon": "19.0.2",
     "sinon-chai": "3.7.0",
-    "stentor": "1.59.116",
+    "stentor-constants": "1.59.114",
+    "stentor-context": "1.59.116",
+    "stentor-handler": "1.59.116",
+    "stentor-logger": "1.59.116",
+    "stentor-models": "1.59.114",
+    "stentor-request": "1.59.116",
+    "stentor-response": "1.59.116",
     "stentor-service-fetch": "1.59.115",
+    "stentor-utils": "1.59.116",
     "ts-node": "10.9.2",
     "typescript": "5.6.2"
   },
@@ -57,8 +63,15 @@
   },
   "peerDependencies": {
     "@xapp/question-answering-handler": "2.x",
-    "stentor": "1.x",
-    "stentor-service-fetch": "1.x"
+    "stentor-constants": "1.x",
+    "stentor-context": "1.x",
+    "stentor-handler": "1.x",
+    "stentor-logger": "1.x",
+    "stentor-models": "1.x",
+    "stentor-request": "1.x",
+    "stentor-response": "1.x",
+    "stentor-service-fetch": "1.x",
+    "stentor-utils": "1.x"
   },
   "packageManager": "yarn@3.8.5"
 }

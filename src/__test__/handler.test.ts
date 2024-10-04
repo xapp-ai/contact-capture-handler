@@ -8,14 +8,17 @@ const expect = chai.expect;
 
 import {
     Context,
+    CrmResponse,
+    CrmService,
+    CrmServiceAvailability,
     DateTimeRange,
+    ErrorEvent,
+    ErrorService,
     IntentRequest,
-    ResponseBuilder,
     KnowledgeBaseResult,
-    CrmService
-} from "stentor";
-import { CrmResponse, CrmServiceAvailability, ErrorEvent, ErrorService } from "stentor-models";
+} from "stentor-models";
 import { IntentRequestBuilder } from "stentor-request";
+import { ResponseBuilder, } from "stentor-response";
 import { ContextBuilder } from "stentor-context";
 
 import { ContactCaptureHandler } from "../handler";

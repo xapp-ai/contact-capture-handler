@@ -1,9 +1,9 @@
 /*! Copyright (c) 2022, XAPP AI */
-import { AddressAutocompleteParameters, BusyDayDescription, CrmServiceAvailabilitySettings, MultistepForm } from "stentor-models";
-import { QuestionAnsweringData } from "@xapp/question-answering-handler";
+import type { AddressAutocompleteParameters, BusyDayDescription, CrmServiceAvailabilitySettings, MultistepForm } from "stentor-models";
+import type { QuestionAnsweringData } from "@xapp/question-answering-handler";
 
-import { PlacesService } from "./services/PlacesService/models";
-import { FormResponseProps } from "./strategies/utils/forms";
+import type { PlacesService } from "./services/PlacesService/models";
+import type { FormResponseProps } from "./strategies/utils/forms";
 
 export type ContactDataType =
     "FIRST_NAME" |

@@ -1,6 +1,6 @@
 /*! Copyright (c) 2024, XAPP AI */
-import { log } from "stentor";
-import {
+import { log } from "stentor-logger";
+import type {
     FormChipsInput,
     FormField,
     FormFieldTextAddressInput,

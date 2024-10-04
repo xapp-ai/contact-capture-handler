@@ -1,5 +1,5 @@
 /*! Copyright (c) 2023, XAPP AI */
-import { Request } from "stentor";
+import type { Request } from "stentor-models";
 
 import { ContactCaptureData } from "../data";
 

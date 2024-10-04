@@ -1,6 +1,8 @@
 /*! Copyright (c) 2023, XAPP AI */
 
-import { Response, Request, Context, FetchService } from "stentor";
+import type { Response, Request, Context } from "stentor-models";
+import { FetchService } from "stentor-service-fetch";
+
 import { ContactCaptureHandler } from "../handler";
 import { ResponseStrategy } from "../strategies/ResponseStrategy";
 

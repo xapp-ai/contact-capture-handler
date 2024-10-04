@@ -1,7 +1,8 @@
 /*! Copyright (c) 2022, XAPP AI */
 import { expect } from "chai";
 
-import { IntentRequestBuilder, RequestSlotMap } from "stentor";
+import { RequestSlotMap } from "stentor-models";
+import { IntentRequestBuilder } from "stentor-request";
 import { cleanCode, generateAlternativeSlots, lookingForHelp } from "../utils";
 
 describe(`#${generateAlternativeSlots.name}()`, () => {

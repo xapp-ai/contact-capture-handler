@@ -1,17 +1,20 @@
 /*! Copyright (c) 2023, XAPP AI */
 
+import { hasSessionId } from "stentor-guards";
+import { log } from "stentor-logger";
 import {
-    compileResponse,
     Context,
     CrmService,
-    hasSessionId,
-    log,
+    CrmServiceAvailability,
+    CrmServiceAvailabilityOptions,
+    CrmServiceAvailabilitySettings,
+    Response,
     Request,
     RequestSlotMap,
-    requestSlotValueToString,
-    Response,
-} from "stentor";
-import { CrmServiceAvailability, CrmServiceAvailabilityOptions, CrmServiceAvailabilitySettings, SessionStore } from "stentor-models";
+    SessionStore
+} from "stentor-models";
+import { requestSlotValueToString } from "stentor-utils";
+import { compileResponse } from "stentor-response";
 
 import * as Constants from "../constants";
 import { CaptureRuntimeData } from "../data";

@@ -5,23 +5,23 @@ import * as sinonChai from "sinon-chai";
 chai.use(sinonChai);
 const expect = chai.expect;
 
-import {
+import type {
     Content,
     Context,
-    ContextBuilder,
     Handler,
     IntentRequest,
-    IntentRequestBuilder,
-    ResponseBuilder,
-    toResponseOutput,
-} from "stentor";
+} from "stentor-models";
+import { ContextBuilder } from "stentor-context";
+import { IntentRequestBuilder } from "stentor-request";
+import { ResponseBuilder } from "stentor-response";
+import { toResponseOutput } from "stentor-utils";
 
 import * as Constants from "../../constants";
-import { ContactCaptureData } from "../../data";
+import type { ContactCaptureData } from "../../data";
 import { ContactCaptureHandler } from "../../handler";
+import type { ChatResult } from "../models/xnlu";
 
 import { ProgrammaticResponseStrategy } from "../ProgrammaticResponseStrategy";
-import { ChatResult } from "../models/xnlu";
 
 const props: Handler<Content, ContactCaptureData> = {
     intentId: "intentId",
