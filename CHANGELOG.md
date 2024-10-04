@@ -1,3 +1,10 @@
+## [1.11.9](https://github.com/xapp-ai/contact-capture-handler/compare/v1.11.8...v1.11.9) (2024-10-04)
+
+
+### Bug Fixes
+
+* Remove stentor in favor of individual packages([#450](https://github.com/xapp-ai/contact-capture-handler/issues/450)) ([9412c1c](https://github.com/xapp-ai/contact-capture-handler/commit/9412c1c380fe764f6c2a8333bc983e5867fddb4f))
+
 ## [1.11.8](https://github.com/xapp-ai/contact-capture-handler/compare/v1.11.7...v1.11.8) (2024-10-03)
 
 
