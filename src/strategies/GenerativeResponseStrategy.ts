@@ -1,17 +1,11 @@
 /*! Copyright (c) 2024, XAPP AI */
 
-import {
-    // Context,
-    Request,
-    Response,
-    ResponseOutput
-} from "stentor";
+import type { Request, Response, ResponseOutput } from "stentor-models";
 
-// import { ContactCaptureData } from "../data";
 import { ContactCaptureHandler } from "../handler";
 
-import { ChatResult } from "./models/xnlu";
-import { ResponseStrategy } from "./ResponseStrategy";
+import type { ChatResult } from "./models/xnlu";
+import type { ResponseStrategy } from "./ResponseStrategy";
 
 export class GenerativeResponseStrategy implements ResponseStrategy {
 

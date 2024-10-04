@@ -1,6 +1,6 @@
 /*! Copyright (c) 2022, XAPP AI */
 
-import { RequestSlotMap } from "stentor";
+import type { RequestSlotMap } from "stentor-models";
 
 export class LeadError extends Error {
     public constructor(message: string) {
@@ -36,10 +36,10 @@ export interface PseudoSlots extends RequestSlotMap {
         type: string;
     }
 
-     /**
-     * Note is passed along in the notes section of the lead
-     */
-     dateTime?: {
+    /**
+    * Note is passed along in the notes section of the lead
+    */
+    dateTime?: {
         name: "dateTime";
         type: string;
     }

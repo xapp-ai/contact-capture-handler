@@ -1,7 +1,8 @@
 /*! Copyright (c) 2022, XAPP AI */
+import { isChannelActionRequest, isIntentRequest, isSessionEndedRequest } from "stentor-guards";
 import { Request, RequestSlotMap, Response } from "stentor-models";
-import { capitalize, getSlotValue, requestSlotValueToString, slotExists } from "stentor-utils";
-import { concatResponseOutput, isChannelActionRequest, isIntentRequest, isSessionEndedRequest, keyFromRequest, toResponseOutput } from "stentor";
+import { concatResponseOutput } from "stentor-response";
+import { keyFromRequest, toResponseOutput, capitalize, getSlotValue, requestSlotValueToString, slotExists } from "stentor-utils";
 
 import { CaptureRuntimeData, ContactCaptureData, ContactDataType } from "./data";
 import { PseudoSlots } from "./model";

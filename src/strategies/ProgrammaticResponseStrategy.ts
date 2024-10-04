@@ -1,20 +1,16 @@
 /*! Copyright (c) 2023, XAPP AI */
 
+import { hasSessionId } from "stentor-guards";
+import { log } from "stentor-logger";
+import { Context, Response, Request, RequestSlotMap } from "stentor-models";
+import { concatResponseOutput, compileResponse } from "stentor-response";
 import {
-    compileResponse,
-    concatResponseOutput,
-    Context,
     existsAndNotEmpty,
     findValueForKey,
     getResponseByTag,
-    hasSessionId,
-    log,
-    Request,
-    RequestSlotMap,
     requestSlotValueToString,
-    Response,
     toResponseOutput,
-} from "stentor";
+} from "stentor-utils";
 
 import * as Constants from "../constants";
 import { ContactCaptureData, ContactDataType, CaptureRuntimeData } from "../data";
@@ -22,9 +18,9 @@ import { concatenateAside, isSessionClosed, lookingForHelp, newLeadGenerationDat
 import { ContactCaptureHandler } from "../handler";
 import { GooglePlacesService, PlacesService } from "../services";
 
-import { ResponseStrategy } from "./ResponseStrategy";
-import { ResultVariableGeneratedInformation } from "@xapp/question-answering-handler/lib/models";
-import { ChatResult } from "./models/xnlu";
+import type { ResponseStrategy } from "./ResponseStrategy";
+import type { ResultVariableGeneratedInformation } from "@xapp/question-answering-handler/lib/models";
+import type { ChatResult } from "./models/xnlu";
 
 export class ProgrammaticResponseStrategy implements ResponseStrategy {
 
