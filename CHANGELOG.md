@@ -1,3 +1,10 @@
+## [1.11.10](https://github.com/xapp-ai/contact-capture-handler/compare/v1.11.9...v1.11.10) (2024-11-07)
+
+
+### Bug Fixes
+
+* Account for undefined suggested job type ([#464](https://github.com/xapp-ai/contact-capture-handler/issues/464)) ([bd93026](https://github.com/xapp-ai/contact-capture-handler/commit/bd93026d90c89dd932dcfd7a43e268546ff17597))
+
 ## [1.11.9](https://github.com/xapp-ai/contact-capture-handler/compare/v1.11.8...v1.11.9) (2024-10-04)
 
 
