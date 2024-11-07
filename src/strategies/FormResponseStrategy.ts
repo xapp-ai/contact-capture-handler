@@ -269,7 +269,7 @@ export class FormResponseStrategy implements ResponseStrategy {
                     const existingJobType = session.get(Constants.CONTACT_CAPTURE_JOB_TYPE);
 
                     // Only call if the jobType changed (visitor changed the description)
-                    if (jobType.id !== existingJobType?.id && typeof crmService?.getAvailability === "function") {
+                    if (jobType?.id !== existingJobType?.id && typeof crmService?.getAvailability === "function") {
                         session.set(Constants.CONTACT_CAPTURE_JOB_TYPE, jobType);
 
                         let options: CrmServiceAvailabilityOptions = {
