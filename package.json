@@ -31,7 +31,7 @@
     "@typescript-eslint/eslint-plugin": "7.18.0",
     "@typescript-eslint/parser": "7.18.0",
     "@xapp/config": "0.2.3",
-    "@xapp/question-answering-handler": "2.5.13",
+    "@xapp/question-answering-handler": "2.5.15",
     "chai": "4.5.0",
     "conventional-changelog-conventionalcommits": "8.0.0",
     "dotenv": "16.4.5",
