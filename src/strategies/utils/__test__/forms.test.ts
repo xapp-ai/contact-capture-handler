@@ -6,7 +6,7 @@ import { FormChipsInput, FormFieldTextAddressInput } from "stentor-models";
 
 import { isMultistepForm } from "../../../guards";
 import { getFormResponse, getContactFormFallback } from "../forms";
-import { CUSTOM_FORM, SIMPLE_BLUEPRINT } from "./assets";
+import { CUSTOM_FORM, SIMPLE_BLUEPRINT, BLUEPRINT_WITHOUT_FULL_NAME } from "./assets";
 
 chai.use(sinonChai);
 const expect = chai.expect;
@@ -438,6 +438,26 @@ describe(`#${getContactFormFallback.name}()`, () => {
                     expect(schedule.label).to.equal("Contact Us");
                 }
             });
+        });
+    });
+    describe("when passed existing props without full_name active", () => {
+        it("adds the name field", () => {
+            const form = getContactFormFallback({ capture: BLUEPRINT_WITHOUT_FULL_NAME, }, { enablePreferredTime: true, service: "schedule_maintenance" });
+
+            expect(form).to.exist;
+            expect(form.steps).to.have.length(5);
+
+            const step = form.steps[1];
+            expect(step).to.exist;
+
+            // name & phone
+            expect(step.fields).to.have.length(2);
+
+            const name = step.fields[0];
+            expect(name.name).to.equal("full_name");
+
+            const phone = step.fields[1];
+            expect(phone.name).to.equal("phone");
         });
     });
 });

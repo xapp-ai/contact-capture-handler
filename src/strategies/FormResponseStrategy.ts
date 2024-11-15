@@ -152,6 +152,16 @@ export class FormResponseStrategy implements ResponseStrategy {
 
         if (!isAbandoned) {
             const data: FormActionResponseData = request.attributes?.data as FormActionResponseData;
+            //   
+
+            // debug here 
+            if (!data.step) {
+                log().warn("No step in the data");
+                // eslint-disable-next-line no-console
+                console.log(request);
+                // eslint-disable-next-line no-console
+                console.log(data);
+            }
             const stepFromData = getStepFromData(handler.data, { formName: data?.form, enablePreferredTime, service }, data?.step);
 
             // Send the requested form

@@ -193,6 +193,7 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
 
         CONTACT_FIELDS = [];
 
+        let hasNameField = false;
 
         // find full_name, email, phone, address
         // message is already included by default
@@ -206,7 +207,12 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
                 mandatory: dataField.required
             };
 
+            // look for first_name or last_name
+
             if (dataField.slotName === "full_name" || dataField.slotName === "name") {
+
+                hasNameField = true;
+
                 const namefield: FormTextInput = {
                     ...field,
                     multiline: false,
@@ -250,6 +256,18 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
                 }
             }
         });
+
+        // absolutely need a name field
+        if (!hasNameField) {
+            // add a default name field
+            CONTACT_FIELDS.unshift({
+                name: "full_name",
+                label: "Name",
+                type: "TEXT",
+                placeholder: "Your full name",
+                mandatory: true
+            });
+        }
     }
 
     // if we have the autocomplete suggestions and the params, append them
@@ -662,6 +680,7 @@ export function getStepFromData(data: ContactCaptureData, props: FormResponsePro
     });
 
     if (!formStep) {
+        // this is getting thrown frequently  with undefined stepName and undefined formName
         throw new Error(`FormResponseStrategy: Unknown step: "${stepName}". Form: "${props.formName}"`);
     }
 
