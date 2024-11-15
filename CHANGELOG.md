@@ -1,3 +1,10 @@
+## [1.11.12](https://github.com/xapp-ai/contact-capture-handler/compare/v1.11.11...v1.11.12) (2024-11-15)
+
+
+### Bug Fixes
+
+* Make sure we always ask for Name ([#467](https://github.com/xapp-ai/contact-capture-handler/issues/467)) ([d58d671](https://github.com/xapp-ai/contact-capture-handler/commit/d58d6719f1f84fdb79f7153bfd371af421ed5fcc))
+
 ## [1.11.11](https://github.com/xapp-ai/contact-capture-handler/compare/v1.11.10...v1.11.11) (2024-11-07)
 
 
