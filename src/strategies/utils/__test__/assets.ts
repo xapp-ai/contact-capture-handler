@@ -133,3 +133,66 @@ export const CUSTOM_FORM: MultistepForm = {
         }
     ]
 };
+
+export const BLUEPRINT_WITHOUT_FULL_NAME: ContactCaptureBlueprint = {
+    data: [
+        {
+            "slotName": "first_name",
+            "active": true,
+            "type": "FIRST_NAME",
+            "questionContentKey": "FirstNameQuestionContent"
+        },
+        {
+            "slotName": "last_name",
+            "active": true,
+            "type": "LAST_NAME",
+            "questionContentKey": "LastNameQuestionContent"
+        },
+        {
+            "slotName": "phone",
+            "active": true,
+            "type": "PHONE",
+            "questionContentKey": "PhoneQuestionContent"
+        },
+        {
+            "slotName": "full_name",
+            "active": false,
+            "type": "FULL_NAME",
+            "questionContentKey": "FullNameQuestionContent"
+        },
+        {
+            "slotName": "zip",
+            "active": false,
+            "type": "ZIP",
+            "questionContentKey": "ZipQuestionContent"
+        },
+        {
+            "slotName": "address",
+            "active": false,
+            "type": "ADDRESS",
+            "questionContentKey": "AddressQuestionContent"
+        },
+        {
+            "slotName": "email",
+            "active": false,
+            "type": "EMAIL",
+            "questionContentKey": "EmailQuestionContent"
+        },
+        {
+            "slotName": "selection",
+            "active": false,
+            "enums": [
+                "Solar",
+                "Roofing"
+            ],
+            "type": "SELECTION",
+            "questionContentKey": "SelectionQuestionContent"
+        },
+        {
+            "slotName": "message",
+            "active": false,
+            "type": "MESSAGE",
+            "questionContentKey": "MessageQuestionContent"
+        }
+    ]
+}
