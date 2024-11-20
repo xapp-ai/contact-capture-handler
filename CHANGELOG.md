@@ -1,3 +1,10 @@
+## [1.11.13](https://github.com/xapp-ai/contact-capture-handler/compare/v1.11.12...v1.11.13) (2024-11-20)
+
+
+### Bug Fixes
+
+* Attempts to fix an error we see where lead data exists but we get an intent request (not channel action request) ([#469](https://github.com/xapp-ai/contact-capture-handler/issues/469)) ([5424871](https://github.com/xapp-ai/contact-capture-handler/commit/542487146a6a61a65e900a68e869da1d6ff41cf2))
+
 ## [1.11.12](https://github.com/xapp-ai/contact-capture-handler/compare/v1.11.11...v1.11.12) (2024-11-15)
 
 
