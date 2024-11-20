@@ -25,7 +25,7 @@ import { ContactCaptureHandler } from "../handler";
 import { CONTACT_CAPTURE_CURRENT_DATA, CONTACT_CAPTURE_LIST, CONTACT_CAPTURE_SENT, CONTACT_CAPTURE_SLOTS } from "../constants";
 import { DetailParams, Place, PlacesService, SearchParams } from "../services";
 
-import { props, propsWithAnyInputQuestion, propsWithCustomForm, propsWithNoCapture, propsWithNoCaptureAndContent } from "./assets";
+import { props, propsWithAnyInputQuestion, propsWithCustomForm, propsWithNoCapture, propsWithNoCaptureAndContent, propsWithStandardData } from "./assets";
 
 class MockCRM implements CrmService {
     public update?(): Promise<CrmResponse> {
@@ -1230,6 +1230,112 @@ describe(`${ContactCaptureHandler.name}`, () => {
                     expect(args.displays).to.have.length(1);
                     expect(args.displays[0].type).to.equal("FORM");
                     expect(args.displays[0].name).to.equal("contact_us_only");
+                });
+                describe("with lead data list already in the session store", () => {
+                    it.only("returns the preferred time form", async () => {
+                        // testing a real example here that happened
+                        const requestActual: IntentRequest = {
+                            "platform": "stentor-platform",
+                            "type": "INTENT_REQUEST",
+                            "intentId": "LeadGeneration",
+                            "channel": "form-widget",
+                            "sessionId": "stentor-form-session-c7-a0dc-be059339ae99",
+                            "userId": "373ef93a-620d9ab0df56",
+                            "isNewSession": true,
+                            "attributes": {
+                                "environment": "production",
+                                "origin": "rwg",
+                                "rwg_token": "AJKvS9X5g9ljTvfooGv36kwEPIIH_mrNc_DrfYKsCWi90barrQLEZ5W3X6fECqYNiSqUDxyS2tI5A==",
+                            },
+                            "slots": {}
+                        }
+
+                        const contextActual: Context = new ContextBuilder()
+                            .withResponse(response)
+                            .withSessionData({
+                                "data": {
+                                    "ContactCaptureBusyDays": {
+                                        "range": {},
+                                        "unavailabilities": [
+                                        ]
+                                    },
+                                    "ContactCaptureList": {
+                                        "data": [
+                                            {
+                                                "questionContentKey": "FirstNameQuestionContent",
+                                                "slotName": "first_name",
+                                                "type": "FIRST_NAME"
+                                            },
+                                            {
+                                                "questionContentKey": "LastNameQuestionContent",
+                                                "slotName": "last_name",
+                                                "type": "LAST_NAME"
+                                            },
+                                            {
+                                                "questionContentKey": "PhoneQuestionContent",
+                                                "slotName": "phone",
+                                                "type": "PHONE"
+                                            },
+                                            {
+                                                "questionContentKey": "AddressQuestionContent",
+                                                "slotName": "address",
+                                                "type": "ADDRESS"
+                                            }
+                                        ],
+                                        "lastModifiedMs": 1732097435181
+                                    },
+                                    "ContactCaptureSlots": {},
+                                    "current_handler": "LeadGeneration",
+                                    "new_user": true,
+                                    "previous_handler": "LeadGeneration",
+                                    "slots": {},
+                                    "unknownInputs": 0
+                                },
+                                "id": "stentor-form-session-c7-a0dc-be059339ae99",
+                                "transcript": [
+                                    {
+                                        "createdTime": "2024-11-20T10:10:35.153Z",
+                                        "from": {
+                                            "id": "373ef93a-620d9ab0df56"
+                                        },
+                                        "message": "Request LeadGeneration",
+                                        "to": [
+                                            {
+                                                "id": "bot"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            })
+                            .build();
+
+                        const handler = new ContactCaptureHandler({
+                            ...propsWithStandardData,
+                            data: {
+                                ...propsWithStandardData.data,
+                                enableFormScheduling: false,
+                                enablePreferredTime: true,
+                                captureLead: true,
+                                capture: {
+                                    data: []
+                                }
+                            }
+                        });
+
+                        await handler.handleRequest(requestActual, contextActual);
+
+                        expect(response.respond).to.have.been.calledOnce;
+
+                        // pull off the first call
+                        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                        // @ts-ignore
+                        const args = response.respond.getCall(0).args[0];
+
+                        expect(args.tag).to.equal("FORM");
+                        expect(args.displays).to.have.length(1);
+                        expect(args.displays[0].type).to.equal("FORM");
+                        expect(args.displays[0].name).to.equal("booking_preferred_time");
+                    });
                 });
             });
         });

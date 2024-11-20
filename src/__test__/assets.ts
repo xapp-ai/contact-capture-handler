@@ -486,4 +486,86 @@ export const propsWithCustomForm: Handler<Content, ContactCaptureData> = {
             }
         ]
     }
+};
+
+// Simulates common scenario we see in the wild
+export const propsWithStandardData: Handler<Content, ContactCaptureData> = {
+    "type": "ContactCaptureHandlerType",
+    appId: "appId",
+    organizationId: "organizationId",
+    intentId: "LeadGeneration",
+    "data": {
+        "inputUnknownStrategy": "REPROMPT",
+        "REMOVE_TRAILING_LINES_WITHOUT_HIGHLIGHTS": true,
+        "FUZZY_MATCH_FAQS": true,
+        "chat": {
+            "followUp": " "
+        },
+        "capture": {
+            "data": [
+                {
+                    "slotName": "first_name",
+                    "active": true,
+                    "type": "FIRST_NAME",
+                    "questionContentKey": "FirstNameQuestionContent"
+                },
+                {
+                    "slotName": "last_name",
+                    "active": true,
+                    "type": "LAST_NAME",
+                    "questionContentKey": "LastNameQuestionContent"
+                },
+                {
+                    "slotName": "phone",
+                    "active": true,
+                    "type": "PHONE",
+                    "questionContentKey": "PhoneQuestionContent"
+                },
+                {
+                    "slotName": "full_name",
+                    "active": false,
+                    "type": "FULL_NAME",
+                    "questionContentKey": "FullNameQuestionContent"
+                },
+                {
+                    "slotName": "zip",
+                    "active": false,
+                    "type": "ZIP",
+                    "questionContentKey": "ZipQuestionContent"
+                },
+                {
+                    "slotName": "address",
+                    "active": true,
+                    "type": "ADDRESS",
+                    "questionContentKey": "AddressQuestionContent"
+                },
+                {
+                    "slotName": "email",
+                    "active": false,
+                    "type": "EMAIL",
+                    "questionContentKey": "EmailQuestionContent"
+                },
+                {
+                    "slotName": "selection",
+                    "enums": [
+                        "Solar",
+                        "Roofing"
+                    ],
+                    "active": false,
+                    "type": "SELECTION",
+                    "questionContentKey": "SelectionQuestionContent"
+                },
+                {
+                    "slotName": "message",
+                    "active": false,
+                    "type": "MESSAGE",
+                    "questionContentKey": "MessageQuestionContent"
+                }
+            ]
+        },
+        "QNA_BOT_LONGEST_HIGHLIGHT": false,
+        "REMOVE_LEADING_LINES_WITHOUT_HIGHLIGHTS": true
+    },
+    "forward": {},
+    "content": {}
 }
