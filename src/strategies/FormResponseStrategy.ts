@@ -109,8 +109,12 @@ export class FormResponseStrategy implements ResponseStrategy {
 
         const service: string | undefined = typeof request?.attributes?.service === "string" ? request.attributes.service : undefined;
 
-        // Make sure we have one
-        if (!leadDataList) {
+        // First request through, they don't have the lead data list
+        // so we generate one and send it on.  This handles a majority of the form requests
+        // Note: We check isIntentRequest because it is possible that we have existing leads data BUT we are in a new session
+        // which means we have to just start over.
+        if (!leadDataList || request.isNewSession) {
+
             leadDataList = newLeadGenerationData(handler.data);
 
             // First call - send the main form
@@ -151,11 +155,11 @@ export class FormResponseStrategy implements ResponseStrategy {
         const isAbandoned = isSessionClosed(request);
 
         if (!isAbandoned) {
+            // Data will only exist when it is a ChannelActionRequest
             const data: FormActionResponseData = request.attributes?.data as FormActionResponseData;
-            //   
 
             // debug here 
-            if (!data.step) {
+            if (!data?.step) {
                 log().warn("No step in the data");
                 // eslint-disable-next-line no-console
                 console.log(request);

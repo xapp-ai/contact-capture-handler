@@ -9,6 +9,7 @@ import { PseudoSlots } from "./model";
 
 /**
  * Returns a fresh data fields  to capture
+ * 
  * @param data 
  */
 export function newLeadGenerationData(data: ContactCaptureData): CaptureRuntimeData {

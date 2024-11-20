@@ -661,7 +661,8 @@ export function getFormResponse(data: ContactCaptureData, props: FormResponsePro
 }
 
 /**
- * Gets the next step
+ * Gets the next step from the form
+ * 
  * @param data 
  * @param formName 
  * @param stepName 
