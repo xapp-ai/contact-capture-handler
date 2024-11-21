@@ -1,3 +1,10 @@
+## [1.11.15](https://github.com/xapp-ai/contact-capture-handler/compare/v1.11.14...v1.11.15) (2024-11-21)
+
+
+### Bug Fixes
+
+* Ensure Required Fields ([#475](https://github.com/xapp-ai/contact-capture-handler/issues/475)) ([8935ed8](https://github.com/xapp-ai/contact-capture-handler/commit/8935ed89a906de2d5e614dfce3581fcd0aaac334))
+
 ## [1.11.14](https://github.com/xapp-ai/contact-capture-handler/compare/v1.11.13...v1.11.14) (2024-11-21)
 
 
