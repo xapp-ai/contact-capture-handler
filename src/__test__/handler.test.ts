@@ -52,12 +52,12 @@ class MockCRM implements CrmService {
 class MockPlacesService implements PlacesService {
     public async search(params: SearchParams): Promise<Place[]> {
         // eslint-disable-next-line no-console
-        console.log(params);
+        console.log(`MockPlacesService.search(${JSON.stringify(params)})`);
         return [{ place_id: "place_id" }];
     }
     public async getDetails(params: DetailParams): Promise<Place> {
         // eslint-disable-next-line no-console
-        console.log(params);
+        console.log(`MockPlacesService.getDetails(${JSON.stringify(params)})`);
         return { place_id: "place_id", formatted_phone_number: "111-123-3333" }
     }
 }
@@ -1195,7 +1195,7 @@ describe(`${ContactCaptureHandler.name}`, () => {
                     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                     // @ts-ignore
                     const args = response.respond.getCall(0).args[0];
-                    // console.log(args);
+
                     expect(args.tag).to.equal("FORM");
                     expect(args.displays).to.have.length(1);
                     expect(args.displays[0].type).to.equal("FORM");
@@ -1230,9 +1230,77 @@ describe(`${ContactCaptureHandler.name}`, () => {
                     expect(args.displays).to.have.length(1);
                     expect(args.displays[0].type).to.equal("FORM");
                     expect(args.displays[0].name).to.equal("contact_us_only");
+
+                    // first step is contact info
+                    const fields = args.displays[0].steps[0].fields;
+
+                    expect(fields).to.have.length(3);
+                    const name = fields[0];
+                    expect(name.type).to.equal("TEXT");
+                    expect(name.mandatory).to.be.true;
+
+                    const phone = fields[1];
+                    expect(phone.format).to.equal("PHONE");
+                    expect(phone.mandatory).to.be.true;
+
+                    const message = fields[2];
+                    expect(message.type).to.equal("TEXT");
+                    expect(message.multiline).to.be.true;
+                });
+                describe("with lead data list already", () => {
+                    it("returns the correct form", async () => {
+                        const handler = new ContactCaptureHandler({
+                            ...propsWithCustomForm,
+                            data: {
+                                ...propsWithCustomForm.data,
+                                enableFormScheduling: false,
+                                capture: {
+                                    data: [
+                                        {
+                                            "slotName": "email",
+                                            "active": true,
+                                            "type": "EMAIL",
+                                            "required": true,
+                                            "questionContentKey": "EmailQuestionContent"
+                                        },
+                                    ]
+                                }
+                            }
+                        });
+
+                        await handler.handleRequest(request, context);
+
+                        expect(response.respond).to.have.been.calledOnce;
+
+                        // pull off the first call
+                        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                        // @ts-ignore
+                        const args = response.respond.getCall(0).args[0];
+
+                        expect(args.tag).to.equal("FORM");
+                        expect(args.displays).to.have.length(1);
+                        expect(args.displays[0].type).to.equal("FORM");
+                        expect(args.displays[0].name).to.equal("contact_us_only");
+
+                        // first step is contact info
+                        const fields = args.displays[0].steps[0].fields;
+
+                        expect(fields).to.have.length(3);
+                        const name = fields[0];
+                        expect(name.type).to.equal("TEXT");
+                        expect(name.mandatory).to.be.true;
+
+                        const email = fields[1];
+                        expect(email.format).to.equal("EMAIL");
+                        expect(email.mandatory).to.be.true;
+
+                        const message = fields[2];
+                        expect(message.type).to.equal("TEXT");
+                        expect(message.multiline).to.be.true;
+                    });
                 });
                 describe("with lead data list already in the session store", () => {
-                    it.only("returns the preferred time form", async () => {
+                    it("returns the preferred time form", async () => {
                         // testing a real example here that happened
                         const requestActual: IntentRequest = {
                             "platform": "stentor-platform",
