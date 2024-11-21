@@ -1196,7 +1196,7 @@ __metadata:
     "@typescript-eslint/eslint-plugin": 7.18.0
     "@typescript-eslint/parser": 7.18.0
     "@xapp/config": 0.2.3
-    "@xapp/question-answering-handler": 2.5.15
+    "@xapp/question-answering-handler": 2.5.16
     chai: 4.5.0
     conventional-changelog-conventionalcommits: 8.0.0
     dotenv: 16.4.5
@@ -1239,13 +1239,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@xapp/question-answering-handler@npm:2.5.15":
-  version: 2.5.15
-  resolution: "@xapp/question-answering-handler@npm:2.5.15"
+"@xapp/question-answering-handler@npm:2.5.16":
+  version: 2.5.16
+  resolution: "@xapp/question-answering-handler@npm:2.5.16"
   dependencies:
     compromise: 14.14.2
     fuse.js: 7.0.0
-    linkifyjs: 4.1.3
+    linkifyjs: 4.1.4
   peerDependencies:
     stentor-constants: 1.X
     stentor-context: 1.X
@@ -1255,7 +1255,7 @@ __metadata:
     stentor-request: 1.X
     stentor-response: 1.X
     stentor-utils: 1.X
-  checksum: 0bae4ed200fb47a3561f3c3d40ff2b796043c272efdcf2a5110d4492e587df641448a5727551e617be54776486498de68d4d9c79a683ef991affc35b56fd42c1
+  checksum: 84f4d5b807e56de622eebb0035e6018ec29ed13aa9024f3b9a7ccf9f5d424932e04b6f98e77e8448e9a7fdc885f48257d5ae8050f62b58f0a112ef032113ed60
   languageName: node
   linkType: hard
 
@@ -3957,10 +3957,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"linkifyjs@npm:4.1.3":
-  version: 4.1.3
-  resolution: "linkifyjs@npm:4.1.3"
-  checksum: 023d467499a717a49ebbfa256a80cb2811a3b038ff2593e5be0fb8a4715b0a63bf80c571838e19e120833d5b9874464f3a1448965c8eebbde8c19458b3a6c6e4
+"linkifyjs@npm:4.1.4":
+  version: 4.1.4
+  resolution: "linkifyjs@npm:4.1.4"
+  checksum: e4d902e6b1acc47bcf7121806c238a9b7c30af726cd7d6f231e01ba658af92671935729b3a2670d4ca87d8148a84c4b80ae5375e1dd343076a688c5e38fcd220
   languageName: node
   linkType: hard
 
