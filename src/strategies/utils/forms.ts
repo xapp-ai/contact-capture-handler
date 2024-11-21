@@ -193,8 +193,6 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
 
         CONTACT_FIELDS = [];
 
-        let hasNameField = false;
-
         // find full_name, email, phone, address
         // message is already included by default
         dataFields.forEach((dataField) => {
@@ -211,13 +209,14 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
 
             if (dataField.slotName === "full_name" || dataField.slotName === "name") {
 
-                hasNameField = true;
-
                 const namefield: FormTextInput = {
                     ...field,
+                    name: "full_name",
                     multiline: false,
                     label: "Name",
-                    placeholder: "Your full name"
+                    placeholder: "Your full name",
+                    // always mandatory
+                    mandatory: true,
                 }
                 CONTACT_FIELDS.push(namefield);
             } else if (dataField.slotName === "email") {
@@ -256,18 +255,41 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
                 }
             }
         });
+    }
 
-        // absolutely need a name field
-        if (!hasNameField) {
-            // add a default name field
-            CONTACT_FIELDS.unshift({
-                name: "full_name",
-                label: "Name",
-                type: "TEXT",
-                placeholder: "Your full name",
-                mandatory: true
-            });
-        }
+    // find index of name field
+    let nameFieldIndex = CONTACT_FIELDS.findIndex((field) => field.name === "full_name");
+
+    if (nameFieldIndex < 0) {
+        // add a default name field
+        CONTACT_FIELDS.unshift({
+            name: "full_name",
+            label: "Name",
+            type: "TEXT",
+            placeholder: "Your full name",
+            mandatory: true
+        });
+
+        nameFieldIndex = 0;
+    }
+
+    let phoneFieldIndex = CONTACT_FIELDS.findIndex((field) => field.name === "phone");
+
+    const emailFieldIndex = CONTACT_FIELDS.findIndex((field) => field.name === "email");
+
+    // make sure we have either phone or email
+    if (phoneFieldIndex < 0 && emailFieldIndex < 0) {
+        // add a default phone field
+        CONTACT_FIELDS.push({
+            format: "PHONE",
+            name: "phone",
+            label: "Phone",
+            placeholder: "Your 10 digit phone number",
+            type: "TEXT",
+            mandatory: true
+        });
+
+        phoneFieldIndex = CONTACT_FIELDS.length - 1;
     }
 
     // if we have the autocomplete suggestions and the params, append them
@@ -509,6 +531,9 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
         }
     ];
 
+
+    const indexForPhoneOrEmail = emailFieldIndex >= 0 ? emailFieldIndex : phoneFieldIndex;
+
     const CONTACT_ONLY_STEPS: FormStep[] = [
         {
             crmSubmit: true,
@@ -518,16 +543,17 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
             nextAction: "submit",
             fields: [
                 // name
-                { ...CONTACT_FIELDS[0] },
-                // phone
-                { ...CONTACT_FIELDS[1] },
+                { ...CONTACT_FIELDS[nameFieldIndex] },
+                // phone (or email)
+                { ...CONTACT_FIELDS[indexForPhoneOrEmail] },
                 // message
                 {
                     name: "message",
                     label: props.messageDescription || "Let us know what we can help you with.",
                     rows: 3,
                     type: "TEXT",
-                    multiline: true
+                    multiline: true,
+                    mandatory: true
                 }
             ],
             title: "Contact Information"
