@@ -1196,7 +1196,7 @@ __metadata:
     "@typescript-eslint/eslint-plugin": 7.18.0
     "@typescript-eslint/parser": 7.18.0
     "@xapp/config": 0.2.3
-    "@xapp/question-answering-handler": 2.5.16
+    "@xapp/question-answering-handler": 2.5.18
     chai: 4.5.0
     conventional-changelog-conventionalcommits: 8.0.0
     dotenv: 16.4.7
@@ -1239,13 +1239,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@xapp/question-answering-handler@npm:2.5.16":
-  version: 2.5.16
-  resolution: "@xapp/question-answering-handler@npm:2.5.16"
+"@xapp/question-answering-handler@npm:2.5.18":
+  version: 2.5.18
+  resolution: "@xapp/question-answering-handler@npm:2.5.18"
   dependencies:
-    compromise: 14.14.2
+    compromise: 14.14.3
     fuse.js: 7.0.0
-    linkifyjs: 4.1.4
+    linkifyjs: 4.2.0
   peerDependencies:
     stentor-constants: 1.X
     stentor-context: 1.X
@@ -1255,7 +1255,7 @@ __metadata:
     stentor-request: 1.X
     stentor-response: 1.X
     stentor-utils: 1.X
-  checksum: 84f4d5b807e56de622eebb0035e6018ec29ed13aa9024f3b9a7ccf9f5d424932e04b6f98e77e8448e9a7fdc885f48257d5ae8050f62b58f0a112ef032113ed60
+  checksum: aca315cfde26ebfe5ac15f7e9d9d8f77b19f5d1b0aac0c12e1ee2f716412ed1bbedd577f4118d824934e6bf7d470c28b8487dfb13d61bb25dd59329688a3bd14
   languageName: node
   linkType: hard
 
@@ -1952,14 +1952,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"compromise@npm:14.14.2":
-  version: 14.14.2
-  resolution: "compromise@npm:14.14.2"
+"compromise@npm:14.14.3":
+  version: 14.14.3
+  resolution: "compromise@npm:14.14.3"
   dependencies:
     efrt: 2.7.0
     grad-school: 0.0.5
     suffix-thumb: 5.0.2
-  checksum: 59938c9b095a8a7ccd75f6787215875e012f618876190245660d68c15558349f3dd1e32e6ea673140f24f3b08bbce0347ac65b1a8b07812d42a2546b0993a778
+  checksum: 86ca68776d74c58496134d3589f895cecc80e3e117305c10dbbe98edfee7b9e6c9c8ec19c52e3db15a304ce895db71a2da28e2c758ee91bb22047546a4ad3624
   languageName: node
   linkType: hard
 
@@ -3944,10 +3944,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"linkifyjs@npm:4.1.4":
-  version: 4.1.4
-  resolution: "linkifyjs@npm:4.1.4"
-  checksum: e4d902e6b1acc47bcf7121806c238a9b7c30af726cd7d6f231e01ba658af92671935729b3a2670d4ca87d8148a84c4b80ae5375e1dd343076a688c5e38fcd220
+"linkifyjs@npm:4.2.0":
+  version: 4.2.0
+  resolution: "linkifyjs@npm:4.2.0"
+  checksum: 874b59ec3c6c3dbd7a67221fc817ab315c89e3d87f3776a09152bfcc02bd60570dca9c8e9829f4156f0e3c91de9486de72a18fc642efa245e727437e8b6fc58f
   languageName: node
   linkType: hard
 
