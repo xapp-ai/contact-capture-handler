@@ -165,7 +165,7 @@ const props: Handler<Content, ContactCaptureData> = {
             "followUp": ""
         }
     }
-}
+};
 
 describe(`${ProgrammaticResponseStrategy.name}`, () => {
     let handler: ContactCaptureHandler;

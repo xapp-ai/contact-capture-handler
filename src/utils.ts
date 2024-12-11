@@ -6,17 +6,25 @@ import { keyFromRequest, toResponseOutput, capitalize, getSlotValue, requestSlot
 
 import { CaptureRuntimeData, ContactCaptureData, ContactDataType } from "./data";
 import { PseudoSlots } from "./model";
+import { DEFAULT_RESPONSES } from "./constants";
 
 /**
- * Returns a fresh data fields  to capture
+ * Returns a fresh data fields to capture
  * 
- * @param data 
+ * If a channel is passed in, it will filter
  */
-export function newLeadGenerationData(data: ContactCaptureData): CaptureRuntimeData {
+export function newLeadGenerationData(data: ContactCaptureData, channel?: "CHAT" | "FORM"): CaptureRuntimeData {
+
     const runtimeData: CaptureRuntimeData = {
         data: ((data as ContactCaptureData).capture.data
             .filter(value => {
                 return value.active;
+            })
+            .filter(value => {
+                if (channel && value.channel) {
+                    return value.channel === channel || value.channel === "ALL";
+                }
+                return true;
             })
             .map(value => {
                 if (value.active) {
@@ -322,7 +330,6 @@ export function cleanCode(code: string): string {
     return code.replace(/[ "'`]/g, "");
 }
 
-
 function hasReprompt(response: Response): boolean {
 
     if (response.reprompt) {
@@ -359,4 +366,19 @@ export function concatenateAside(currentResponse: Response, aside: Response | un
     response.displays = aside.displays;
 
     return response;
+}
+
+/**
+ * Get a default response by tag.
+ */
+export function getDefaultResponseByTag(contentId: string): Response {
+
+    const disableDefaultResponses = process.env?.DISABLE_DEFAULT_RESPONSES?.toLowerCase() === "true";
+
+    if (disableDefaultResponses) {
+        return undefined;
+    }
+
+    // now look them up!
+    return DEFAULT_RESPONSES.find(response => response.tag === contentId);
 }

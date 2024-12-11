@@ -17,3 +17,4 @@ An Apache 2.0 licensed open source framework for building conversational applica
 
 `PLACES_API_KEY` - A Google Places API Key
 
+`DISABLE_DEFAULT_RESPONSES` - Disables default responses, will throw an error response if an unknown content key is requested.
