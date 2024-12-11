@@ -306,19 +306,42 @@ describe(`${ContactCaptureHandler.name}`, () => {
                 });
                 afterEach(() => {
                     sandbox.restore();
-                })
-                it("returns the error response", async () => {
+                });
+                it("returns default response", async () => {
                     cc = new ContactCaptureHandler(props);
 
                     await cc.handleRequest(request, context);
 
                     expect(response.respond).to.have.been.calledOnce;
-                    expect(response.respond).to.have.been.calledWith({
+
+                    // get the first argument of the first call
+                    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                    // @ts-ignore
+                    const responseArgs = response.respond.getCall(0).args[0];
+                    expect(responseArgs).to.exist;
+                    expect(responseArgs).to.deep.equal({
                         outputSpeech: {
-                            displayText: 'ERROR: I am not configured correctly. Missing content for tag LastNameQuestionContent',
-                            ssml: '<speak>ERROR: I am not configured correctly. Missing content for tag LastNameQuestionContent</speak>'
+                            ssml: '<speak>What is your last name?</speak>',
+                            displayText: 'What is your last name?'
                         },
-                        tag: 'ERROR'
+                        reprompt: {
+                            ssml: '<speak>May I have your last name?</speak>',
+                            displayText: 'May I have your last name?'
+                        },
+                        context: {
+                            active: [
+                                {
+                                    name: "expecting_name",
+                                    parameters: null,
+                                    timeToLive: {
+                                        timeToLiveInSeconds: 2000,
+                                        turnsToLive: 1
+                                    }
+                                }
+                            ]
+                        },
+                        name: 'Last Name',
+                        tag: 'LastNameQuestionContent'
                     });
 
                     const sessionStore = context.storage.sessionStore?.data;
@@ -337,6 +360,100 @@ describe(`${ContactCaptureHandler.name}`, () => {
                     expect(leadSent).to.be.undefined;
                     const previousType = sessionStore ? sessionStore[CONTACT_CAPTURE_CURRENT_DATA] : undefined;
                     expect(previousType).to.equal("LAST_NAME");
+                });
+                describe("with default responses turned off", () => {
+                    const sandbox = sinon.createSandbox();
+                    beforeEach(() => {
+                        response = new ResponseBuilder({
+                            device: {
+                                audioSupported: false,
+                                channel: "test",
+                                canPlayAudio: false,
+                                canPlayVideo: false,
+                                canSpeak: false,
+                                canThrowCard: false,
+                                canTransferCall: false,
+                                hasScreen: true,
+                                hasWebBrowser: true,
+                                videoSupported: false
+                            }
+                        });
+                        sandbox.spy(response, "respond");
+
+                        request = new IntentRequestBuilder()
+                            .withSlots({
+                                "first_name": {
+                                    value: "Michael",
+                                    name: "first_name"
+                                }
+                            })
+                            .withIntentId(props.intentId)
+                            .updateDevice({
+                                canSpeak: false
+                            }).build();
+
+                        context = new ContextBuilder()
+                            .withResponse(response)
+                            .withSessionData({
+                                id: "foo",
+                                data: {
+                                    ContactCaptureCurrentData: "FIRST_NAME",
+                                    ContactCaptureSlots: {},
+                                    ContactCaptureList: {
+                                        data: [{
+                                            type: 'FIRST_NAME',
+                                            enums: undefined,
+                                            questionContentKey: 'FirstNameQuestionContent',
+                                            slotName: 'first_name'
+                                        },
+                                        {
+                                            type: 'LAST_NAME',
+                                            enums: undefined,
+                                            questionContentKey: 'LastNameQuestionContent',
+                                            slotName: 'last_name'
+                                        },]
+                                    }
+                                }
+                            })
+                            .build();
+
+                        process.env.DISABLE_DEFAULT_RESPONSES = "true";
+                    });
+                    afterEach(() => {
+                        process.env.DISABLE_DEFAULT_RESPONSES = undefined;
+                        sandbox.restore();
+                    });
+                    it("returns the error response", async () => {
+                        cc = new ContactCaptureHandler(props);
+
+                        await cc.handleRequest(request, context);
+
+                        expect(response.respond).to.have.been.calledOnce;
+                        expect(response.respond).to.have.been.calledWith({
+                            outputSpeech: {
+                                displayText: 'ERROR: I am not configured correctly. Missing content for tag LastNameQuestionContent',
+                                ssml: '<speak>ERROR: I am not configured correctly. Missing content for tag LastNameQuestionContent</speak>'
+                            },
+                            tag: 'ERROR'
+                        });
+
+                        const sessionStore = context.storage.sessionStore?.data;
+                        const slots = sessionStore ? sessionStore[CONTACT_CAPTURE_SLOTS] : undefined;
+                        expect(slots).to.deep.equal({
+                            "first_name": {
+                                name: "first_name",
+                                value: "Michael"
+                            },
+                            "full_name": {
+                                name: "full_name",
+                                value: "Michael"
+                            }
+                        });
+                        const leadSent = sessionStore ? sessionStore[CONTACT_CAPTURE_SENT] : undefined;
+                        expect(leadSent).to.be.undefined;
+                        const previousType = sessionStore ? sessionStore[CONTACT_CAPTURE_CURRENT_DATA] : undefined;
+                        expect(previousType).to.equal("LAST_NAME");
+                    });
                 });
             });
             describe("for a request that takes any customer response", () => {

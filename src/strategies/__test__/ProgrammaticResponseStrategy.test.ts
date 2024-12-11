@@ -165,7 +165,7 @@ const props: Handler<Content, ContactCaptureData> = {
             "followUp": ""
         }
     }
-}
+};
 
 describe(`${ProgrammaticResponseStrategy.name}`, () => {
     let handler: ContactCaptureHandler;
@@ -307,4 +307,7 @@ describe(`${ProgrammaticResponseStrategy.name}`, () => {
             });
         });
     });
+    describe("with data for FORM and CHAT", () => {
+
+    })
 });

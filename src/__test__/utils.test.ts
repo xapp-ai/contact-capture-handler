@@ -3,7 +3,10 @@ import { expect } from "chai";
 
 import { RequestSlotMap } from "stentor-models";
 import { IntentRequestBuilder } from "stentor-request";
-import { cleanCode, generateAlternativeSlots, lookingForHelp } from "../utils";
+
+import { ContactCaptureData } from "../data";
+
+import { cleanCode, generateAlternativeSlots, lookingForHelp, newLeadGenerationData } from "../utils";
 
 describe(`#${generateAlternativeSlots.name}()`, () => {
     describe('when asking for the LAST_NAME', () => {
@@ -217,5 +220,49 @@ describe(`#${lookingForHelp.name}()`, () => {
         const request = new IntentRequestBuilder().build();
         const result = lookingForHelp(request);
         expect(result).to.be.false;
+    });
+});
+
+describe(`#${newLeadGenerationData.name}()`, () => {
+
+    const data: ContactCaptureData = {
+        capture: {
+            data: [
+                // all
+                { active: true, type: "EMAIL", enums: [], questionContentKey: "emailQuestion", slotName: "email", acceptAnyInput: true, channel: "ALL" },
+                // just chat
+                { active: false, type: "PHONE", enums: [], questionContentKey: "phoneQuestion", slotName: "phone", acceptAnyInput: true, channel: "CHAT" },
+                // just form
+                { active: true, type: "FULL_NAME", enums: [], questionContentKey: "nameQuestion", slotName: "name", acceptAnyInput: true, channel: "FORM" },
+                // all 
+                { active: true, type: "ZIP", enums: [], questionContentKey: "zipQuestion", slotName: "zip", acceptAnyInput: false, }
+            ]
+        }
+    };
+    it("returns all active data fields when no channel is passed", () => {
+        const result = newLeadGenerationData(data);
+        expect(result.data).to.deep.equal([
+            { type: "EMAIL", enums: [], questionContentKey: "emailQuestion", slotName: "email", acceptAnyInput: true },
+            { type: "FULL_NAME", enums: [], questionContentKey: "nameQuestion", slotName: "name", acceptAnyInput: true },
+            { type: "ZIP", enums: [], questionContentKey: "zipQuestion", slotName: "zip", acceptAnyInput: false }
+        ]);
+        expect(result.lastModifiedMs).to.be.a("number");
+    });
+    it("returns active data fields for the specified channel", () => {
+        const result = newLeadGenerationData(data, "FORM");
+        expect(result.data).to.deep.equal([
+            { type: "EMAIL", enums: [], questionContentKey: "emailQuestion", slotName: "email", acceptAnyInput: true },
+            { type: "FULL_NAME", enums: [], questionContentKey: "nameQuestion", slotName: "name", acceptAnyInput: true },
+            { type: "ZIP", enums: [], questionContentKey: "zipQuestion", slotName: "zip", acceptAnyInput: false }
+        ]);
+        expect(result.lastModifiedMs).to.be.a("number");
+    });
+    it("returns an empty array when no active data fields match the specified channel", () => {
+        const result = newLeadGenerationData(data, "CHAT");
+        expect(result.data).to.deep.equal([
+            { type: "EMAIL", enums: [], questionContentKey: "emailQuestion", slotName: "email", acceptAnyInput: true },
+            { type: "ZIP", enums: [], questionContentKey: "zipQuestion", slotName: "zip", acceptAnyInput: false }
+        ]);
+        expect(result.lastModifiedMs).to.be.a("number");
     });
 });

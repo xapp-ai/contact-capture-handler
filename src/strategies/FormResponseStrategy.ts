@@ -115,7 +115,7 @@ export class FormResponseStrategy implements ResponseStrategy {
         // which means we have to just start over.
         if (!leadDataList || request.isNewSession) {
 
-            leadDataList = newLeadGenerationData(handler.data);
+            leadDataList = newLeadGenerationData(handler.data, "FORM");
 
             // First call - send the main form
             response = getFormResponse(handler.data, { formName: handler.data.CAPTURE_MAIN_FORM, service, enablePreferredTime });

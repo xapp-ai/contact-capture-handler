@@ -14,7 +14,13 @@ import {
 
 import * as Constants from "../constants";
 import { ContactCaptureData, ContactDataType, CaptureRuntimeData } from "../data";
-import { concatenateAside, isSessionClosed, lookingForHelp, newLeadGenerationData, } from "../utils";
+import {
+    concatenateAside,
+    getDefaultResponseByTag,
+    isSessionClosed,
+    lookingForHelp,
+    newLeadGenerationData
+} from "../utils";
 import { ContactCaptureHandler } from "../handler";
 import { GooglePlacesService, PlacesService } from "../services";
 
@@ -131,7 +137,7 @@ export class ProgrammaticResponseStrategy implements ResponseStrategy {
             //  const crmService = context.services.crmService;
             //  await ageService.set(request.userId, { appId: crmService.appId });
 
-            leadDataList = newLeadGenerationData(handler.data);
+            leadDataList = newLeadGenerationData(handler.data, "CHAT");
 
             isFirstQuestion = true;
         } else {
@@ -161,7 +167,7 @@ export class ProgrammaticResponseStrategy implements ResponseStrategy {
                     context.services.eventService,
                 );
                 // Refresh the list
-                leadDataList = newLeadGenerationData(handler.data);
+                leadDataList = newLeadGenerationData(handler.data, "CHAT");
             }
         }
 
@@ -207,14 +213,20 @@ export class ProgrammaticResponseStrategy implements ResponseStrategy {
             log().debug(`Response for tag ${contentId}`);
             log().debug(response);
             if (!response) {
-                const errorMessage = `Missing content for tag ${contentId}`;
-                log().error(errorMessage);
-                response = {
-                    outputSpeech: {
-                        displayText: `ERROR: I am not configured correctly. ${errorMessage}`,
-                        ssml: `ERROR: I am not configured correctly. ${errorMessage}`,
-                    },
-                    tag: "ERROR"
+                // get the default response if we don't have an override
+                response = getDefaultResponseByTag(contentId);
+
+                // if we still don't have one, send an error message
+                if (!response) {
+                    const errorMessage = `Missing content for tag ${contentId}`;
+                    log().error(errorMessage);
+                    response = {
+                        outputSpeech: {
+                            displayText: `ERROR: I am not configured correctly. ${errorMessage}`,
+                            ssml: `ERROR: I am not configured correctly. ${errorMessage}`,
+                        },
+                        tag: "ERROR"
+                    }
                 }
             }
 
