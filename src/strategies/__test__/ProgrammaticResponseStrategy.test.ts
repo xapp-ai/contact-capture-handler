@@ -307,7 +307,4 @@ describe(`${ProgrammaticResponseStrategy.name}`, () => {
             });
         });
     });
-    describe("with data for FORM and CHAT", () => {
-
-    })
 });
