@@ -1,3 +1,10 @@
+# [1.12.0](https://github.com/xapp-ai/contact-capture-handler/compare/v1.11.15...v1.12.0) (2024-12-11)
+
+
+### Features
+
+* Support for Default Responses ([#485](https://github.com/xapp-ai/contact-capture-handler/issues/485)) ([6800f1e](https://github.com/xapp-ai/contact-capture-handler/commit/6800f1e5cad95c1217510103c525daf60a6271ee))
+
 ## [1.11.15](https://github.com/xapp-ai/contact-capture-handler/compare/v1.11.14...v1.11.15) (2024-11-21)
 
 
