@@ -1,3 +1,10 @@
+## [1.12.1](https://github.com/xapp-ai/contact-capture-handler/compare/v1.12.0...v1.12.1) (2025-01-08)
+
+
+### Bug Fixes
+
+* Make sure we send expecting_address context ([#492](https://github.com/xapp-ai/contact-capture-handler/issues/492)) ([e736fd8](https://github.com/xapp-ai/contact-capture-handler/commit/e736fd8d72e52706780127410ccd662c08b4cb99))
+
 # [1.12.0](https://github.com/xapp-ai/contact-capture-handler/compare/v1.11.15...v1.12.0) (2024-12-11)
 
 
