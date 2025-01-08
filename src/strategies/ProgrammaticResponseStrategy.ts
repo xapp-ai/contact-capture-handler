@@ -245,7 +245,6 @@ export class ProgrammaticResponseStrategy implements ResponseStrategy {
             if (isFirstQuestion) {
                 let leadStartResponse: Response;
                 if (isLookingForHelp) {
-
                     // useChatResponse allows us to use the chat response for the help start content
                     // we look for it on the data object first and then an environment variable
                     let useChatResponse = false;
@@ -262,7 +261,6 @@ export class ProgrammaticResponseStrategy implements ResponseStrategy {
 
                     // we only use the chat response on the first response
                     if (useChatResponse && attributes) {
-
 
                         // See if we have the response on the session data
                         const chatResponse: ResultVariableGeneratedInformation = attributes["CHAT_RESPONSE"];
@@ -330,6 +328,14 @@ export class ProgrammaticResponseStrategy implements ResponseStrategy {
                             },
                             {
                                 name: "expecting_phone",
+                                parameters: null,
+                                timeToLive: {
+                                    timeToLiveInSeconds: 400,
+                                    turnsToLive: 2
+                                }
+                            },
+                            {
+                                name: "expecting_address",
                                 parameters: null,
                                 timeToLive: {
                                     timeToLiveInSeconds: 400,

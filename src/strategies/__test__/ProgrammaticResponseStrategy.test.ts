@@ -300,11 +300,14 @@ describe(`${ProgrammaticResponseStrategy.name}`, () => {
                 const response = await strategy.getResponse(handler, request, context);
                 expect(response).to.exist;
                 expect(response.tag).to.equal(Constants.CONTACT_CAPTURE_HELP_START_CONTENT);
-                expect(response?.context?.active).to.have.length(4);
+                expect(response?.context?.active).to.have.length(5);
                 const output = toResponseOutput(response.outputSpeech || "");
                 expect(output.displayText).to.include("**We can help with the installation of your Phase 2 EV charger.**");
                 expect(output.displayText).to.include("Could you please provide your name and the best way for a team member to get in touch with you?");
             });
+        });
+        describe("when in the middle of data capture", () => {
+
         });
     });
 });

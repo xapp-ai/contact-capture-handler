@@ -50,7 +50,6 @@ interface ComponentRequest extends IntentRequest {
  * It extends the Question Answering Handler to allow the user to ask questions
  */
 export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, ContactCaptureData> {
-
     public static readonly TYPE: string = Constants.CONTACT_CAPTURE_HANDLER_TYPE;
 
     /**
@@ -64,14 +63,14 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
         service: CrmService,
         request: Request,
         eventService: ErrorService,
-        finalResponse?: Response
-    ): Promise<{ success: boolean, id?: string }> {
+        finalResponse?: Response,
+    ): Promise<{ success: boolean; id?: string }> {
         const fields: LeadFormField[] = [];
 
         for (const lead of leadList.data) {
             fields.push({
                 name: lead.type as string,
-                value: lead.collectedValue
+                value: lead.collectedValue,
             });
         }
 
@@ -86,9 +85,10 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
             "number",
             // don't need _number & _name because "street" includes both
             "street_number",
-            "street_name"
+            "street_name",
         ];
 
+        // go through each slot, adding them.
         slotNames.forEach((name) => {
             // the names in fields are uppercase.
             const NAME = name.toUpperCase();
@@ -103,7 +103,7 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
                 // Add it!
                 fields.push({
                     name: NAME,
-                    value
+                    value,
                 });
             }
         });
@@ -113,8 +113,8 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
         // Add the final response to the transcript if it exists
         if (finalResponse) {
             const responseOutput: Response<ResponseOutput> = {
-                outputSpeech: toResponseOutput(finalResponse.outputSpeech)
-            }
+                outputSpeech: toResponseOutput(finalResponse.outputSpeech),
+            };
             const finalMessage = responseToMessage(responseOutput, request);
 
             transcript.push(finalMessage);
@@ -125,7 +125,7 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
             transcript,
             refId: extras.existingRefId as string,
             jobTypeId: extras.jobTypeId as string,
-            availabilityClassId: extras.avalabilityClassId as string
+            availabilityClassId: extras.avalabilityClassId as string,
         };
 
         if (request) {
@@ -138,7 +138,7 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
             }
 
             if (request.channel) {
-                externalLead.source = request.channel
+                externalLead.source = request.channel;
             }
 
             if (request.attributes && Object.keys(request.attributes).length > 0) {
@@ -178,7 +178,6 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
     }
 
     public canHandleRequest(request: Request, context: Context): boolean {
-
         const key = keyFromRequest(request);
 
         // Blacklisted, never respond to these
@@ -202,7 +201,7 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
             "AppointmentDate",
             "OptionSelect",
             "ContactMethod",
-            "ContactMethodOnly"
+            "ContactMethodOnly",
         ];
 
         // ThatsAllIntent
@@ -239,8 +238,10 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
             log().info(`Request Slots: ${requestSlotsToString(request.slots)}`);
         } else if (isChannelActionRequest(request)) {
             const data: FormActionResponseData = request.attributes?.data as FormActionResponseData;
-            log().info(`Request: CHANNEL_ACTION_REQUEST Channel: ${request.channel} Action: "${request.action}" Step: "${data?.step}"`);
-            log().info(`Attributes: ${JSON.stringify(data?.result || {})}`)
+            log().info(
+                `Request: CHANNEL_ACTION_REQUEST Channel: ${request.channel} Action: "${request.action}" Step: "${data?.step}"`,
+            );
+            log().info(`Attributes: ${JSON.stringify(data?.result || {})}`);
         }
 
         const leadSent = context.session.get(Constants.CONTACT_CAPTURE_SENT) as boolean;
@@ -285,7 +286,13 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
         // Pseudo slots are not actual real slots but derivative of others
         const pseudoSlots = generatePseudoSlots({ ...requestSlots, ...sessionSlots, ...alternativeSlots }, request);
         // Now mix them all in priority order
-        const slots: RequestSlotMap = { ...requestSlots, ...sessionSlots, ...pseudoSlots, ...alternativeSlots, ...formSlots };
+        const slots: RequestSlotMap = {
+            ...requestSlots,
+            ...sessionSlots,
+            ...pseudoSlots,
+            ...alternativeSlots,
+            ...formSlots,
+        };
         // Persist these new ones for reuse, we want to keep the modifications from the pseudo and alternative
         context.session.set(Constants.CONTACT_CAPTURE_SLOTS, slots);
 
@@ -318,7 +325,6 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
                     context.response.response &&
                     Object.keys(context.response.response).length > 0
                 ) {
-
                     asideResponse = context.response.response;
 
                     const asideResponseOutput = toResponseOutput(asideResponse.outputSpeech);
@@ -337,7 +343,6 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
                     }
 
                     context.session.set(Constants.CONTACT_CAPTURE_ASIDE, asideResponse);
-
                 }
             default:
             // default falls through below where we perform the lead capture
@@ -345,12 +350,16 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
 
         // Alert people the new setting
         if (typeof this.data.captureLead !== "boolean") {
-            log().warn(`'captureLead' is not set on handler data, currently defaulting to false which means it will not capture lead data.type: ${typeof this.data.captureLead} value: ${this.data.captureLead}`);
+            log().warn(
+                `'captureLead' is not set on handler data, currently defaulting to false which means it will not capture lead data.type: ${typeof this.data.captureLead} value: ${this.data.captureLead}`,
+            );
             log().debug(this.data);
         }
 
         if (typeof this.data.enableFormScheduling !== "boolean") {
-            log().warn(`'enableFormScheduling' is not set on handler data, currently defaulting to false which means it will not enable scheduling within the form. data.type: ${typeof this.data.enableFormScheduling} value: ${this.data.enableFormScheduling}`);
+            log().warn(
+                `'enableFormScheduling' is not set on handler data, currently defaulting to false which means it will not enable scheduling within the form. data.type: ${typeof this.data.enableFormScheduling} value: ${this.data.enableFormScheduling}`,
+            );
             log().debug(this.data);
         }
 
@@ -402,7 +411,6 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
     }
 
     private handleMultiModalInput(request: ComponentRequest): void {
-
         const request_type = "INTENT_REQUEST";
         request.slots = !request.slots ? {} : request.slots;
 
@@ -434,7 +442,6 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
                 name: "Image",
                 value: request.image,
             };
-
         }
     }
 }
