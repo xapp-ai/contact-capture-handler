@@ -1234,7 +1234,7 @@ __metadata:
     "@typescript-eslint/eslint-plugin": 7.18.0
     "@typescript-eslint/parser": 7.18.0
     "@xapp/config": 0.2.3
-    "@xapp/question-answering-handler": 2.5.19
+    "@xapp/question-answering-handler": 2.5.20
     chai: 4.5.0
     conventional-changelog-conventionalcommits: 8.0.0
     dotenv: 16.4.7
@@ -1277,12 +1277,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@xapp/question-answering-handler@npm:2.5.19":
-  version: 2.5.19
-  resolution: "@xapp/question-answering-handler@npm:2.5.19"
+"@xapp/question-answering-handler@npm:2.5.20":
+  version: 2.5.20
+  resolution: "@xapp/question-answering-handler@npm:2.5.20"
   dependencies:
     compromise: 14.14.4
-    fuse.js: 7.0.0
+    fuse.js: 7.1.0
     linkifyjs: 4.2.0
   peerDependencies:
     stentor-constants: 1.X
@@ -1293,7 +1293,7 @@ __metadata:
     stentor-request: 1.X
     stentor-response: 1.X
     stentor-utils: 1.X
-  checksum: 2755e34e82b324b2ad2e69b647b2e395505cdaa48dbbc7fba958c13056d4f850e3a74b42e483f249424dd8b3c2c340b7db9e26f4c025b1b1ce614e27dbe43cbe
+  checksum: 5a8735df146044251d1a90aa74c6b144398024cb94d8ffeb898dc5c96829cae3a1e7ead8340110fe6f0e21bb83eb3f348b07a4b32824130fa3c9e4ced57b02ff
   languageName: node
   linkType: hard
 
@@ -2988,10 +2988,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"fuse.js@npm:7.0.0":
-  version: 7.0.0
-  resolution: "fuse.js@npm:7.0.0"
-  checksum: d15750efec1808370c0cae92ec9473aa7261c59bca1f15f1cf60039ba6f804b8f95340b5cabd83a4ef55839c1034764856e0128e443921f072aa0d8a20e4cacf
+"fuse.js@npm:7.1.0":
+  version: 7.1.0
+  resolution: "fuse.js@npm:7.1.0"
+  checksum: e0c7d6833d336f9facd9359a888170b90c418b2f46c6cb389fd7dbc708712a2d1c5f30b5fea13b634a090a21f69d746eb0ceaff545b11ca088d3e5058c2a8e15
   languageName: node
   linkType: hard
 
