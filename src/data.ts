@@ -1,23 +1,23 @@
 /*! Copyright (c) 2022, XAPP AI */
-import type { AddressAutocompleteParameters, BusyDayDescription, CrmServiceAvailabilitySettings, MultistepForm } from "stentor-models";
+import type { AddressAutocompleteParameters, CrmServiceAvailabilitySettings, MultistepForm } from "stentor-models";
 import type { QuestionAnsweringData } from "@xapp/question-answering-handler";
 
 import type { PlacesService } from "./services/PlacesService/models";
 import type { FormResponseProps } from "./strategies/utils/forms";
 
 export type ContactDataType =
-    "FIRST_NAME" |
-    "LAST_NAME" |
-    "FULL_NAME" |
-    "PHONE" |
-    "ZIP" |
-    "ADDRESS" |
-    "EMAIL" |
-    "SELECTION" |
-    "COMPANY" |
-    "ORGANIZATION" |
-    "MESSAGE" |
-    "DATE_TIME";
+    | "FIRST_NAME"
+    | "LAST_NAME"
+    | "FULL_NAME"
+    | "PHONE"
+    | "ZIP"
+    | "ADDRESS"
+    | "EMAIL"
+    | "SELECTION"
+    | "COMPANY"
+    | "ORGANIZATION"
+    | "MESSAGE"
+    | "DATE_TIME";
 
 export interface ContactCaptureService {
     /**
@@ -42,17 +42,10 @@ export interface ContactCaptureService {
     requiresDate?: boolean;
 }
 
-export interface AvailabilitySettings extends CrmServiceAvailabilitySettings {
-    /**
-     * Used when no availability service is available.
-     */
-    defaultBusyDays?: BusyDayDescription;
-}
-
 export interface ContactCaptureData extends QuestionAnsweringData, Pick<FormResponseProps, "enablePreferredTime"> {
     /**
      * It will not capture the lead and instead provide contact information.
-     * 
+     *
      * Defaults to false.
      */
     captureLead?: boolean;
@@ -61,18 +54,18 @@ export interface ContactCaptureData extends QuestionAnsweringData, Pick<FormResp
      */
     enablePreferredTime?: boolean;
     /**
-     * Form Widget channel only, it will enable scheduling within the form.  Otherwise the form widget will simply act as a contact us form. 
-     * 
+     * Form Widget channel only, it will enable scheduling within the form.  Otherwise the form widget will simply act as a contact us form.
+     *
      */
     enableFormScheduling?: boolean;
     /**
      * Optional place IDs to look up information about the business
      */
     places?: {
-        placeId?: string
+        placeId?: string;
     }[];
     /**
-     * Optional PlaceService, used for testing, defaults to GooglePlaceService.  
+     * Optional PlaceService, used for testing, defaults to GooglePlaceService.
      */
     placeService?: PlacesService;
     /**
@@ -89,7 +82,7 @@ export interface ContactCaptureData extends QuestionAnsweringData, Pick<FormResp
     useChatResponse?: boolean;
     /**
      * The form descriptions for the form widget.
-     * 
+     *
      * You must also set CAPTURE_MAIN_FORM
      */
     forms?: MultistepForm[];
@@ -104,7 +97,7 @@ export interface ContactCaptureData extends QuestionAnsweringData, Pick<FormResp
     /**
      * Optional availability settings to be used when calling CRMService.getAvailability()
      */
-    availabilitySettings?: AvailabilitySettings;
+    availabilitySettings?: CrmServiceAvailabilitySettings;
 }
 
 export interface ContactCaptureBlueprint {
@@ -114,13 +107,13 @@ export interface ContactCaptureBlueprint {
     data: DataDescriptorBase[];
     /**
      * Optional services that will be displayed to the user in the form widget.
-     * 
+     *
      * For example: "Get Quote", "Request HVAC Service", "Schedule Appointment"
      */
     serviceOptions?: ContactCaptureService[];
     /**
-    * Option to override the default message description in the multiline text field.
-    */
+     * Option to override the default message description in the multiline text field.
+     */
     messageDescription?: string;
     /**
      * Autocomplete parameters for any address fields.
@@ -131,7 +124,7 @@ export interface ContactCaptureBlueprint {
 export interface DataDescriptorBase {
     /**
      * The tag matching to the response that will be used to ask for this data.
-     * 
+     *
      * This is for chat channels only.
      */
     questionContentKey: string;
@@ -141,7 +134,7 @@ export interface DataDescriptorBase {
     type: ContactDataType;
     /**
      * Possible values to ask of the user
-     * 
+     *
      * For example, which service are you interested in: Roofing, Gutters
      */
     enums?: string[];
@@ -156,7 +149,7 @@ export interface DataDescriptorBase {
     acceptAnyInput?: boolean;
     /**
      * If the data is required.  If not required and the user says no, we will skip it.
-     * 
+     *
      * For example, if you ask for both phone and email, you can just require one.
      */
     required?: boolean;
