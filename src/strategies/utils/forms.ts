@@ -8,26 +8,27 @@ import type {
     FormTextInput,
     MultistepForm,
     Response,
-    SelectableItem
+    SelectableItem,
 } from "stentor-models";
 import { capitalize, existsAndNotEmpty } from "stentor-utils";
 
 import { ContactCaptureData, ContactCaptureService, DataDescriptorBase } from "../../data";
+import { isFormDateInput } from "../../guards";
 
 // THE DEFAULT CHIPS
 export const DEFAULT_SERVICE_CHIP_ITEMS: SelectableItem[] = [
     {
         id: "schedule_visit",
-        label: "Schedule Visit"
+        label: "Schedule Visit",
     },
     {
         id: "get_quote",
-        label: "Get Quote"
+        label: "Get Quote",
     },
     {
         id: "contact_us",
-        label: "Contact Us"
-    }
+        label: "Contact Us",
+    },
 ];
 
 export const DEFAULT_CONTACT_FIELDS: FormField[] = [
@@ -36,7 +37,7 @@ export const DEFAULT_CONTACT_FIELDS: FormField[] = [
         label: "Name",
         type: "TEXT",
         placeholder: "Full Name",
-        mandatory: true
+        mandatory: true,
     },
     {
         format: "PHONE",
@@ -44,7 +45,7 @@ export const DEFAULT_CONTACT_FIELDS: FormField[] = [
         label: "Phone",
         placeholder: "Your 10 digit phone number",
         type: "TEXT",
-        mandatory: true
+        mandatory: true,
     },
     {
         format: "ADDRESS",
@@ -52,12 +53,11 @@ export const DEFAULT_CONTACT_FIELDS: FormField[] = [
         label: "Address",
         type: "TEXT",
         mandatory: false,
-        mapsBaseUrl: "https://places.xapp.ai"
-    } as FormFieldTextAddressInput
+        mapsBaseUrl: "https://places.xapp.ai",
+    } as FormFieldTextAddressInput,
 ];
 
 export interface FieldSettings {
-
     required?: boolean;
 }
 
@@ -90,11 +90,10 @@ export interface FormResponseProps {
 
 /**
  * Get a simple contact us form.
- * 
- * @returns 
+ *
+ * @returns
  */
 export function getContactFormFallback(data: ContactCaptureData, props: FormResponseProps): MultistepForm {
-
     if (typeof data.enablePreferredTime === "boolean") {
         props.enablePreferredTime = data.enablePreferredTime;
     }
@@ -110,24 +109,24 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
     const PREFERRED_TIME_HEADER = [
         {
             step: "service_request",
-            label: "Service Request"
+            label: "Service Request",
         },
         {
             step: "contact_info",
-            label: "Contact Info"
+            label: "Contact Info",
         },
         {
             step: "preferred_time",
-            label: "Preferred Date"
+            label: "Preferred Date",
         },
         {
             step: "confirmation",
-            label: "Review"
+            label: "Review",
         },
         {
             step: "thank_you",
-            label: "Request Submitted"
-        }
+            label: "Request Submitted",
+        },
     ];
 
     let chips: SelectableItem[] = [...DEFAULT_SERVICE_CHIP_ITEMS];
@@ -139,7 +138,7 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
 
         // make sure it has a contact_us chip by determining if the label has "Contact" or "Get in Touch"
         const found = chips.find((item) => {
-            return (item.label.toLowerCase().includes("contact") || item.label.toLowerCase().includes("touch"));
+            return item.label.toLowerCase().includes("contact") || item.label.toLowerCase().includes("touch");
         });
 
         if (found) {
@@ -147,13 +146,12 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
         } else {
             chips.push({
                 id: contactUsChip,
-                label: "Contact Us"
+                label: "Contact Us",
             });
         }
     }
 
     if (props?.service) {
-
         // see if it is already in the items, match by id
         const found = chips.findIndex((item) => item.id === props.service);
 
@@ -166,12 +164,15 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
             // and capitalize first letter of each word
             const serviceRaw = props.service.replace("_", " ");
             // split by words and capitalize and recombine
-            const service = serviceRaw.split(" ").map((word) => capitalize(word)).join(" ");
+            const service = serviceRaw
+                .split(" ")
+                .map((word) => capitalize(word))
+                .join(" ");
 
             chips.unshift({
                 id: props.service,
                 label: service,
-                selected: true
+                selected: true,
             });
         }
     }
@@ -184,11 +185,10 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
 
     // see if we have any data fields and overide the defaults
     if (existsAndNotEmpty(data.capture.data)) {
-
         // first filter to make sure we only adding ones meant for form
         // and are active
         const dataFields = data.capture.data.filter((dataItem) => {
-            return dataItem.channel !== "CHAT" && (dataItem.active !== false);
+            return dataItem.channel !== "CHAT" && dataItem.active !== false;
         });
 
         CONTACT_FIELDS = [];
@@ -196,19 +196,17 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
         // find full_name, email, phone, address
         // message is already included by default
         dataFields.forEach((dataField) => {
-
             // default and will build depending on data
             const field: FormField = {
                 name: dataField.slotName,
                 label: capitalize(dataField.slotName),
                 type: "TEXT",
-                mandatory: dataField.required
+                mandatory: dataField.required,
             };
 
             // look for first_name or last_name
 
             if (dataField.slotName === "full_name" || dataField.slotName === "name") {
-
                 const namefield: FormTextInput = {
                     ...field,
                     name: "full_name",
@@ -217,33 +215,33 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
                     placeholder: "Your full name",
                     // always mandatory
                     mandatory: true,
-                }
+                };
                 CONTACT_FIELDS.push(namefield);
             } else if (dataField.slotName === "email") {
                 const emailField: FormTextInput = {
                     ...field,
                     format: "EMAIL",
-                    placeholder: "Your email address"
+                    placeholder: "Your email address",
                 };
                 CONTACT_FIELDS.push(emailField);
             } else if (dataField.slotName === "phone") {
                 const phoneField: FormTextInput = {
                     ...field,
                     format: "PHONE",
-                    placeholder: "Your phone number we can best reach you on"
+                    placeholder: "Your phone number we can best reach you on",
                 };
                 CONTACT_FIELDS.push(phoneField);
             } else if (dataField.slotName === "zip") {
                 const zipField: FormTextInput = {
                     ...field,
-                    placeholder: "Your zip code"
+                    placeholder: "Your zip code",
                 };
                 CONTACT_FIELDS.push(zipField);
             } else if (dataField.slotName === "address") {
                 const addressField: FormFieldTextAddressInput = {
                     ...field,
                     format: "ADDRESS",
-                    mapsBaseUrl: "https://places.xapp.ai"
+                    mapsBaseUrl: "https://places.xapp.ai",
                 };
                 if (data.capture.addressAutocompleteParams) {
                     addressField.mapsUrlQueryParams = data.capture.addressAutocompleteParams;
@@ -267,7 +265,7 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
             label: "Name",
             type: "TEXT",
             placeholder: "Your full name",
-            mandatory: true
+            mandatory: true,
         });
 
         nameFieldIndex = 0;
@@ -286,7 +284,7 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
             label: "Phone",
             placeholder: "Your 10 digit phone number",
             type: "TEXT",
-            mandatory: true
+            mandatory: true,
         });
 
         phoneFieldIndex = CONTACT_FIELDS.length - 1;
@@ -309,9 +307,12 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
     let preferredTimeConditional = `!help_type.includes('${contactUsChip}')`;
     // we now loop through our services and build the conditional
     if (existsAndNotEmpty(data?.capture?.serviceOptions)) {
-        preferredTimeConditional = data.capture.serviceOptions.filter((service) => service.requiresDate).map((chip) => {
-            return `help_type.includes('${chip.id}')`;
-        }).join(" || ");
+        preferredTimeConditional = data.capture.serviceOptions
+            .filter((service) => service.requiresDate)
+            .map((chip) => {
+                return `help_type.includes('${chip.id}')`;
+            })
+            .join(" || ");
     }
 
     // make sure there is some kind of "contact" chip
@@ -327,7 +328,7 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
                     type: "CHIPS",
                     items: chips,
                     mandatory: true,
-                    radio: true
+                    radio: true,
                 },
                 {
                     name: "message",
@@ -335,15 +336,15 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
                     rows: 6,
                     type: "TEXT",
                     multiline: true,
-                    mandatory: requiredMessage
-                }
-            ]
+                    mandatory: requiredMessage,
+                },
+            ],
         },
         {
             name: "contact_info",
             nextAction: "next",
             title: "Contact Information",
-            fields: CONTACT_FIELDS
+            fields: CONTACT_FIELDS,
         },
         {
             name: "preferred_time",
@@ -354,7 +355,7 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
                     name: "dateTime",
                     title: "Preferred date",
                     type: "DATE",
-                    mandatory: false,
+                    mandatory: true,
                     // pass through busy day information
                     defaultBusyDays: data.availabilitySettings?.defaultBusyDays,
                 },
@@ -362,10 +363,10 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
                     name: "card_time_preference",
                     variant: "body1",
                     style: {
-                        fontStyle: "italic"
+                        fontStyle: "italic",
                     },
                     text: "Preferred Time",
-                    type: "CARD"
+                    type: "CARD",
                 },
                 {
                     name: "preferred_time",
@@ -374,30 +375,30 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
                     items: [
                         {
                             id: "first_available",
-                            label: "First Available"
+                            label: "First Available",
                         },
                         {
                             id: "morning",
-                            label: "Morning"
+                            label: "Morning",
                         },
                         {
                             id: "afternoon",
-                            label: "Afternoon"
-                        }
+                            label: "Afternoon",
+                        },
                     ],
                     mandatory: true,
-                    radio: true
+                    radio: true,
                 },
                 {
                     name: "time_request_note_card",
                     text: "This is a preferred time for a possible visit for the service request.  Someone will call to confirm a time and we may have something sooner than what is shown above.",
                     style: {
-                        fontStyle: "bold"
+                        fontStyle: "bold",
                     },
                     title: "Card",
-                    type: "CARD"
-                }
-            ]
+                    type: "CARD",
+                },
+            ],
         },
         {
             final: true,
@@ -414,7 +415,7 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
                         fontWeight: "bold",
                     },
                     text: "#{help_type} Request",
-                    type: "CARD"
+                    type: "CARD",
                 },
                 {
                     name: "confirmation_card1",
@@ -425,14 +426,14 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
                         fontWeight: "bold",
                     },
                     text: "Time Preference",
-                    type: "CARD"
+                    type: "CARD",
                 },
                 {
                     name: "confirmation_card12",
                     variant: "body1",
                     condition: "!!dateTime && preferred_time.length > 0",
                     text: "#{dateTime}, #{preferred_time}",
-                    type: "CARD"
+                    type: "CARD",
                 },
                 {
                     name: "confirmation_card_details",
@@ -443,35 +444,35 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
                         fontWeight: "bold",
                     },
                     condition: "!!message || !!address || !!phone || !!email",
-                    type: "CARD"
+                    type: "CARD",
                 },
                 {
                     name: "confirmation_card_name",
                     variant: "body1",
                     text: "#{full_name}",
                     condition: "!!full_name",
-                    type: "CARD"
+                    type: "CARD",
                 },
                 {
                     name: "confirmation_card_address",
                     variant: "body1",
                     text: "#{address}",
                     condition: "!!address",
-                    type: "CARD"
+                    type: "CARD",
                 },
                 {
                     name: "confirmation_card_phone",
                     variant: "body1",
                     text: "#{phone}",
                     condition: "!!phone",
-                    type: "CARD"
+                    type: "CARD",
                 },
                 {
                     name: "confirmation_card_email",
                     variant: "body1",
                     text: "#{email}",
                     condition: "!!email",
-                    type: "CARD"
+                    type: "CARD",
                 },
                 {
                     name: "confirmation_card_details",
@@ -482,7 +483,7 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
                         fontWeight: "bold",
                     },
                     condition: "!!message",
-                    type: "CARD"
+                    type: "CARD",
                 },
                 {
                     name: "confirmation_card_message",
@@ -490,18 +491,18 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
                     text: "#{message}",
                     condition: "!!message",
                     style: {
-                        fontStyle: "italic"
+                        fontStyle: "italic",
                     },
-                    type: "CARD"
+                    type: "CARD",
                 },
                 {
                     name: "confirmation_card2",
                     condition: "!!dateTime && preferred_time.length > 0",
                     text: "Somebody will call you as soon as possible to finalize the time and collect final details.",
                     align: "left",
-                    type: "CARD"
+                    type: "CARD",
                 },
-            ]
+            ],
         },
         {
             name: "thank_you",
@@ -512,10 +513,10 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
                     name: "thank_you_text",
                     // condition: "!!help_type.includes('contact_us')",
                     header: {
-                        title: "Thank You"
+                        title: "Thank You",
                     },
                     text: "Thank you for your request. We will get back to you as soon as possible.",
-                    type: "CARD"
+                    type: "CARD",
                 },
                 /*
                 {
@@ -527,10 +528,9 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
                     text: "Thank you for your request.  Someone will call you to confirm the time with you.",
                     type: "CARD"
                 } */
-            ]
-        }
+            ],
+        },
     ];
-
 
     const indexForPhoneOrEmail = emailFieldIndex >= 0 ? emailFieldIndex : phoneFieldIndex;
 
@@ -553,26 +553,26 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
                     rows: 3,
                     type: "TEXT",
                     multiline: true,
-                    mandatory: true
-                }
+                    mandatory: true,
+                },
             ],
-            title: "Contact Information"
+            title: "Contact Information",
         },
         {
             fields: [
                 {
                     name: "thank_you_text",
                     header: {
-                        title: "Thank You"
+                        title: "Thank You",
                     },
                     text: "Somebody will contact you as soon as possible to follow up with your request.",
-                    type: "CARD"
-                }
+                    type: "CARD",
+                },
             ],
             previousAction: "omit",
             nextAction: "omit",
-            name: "Thanks"
-        }
+            name: "Thanks",
+        },
     ];
 
     // Now build the fallback form
@@ -582,16 +582,16 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
         type: "FORM",
         header: [
             {
-                "step": "contact_info",
-                "label": "Contact Info"
+                step: "contact_info",
+                label: "Contact Info",
             },
             {
-                "step": "Thanks",
-                "label": "Thanks"
-            }
+                step: "Thanks",
+                label: "Thanks",
+            },
         ],
         labelHeader: true,
-        steps: []
+        steps: [],
     };
 
     if (props.enablePreferredTime) {
@@ -608,16 +608,18 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
 
 /**
  * Gets the current form in use
- * 
- * @param data 
- * @param props 
- * @returns 
+ *
+ * @param data
+ * @param props
+ * @returns
  */
 function getForm(data: ContactCaptureData, props: FormResponseProps): MultistepForm {
     // check if scheduling is enabled, otherwise use the fallback form
     if (!data?.enableFormScheduling) {
         // remove this after a couple of releases
-        log().warn(`NEW FEATURE! You must enable scheduling if you are running this standalone.  Set enableFormScheduling to true in handler data.`);
+        log().warn(
+            `NEW FEATURE! You must enable scheduling if you are running this standalone.  Set enableFormScheduling to true in handler data.`,
+        );
 
         return getContactFormFallback(data, props);
     }
@@ -627,15 +629,18 @@ function getForm(data: ContactCaptureData, props: FormResponseProps): MultistepF
 
     if (!hasCustomForm) {
         log().warn(`No custom forms found.  Using default form.`);
-        return getContactFormFallback({
-            ...data,
-            enablePreferredTime: true
-        }, props);
+        return getContactFormFallback(
+            {
+                ...data,
+                enablePreferredTime: true,
+            },
+            props,
+        );
     }
 
     // forms can be empty
     let formDeclaration = (data?.forms || []).find((form) => {
-        return (form.name === formName);
+        return form.name === formName;
     });
 
     if (!formDeclaration) {
@@ -643,10 +648,10 @@ function getForm(data: ContactCaptureData, props: FormResponseProps): MultistepF
         formDeclaration = data.forms[0];
     }
 
-    // look through each step, see if there are any chips we need to preselect based on service passed in 
-    if (props?.service) {
-        formDeclaration.steps.forEach((step) => {
-            if (existsAndNotEmpty(step.fields)) {
+    // Going to augment the form with the service chip selected or default busy days
+    formDeclaration.steps.forEach((step) => {
+        if (existsAndNotEmpty(step.fields)) {
+            if (props?.service) {
                 // look for chip type
                 const chipField: FormChipsInput = step.fields.find((field) => {
                     return field.type === "CHIPS";
@@ -663,15 +668,26 @@ function getForm(data: ContactCaptureData, props: FormResponseProps): MultistepF
                     }
                 }
             }
-        });
-    }
+
+            // Also look for a DATE type field
+            // and we set defaultBusyDays
+            const dateField = step.fields.find((field) => {
+                return isFormDateInput(field);
+            });
+
+            // see if they have any default busy days by checking keys on the
+            const hasDefaultBusyDays = Object.keys(dateField?.defaultBusyDays || {}).length > 0;
+
+            if (!!dateField && !hasDefaultBusyDays) {
+                dateField.defaultBusyDays = data?.availabilitySettings?.defaultBusyDays;
+            }
+        }
+    });
 
     return formDeclaration;
-
 }
 
 export function getFormResponse(data: ContactCaptureData, props: FormResponseProps): Response {
-
     const form = getForm(data, props);
 
     // The form is a DISPLAY of type "FORM"
@@ -680,22 +696,18 @@ export function getFormResponse(data: ContactCaptureData, props: FormResponsePro
         displays: [{ type: "FORM", ...form }],
     };
 
-    // TODO: look through the form, at each step, see if we have chips and we need to preselect based on service
-    // chips field name could be help_type or service_type
-
     return response;
 }
 
 /**
  * Gets the next step from the form
- * 
- * @param data 
- * @param formName 
- * @param stepName 
- * @returns 
+ *
+ * @param data
+ * @param formName
+ * @param stepName
+ * @returns
  */
 export function getStepFromData(data: ContactCaptureData, props: FormResponseProps, stepName: string): FormStep {
-
     const formDeclaration = getForm(data, props);
 
     if (!formDeclaration) {
@@ -703,7 +715,7 @@ export function getStepFromData(data: ContactCaptureData, props: FormResponsePro
     }
 
     const formStep = formDeclaration.steps.find((step) => {
-        return (step.name == stepName);
+        return step.name == stepName;
     });
 
     if (!formStep) {

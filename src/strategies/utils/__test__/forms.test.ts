@@ -4,29 +4,34 @@ import * as sinonChai from "sinon-chai";
 
 import { FormChipsInput, FormFieldTextAddressInput } from "stentor-models";
 
-import { isMultistepForm } from "../../../guards";
+import { isFormDateInput, isMultistepForm } from "../../../guards";
 import { getFormResponse, getContactFormFallback } from "../forms";
-import { CUSTOM_FORM, SIMPLE_BLUEPRINT, BLUEPRINT_WITHOUT_FULL_NAME } from "./assets";
+import { CUSTOM_FORM, SIMPLE_BLUEPRINT, BLUEPRINT_WITHOUT_FULL_NAME, CUSTOM_FORM_WITH_DATE } from "./assets";
 
 chai.use(sinonChai);
 const expect = chai.expect;
 
 describe(`#${getFormResponse.name}()`, () => {
-    describe('when passed empty props', () => {
-        it('returns a contact form', () => {
-            const response = getFormResponse({
-                capture: SIMPLE_BLUEPRINT
-            }, {});
+    describe("when passed empty props", () => {
+        it("returns a contact form", () => {
+            const response = getFormResponse(
+                {
+                    capture: SIMPLE_BLUEPRINT,
+                },
+                {},
+            );
 
             expect(response).to.exist;
 
-            const form = response && Array.isArray(response.displays) && response?.displays?.length > 0 ? response.displays[0] : undefined;
+            const form =
+                response && Array.isArray(response.displays) && response?.displays?.length > 0
+                    ? response.displays[0]
+                    : undefined;
             expect(form).to.exist;
 
             expect(isMultistepForm(form)).to.be.true;
 
             if (isMultistepForm(form)) {
-
                 expect(form.name).to.equal("contact_us_only");
                 expect(form.header).to.have.length(2);
                 expect(form.steps).to.have.length(2);
@@ -38,16 +43,22 @@ describe(`#${getFormResponse.name}()`, () => {
             }
         });
     });
-    describe('when passed enabledPreferredTime', () => {
+    describe("when passed enabledPreferredTime", () => {
         it("returns a preferred time form", () => {
-            const response = getFormResponse({
-                enablePreferredTime: true,
-                capture: { data: [] }
-            }, {});
+            const response = getFormResponse(
+                {
+                    enablePreferredTime: true,
+                    capture: { data: [] },
+                },
+                {},
+            );
 
             expect(response).to.exist;
 
-            const form = response && Array.isArray(response.displays) && response?.displays?.length > 0 ? response.displays[0] : undefined;
+            const form =
+                response && Array.isArray(response.displays) && response?.displays?.length > 0
+                    ? response.displays[0]
+                    : undefined;
             expect(form).to.exist;
 
             expect(isMultistepForm(form)).to.be.true;
@@ -92,26 +103,32 @@ describe(`#${getFormResponse.name}()`, () => {
         });
         describe("when passes serviceOptions", () => {
             it("returns a preferred time form with the service options", () => {
-                const response = getFormResponse({
-                    enablePreferredTime: true,
-                    capture: {
-                        ...SIMPLE_BLUEPRINT,
-                        serviceOptions: [
-                            {
-                                id: "schedule_maintenance",
-                                label: "Schedule Maintenance"
-                            },
-                            {
-                                id: "emergency_service",
-                                label: "Emergency Service"
-                            }
-                        ]
-                    }
-                }, {});
+                const response = getFormResponse(
+                    {
+                        enablePreferredTime: true,
+                        capture: {
+                            ...SIMPLE_BLUEPRINT,
+                            serviceOptions: [
+                                {
+                                    id: "schedule_maintenance",
+                                    label: "Schedule Maintenance",
+                                },
+                                {
+                                    id: "emergency_service",
+                                    label: "Emergency Service",
+                                },
+                            ],
+                        },
+                    },
+                    {},
+                );
 
                 expect(response).to.exist;
 
-                const form = response && Array.isArray(response.displays) && response?.displays?.length > 0 ? response.displays[0] : undefined;
+                const form =
+                    response && Array.isArray(response.displays) && response?.displays?.length > 0
+                        ? response.displays[0]
+                        : undefined;
                 expect(form).to.exist;
 
                 expect(isMultistepForm(form)).to.be.true;
@@ -141,17 +158,21 @@ describe(`#${getFormResponse.name}()`, () => {
                 }
             });
         });
-        describe("when passed bluepint data", () => {
+        describe("when passed blueprint data", () => {
             it("sets the appropriate fields", () => {
-                const response = getFormResponse({
-                    enablePreferredTime: true,
-                    capture: SIMPLE_BLUEPRINT
-                }, {
-
-                });
+                const response = getFormResponse(
+                    {
+                        enablePreferredTime: true,
+                        capture: SIMPLE_BLUEPRINT,
+                    },
+                    {},
+                );
 
                 expect(response).to.exist;
-                const form = response && Array.isArray(response.displays) && response?.displays?.length > 0 ? response.displays[0] : undefined;
+                const form =
+                    response && Array.isArray(response.displays) && response?.displays?.length > 0
+                        ? response.displays[0]
+                        : undefined;
                 expect(form).to.exist;
 
                 expect(isMultistepForm(form)).to.be.true;
@@ -184,49 +205,53 @@ describe(`#${getFormResponse.name}()`, () => {
         });
         describe("when passed serviceOptions & blueprint data", () => {
             it("sets the appropriate fields", () => {
-                const response = getFormResponse({
-                    enablePreferredTime: true,
-                    capture: {
-                        data: [
-                            ...SIMPLE_BLUEPRINT.data,
-                            {
-                                questionContentKey: "address",
-                                slotName: "address",
-                                type: "ADDRESS",
-                                required: true,
-                            }
-                        ],
-                        addressAutocompleteParams: {
-                            components: "country:us",
+                const response = getFormResponse(
+                    {
+                        enablePreferredTime: true,
+                        capture: {
+                            data: [
+                                ...SIMPLE_BLUEPRINT.data,
+                                {
+                                    questionContentKey: "address",
+                                    slotName: "address",
+                                    type: "ADDRESS",
+                                    required: true,
+                                },
+                            ],
+                            addressAutocompleteParams: {
+                                components: "country:us",
+                            },
+                            serviceOptions: [
+                                {
+                                    id: "free_quote",
+                                    label: "Free Quote",
+                                    requiresDate: false,
+                                },
+                                {
+                                    id: "schedule_maintenance",
+                                    label: "Schedule Maintenance",
+                                    requiresDate: true,
+                                },
+                                {
+                                    id: "emergency_service",
+                                    label: "Emergency Service",
+                                },
+                                {
+                                    id: "service_repair",
+                                    label: "Service/Repair",
+                                    requiresDate: true,
+                                },
+                            ],
                         },
-                        serviceOptions: [
-                            {
-                                id: "free_quote",
-                                label: "Free Quote",
-                                requiresDate: false,
-                            },
-                            {
-                                id: "schedule_maintenance",
-                                label: "Schedule Maintenance",
-                                requiresDate: true
-                            },
-                            {
-                                id: "emergency_service",
-                                label: "Emergency Service"
-                            },
-                            {
-                                id: "service_repair",
-                                label: "Service/Repair",
-                                requiresDate: true
-                            }
-                        ]
-                    }
-                }, {
-
-                });
+                    },
+                    {},
+                );
 
                 expect(response).to.exist;
-                const form = response && Array.isArray(response.displays) && response?.displays?.length > 0 ? response.displays[0] : undefined;
+                const form =
+                    response && Array.isArray(response.displays) && response?.displays?.length > 0
+                        ? response.displays[0]
+                        : undefined;
                 expect(form).to.exist;
 
                 /// Helpful for copy pasting and testing
@@ -247,7 +272,6 @@ describe(`#${getFormResponse.name}()`, () => {
                     const chips = (step.fields[0] as FormChipsInput).items;
                     expect(chips).to.have.length(5);
 
-
                     const contactInfoStep = form.steps[1];
                     expect(contactInfoStep).to.exist;
 
@@ -266,7 +290,8 @@ describe(`#${getFormResponse.name}()`, () => {
                     expect(phoneField.name).to.equal("phone");
                     expect(phoneField.mandatory).to.be.true;
 
-                    const addressField: FormFieldTextAddressInput = contactInfoStep.fields[3] as FormFieldTextAddressInput;
+                    const addressField: FormFieldTextAddressInput = contactInfoStep
+                        .fields[3] as FormFieldTextAddressInput;
                     expect(addressField.name).to.equal("address");
                     expect(addressField.mandatory).to.be.true;
                     expect(addressField.mapsUrlQueryParams).to.deep.equal({ components: "country:us" });
@@ -276,33 +301,41 @@ describe(`#${getFormResponse.name}()`, () => {
                     expect(preferredTimeStep).to.exist;
                     expect(preferredTimeStep.name).to.equal("preferred_time");
                     const condition = preferredTimeStep.condition;
-                    expect(condition).to.equal("help_type.includes('schedule_maintenance') || help_type.includes('service_repair')");
+                    expect(condition).to.equal(
+                        "help_type.includes('schedule_maintenance') || help_type.includes('service_repair')",
+                    );
                 }
             });
         });
     });
     describe("when passed enableFormScheduling", () => {
         it("returns a fallback form when no custom form is provided", () => {
-            const response = getFormResponse({
-                enableFormScheduling: true,
-                capture: {
-                    ...SIMPLE_BLUEPRINT,
-                    serviceOptions: [
-                        {
-                            id: "schedule_maintenance",
-                            label: "Schedule Maintenance"
-                        },
-                        {
-                            id: "emergency_service",
-                            label: "Emergency Service"
-                        }
-                    ]
-                }
-            }, {});
+            const response = getFormResponse(
+                {
+                    enableFormScheduling: true,
+                    capture: {
+                        ...SIMPLE_BLUEPRINT,
+                        serviceOptions: [
+                            {
+                                id: "schedule_maintenance",
+                                label: "Schedule Maintenance",
+                            },
+                            {
+                                id: "emergency_service",
+                                label: "Emergency Service",
+                            },
+                        ],
+                    },
+                },
+                {},
+            );
 
             expect(response).to.exist;
 
-            const form = response && Array.isArray(response.displays) && response?.displays?.length > 0 ? response.displays[0] : undefined;
+            const form =
+                response && Array.isArray(response.displays) && response?.displays?.length > 0
+                    ? response.displays[0]
+                    : undefined;
             expect(form).to.exist;
 
             expect(isMultistepForm(form)).to.be.true;
@@ -332,27 +365,33 @@ describe(`#${getFormResponse.name}()`, () => {
             }
         });
         it("returns a custom form", () => {
-            const response = getFormResponse({
-                enableFormScheduling: true,
-                capture: {
-                    ...SIMPLE_BLUEPRINT,
-                    serviceOptions: [
-                        {
-                            id: "schedule_maintenance",
-                            label: "Schedule Maintenance"
-                        },
-                        {
-                            id: "emergency_service",
-                            label: "Emergency Service"
-                        }
-                    ]
+            const response = getFormResponse(
+                {
+                    enableFormScheduling: true,
+                    capture: {
+                        ...SIMPLE_BLUEPRINT,
+                        serviceOptions: [
+                            {
+                                id: "schedule_maintenance",
+                                label: "Schedule Maintenance",
+                            },
+                            {
+                                id: "emergency_service",
+                                label: "Emergency Service",
+                            },
+                        ],
+                    },
+                    forms: [CUSTOM_FORM],
                 },
-                forms: [CUSTOM_FORM],
-            }, {});
+                {},
+            );
 
             expect(response).to.exist;
 
-            const form = response && Array.isArray(response.displays) && response?.displays?.length > 0 ? response.displays[0] : undefined;
+            const form =
+                response && Array.isArray(response.displays) && response?.displays?.length > 0
+                    ? response.displays[0]
+                    : undefined;
             expect(form).to.exist;
 
             expect(isMultistepForm(form)).to.be.true;
@@ -371,12 +410,60 @@ describe(`#${getFormResponse.name}()`, () => {
             }
         });
     });
+    describe("with a custom form and default busy days", () => {
+        it("returns the custom form with default busy days", () => {
+            const response = getFormResponse(
+                {
+                    capture: SIMPLE_BLUEPRINT,
+                    forms: [CUSTOM_FORM_WITH_DATE],
+                    enableFormScheduling: true,
+                    availabilitySettings: {
+                        defaultBusyDays: {
+                            availableDays: ["monday", "tuesday", "wednesday"],
+                        },
+                    },
+                },
+                {},
+            );
+
+            expect(response).to.exist;
+
+            const form =
+                response && Array.isArray(response.displays) && response?.displays?.length > 0
+                    ? response.displays[0]
+                    : undefined;
+
+            expect(form).to.exist;
+            expect(isMultistepForm(form)).to.be.true;
+
+            if (isMultistepForm(form)) {
+                expect(form.steps).to.have.length(3);
+
+                // 2nd step is calendar
+                const calendarStep = form.steps[1];
+                expect(calendarStep).to.exist;
+                expect(calendarStep.fields).to.have.length(1);
+                const calendarField = calendarStep.fields[0];
+
+                expect(calendarField.type).to.equal("DATE");
+                expect(isFormDateInput(calendarField)).to.be.true;
+                if (isFormDateInput(calendarField)) {
+                    expect(calendarField.name).to.equal("date");
+                    expect(calendarField.mandatory).to.be.true;
+                    expect(calendarField.defaultBusyDays).to.exist;
+                    expect(calendarField.defaultBusyDays).to.deep.equal({
+                        availableDays: ["monday", "tuesday", "wednesday"],
+                    });
+                }
+            }
+        });
+    });
 });
 
 describe(`#${getContactFormFallback.name}()`, () => {
     describe("when passed empty props", () => {
         it("returns as expected", () => {
-            const form = getContactFormFallback({ capture: SIMPLE_BLUEPRINT, }, {});
+            const form = getContactFormFallback({ capture: SIMPLE_BLUEPRINT }, {});
             expect(form).to.exist;
 
             expect(form.steps).to.have.length(2);
@@ -389,7 +476,10 @@ describe(`#${getContactFormFallback.name}()`, () => {
     });
     describe("when passed fallback props", () => {
         it("returns as expected", () => {
-            const form = getContactFormFallback({ capture: SIMPLE_BLUEPRINT, }, { enablePreferredTime: true, service: "schedule_maintenance" });
+            const form = getContactFormFallback(
+                { capture: SIMPLE_BLUEPRINT },
+                { enablePreferredTime: true, service: "schedule_maintenance" },
+            );
 
             expect(form).to.exist;
             expect(form.steps).to.have.length(5);
@@ -411,11 +501,13 @@ describe(`#${getContactFormFallback.name}()`, () => {
                 expect(schedule.id).to.equal("schedule_maintenance");
                 expect(schedule.label).to.equal("Schedule Maintenance");
             }
-
         });
         describe("with an existing service", () => {
             it("returns as expected", () => {
-                const form = getContactFormFallback({ capture: SIMPLE_BLUEPRINT, }, { enablePreferredTime: true, service: "contact_us" });
+                const form = getContactFormFallback(
+                    { capture: SIMPLE_BLUEPRINT },
+                    { enablePreferredTime: true, service: "contact_us" },
+                );
 
                 expect(form).to.exist;
                 expect(form.steps).to.have.length(5);
@@ -442,7 +534,10 @@ describe(`#${getContactFormFallback.name}()`, () => {
     });
     describe("when passed existing props without full_name active", () => {
         it("adds the name field", () => {
-            const form = getContactFormFallback({ capture: BLUEPRINT_WITHOUT_FULL_NAME, }, { enablePreferredTime: true, service: "schedule_maintenance" });
+            const form = getContactFormFallback(
+                { capture: BLUEPRINT_WITHOUT_FULL_NAME },
+                { enablePreferredTime: true, service: "schedule_maintenance" },
+            );
 
             expect(form).to.exist;
             expect(form.steps).to.have.length(5);
