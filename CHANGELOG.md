@@ -1,3 +1,10 @@
+## [1.12.2](https://github.com/xapp-ai/contact-capture-handler/compare/v1.12.1...v1.12.2) (2025-03-06)
+
+
+### Bug Fixes
+
+* Use DefaultBusyDays if Available ([#509](https://github.com/xapp-ai/contact-capture-handler/issues/509)) ([e58bdb7](https://github.com/xapp-ai/contact-capture-handler/commit/e58bdb70f7f5802553bd01f66450216512e0eebe))
+
 ## [1.12.1](https://github.com/xapp-ai/contact-capture-handler/compare/v1.12.0...v1.12.1) (2025-01-08)
 
 
