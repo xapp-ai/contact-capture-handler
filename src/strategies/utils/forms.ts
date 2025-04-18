@@ -75,6 +75,10 @@ export interface FormResponseProps {
      */
     serviceOptions?: ContactCaptureService[];
     /**
+     * Optional header overrides for the fallback form
+     */
+    headerOverrides?: string[];
+    /**
      * Optional message description to help people leave meaningful messages
      */
     messageDescription?: string;
@@ -601,6 +605,16 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
     } else {
         contactUsForm.name = "contact_us_only";
         contactUsForm.steps = CONTACT_ONLY_STEPS;
+    }
+
+    // look at the headers and apply the overrides
+    if (existsAndNotEmpty(props.headerOverrides)) {
+        // loop through the header and find the step
+        props.headerOverrides.forEach((header, index) => {
+            if (contactUsForm.header[index] && !!header) {
+                contactUsForm.header[index].label = header;
+            }
+        });
     }
 
     return contactUsForm;

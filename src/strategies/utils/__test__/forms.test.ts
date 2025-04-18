@@ -484,7 +484,6 @@ describe(`#${getContactFormFallback.name}()`, () => {
             expect(form).to.exist;
             expect(form.steps).to.have.length(5);
 
-            // console.log(JSON.stringify(form.steps, null, 2));
             const step = form.steps[0];
             expect(step).to.exist;
             // service field and message field
@@ -529,6 +528,27 @@ describe(`#${getContactFormFallback.name}()`, () => {
                     expect(schedule.id).to.equal("contact_us");
                     expect(schedule.label).to.equal("Contact Us");
                 }
+            });
+        });
+        describe("with header overrides", () => {
+            it("returns as expected", () => {
+                const form = getContactFormFallback(
+                    { capture: SIMPLE_BLUEPRINT },
+                    {
+                        enablePreferredTime: true,
+                        service: "schedule_maintenance",
+                        headerOverrides: ["How can I help?", "", "Meeting Preference"],
+                    },
+                );
+
+                expect(form).to.exist;
+                expect(form.steps).to.have.length(5);
+
+                expect(form.header).to.have.length(5);
+                expect(form.header[0].label).to.equal("How can I help?");
+                // we use the existing
+                expect(form.header[1].label).to.equal("Contact Info");
+                expect(form.header[2].label).to.equal("Meeting Preference");
             });
         });
     });

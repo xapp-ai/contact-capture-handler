@@ -17,7 +17,12 @@ export function normalizePhoneNumber(phoneNumber: string): string {
 }
 
 export function normalizeEmailAddress(emailAddress: string): string {
-    // TODO: use a regex
+    if (!emailAddress) {
+        return undefined;
+    }
+
+    emailAddress = emailAddress.trim();
+
     if (!!emailAddress && emailAddress.indexOf("@") > 0) {
         return emailAddress;
     }
@@ -25,7 +30,6 @@ export function normalizeEmailAddress(emailAddress: string): string {
     return undefined;
 }
 export function normalizeDateTime(dateTime: string): string {
-
     return dateTime;
 
     // TODO:  implement date and time validation
@@ -35,7 +39,7 @@ export function normalizeDateTime(dateTime: string): string {
     // if (isNaN(timestamp) === false) {
     //        return dateTime
     // }
-   
+
     // return undefined;
 }
 
@@ -66,7 +70,7 @@ export function validateLead(rawQuery: string, lead: DataDescriptorRuntime): str
         case "EMAIL":
             return normalizeEmailAddress(rawQuery);
         case "DATE_TIME":
-           return normalizeDateTime(rawQuery);
+            return normalizeDateTime(rawQuery);
         case "ZIP":
             return normalizeZipCode(rawQuery);
         case "SELECTION":
@@ -85,8 +89,6 @@ export function validateLead(rawQuery: string, lead: DataDescriptorRuntime): str
 
     return rawQuery;
 }
-
-
 
 // export function validateZipCode(zipCode: string): boolean {
 //     const zipCodePattern = /^\d{5}$|^\d{5}-\d{4}$/;
