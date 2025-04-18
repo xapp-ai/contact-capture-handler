@@ -19,7 +19,7 @@ import {
     getDefaultResponseByTag,
     isSessionClosed,
     lookingForHelp,
-    newLeadGenerationData
+    newLeadGenerationData,
 } from "../utils";
 import { ContactCaptureHandler } from "../handler";
 import { GooglePlacesService, PlacesService } from "../services";
@@ -29,7 +29,6 @@ import type { ResultVariableGeneratedInformation } from "@xapp/question-answerin
 import type { ChatResult } from "./models/xnlu";
 
 export class ProgrammaticResponseStrategy implements ResponseStrategy {
-
     private data: ContactCaptureData;
 
     public constructor(data?: ContactCaptureData) {
@@ -37,7 +36,6 @@ export class ProgrammaticResponseStrategy implements ResponseStrategy {
     }
 
     public async getResponse(handler: ContactCaptureHandler, request: Request, context: Context): Promise<Response> {
-
         const isAbandoned = isSessionClosed(request);
 
         // Helpful data that will be used
@@ -79,12 +77,17 @@ export class ProgrammaticResponseStrategy implements ResponseStrategy {
                         if (process.env.PLACES_API_KEY) {
                             placesService = new GooglePlacesService(process.env.PLACES_API_KEY);
                         } else {
-                            log().warn(`Unable to use default GooglePlacesService, environment variable PLACES_API_KEY is not set.`);
+                            log().warn(
+                                `Unable to use default GooglePlacesService, environment variable PLACES_API_KEY is not set.`,
+                            );
                         }
                     }
                     // make sure we have one still
                     if (placesService) {
-                        const details = await placesService.getDetails({ place_id: place.placeId, fields: ["name", "opening_hours", "formatted_phone_number"] });
+                        const details = await placesService.getDetails({
+                            place_id: place.placeId,
+                            fields: ["name", "opening_hours", "formatted_phone_number"],
+                        });
                         log().info(`Received details for business ${details.name} ${details.formatted_phone_number}`);
                         // only if we have the phone number
                         if (details.formatted_phone_number) {
@@ -92,24 +95,26 @@ export class ProgrammaticResponseStrategy implements ResponseStrategy {
                                 name: "No Capture with Number",
                                 tag: "ContactCaptureNoCaptureStart",
                                 outputSpeech: {
-                                    displayText: `We can help with that, it is best to give us a call at ${details.formatted_phone_number} to continue the conversation.`
-                                }
-                            }
+                                    displayText: `We can help with that, it is best to give us a call at ${details.formatted_phone_number} to continue the conversation.`,
+                                },
+                            };
                         }
                     }
                 }
 
                 if (!response) {
-                    log().debug("Unable to build response, defaulting to a generic response without business information.");
+                    log().debug(
+                        "Unable to build response, defaulting to a generic response without business information.",
+                    );
                     // defaulting to generic no capture response.
                     response = {
                         name: "No Capture",
                         tag: "ContactCaptureNoCaptureStart",
                         outputSpeech: {
-                            displayText: "We can help with that, please contact us to continue the conversation."
+                            displayText: "We can help with that, please contact us to continue the conversation.",
                         },
-                        displays: []
-                    }
+                        displays: [],
+                    };
                 }
             }
 
@@ -144,7 +149,6 @@ export class ProgrammaticResponseStrategy implements ResponseStrategy {
             // See if the lead data is stale
             const now = new Date().getTime();
             if (now - leadDataList.lastModifiedMs > Constants.LEAD_LIST_TTL_MS) {
-
                 // and send it off
                 const url: string = request.attributes?.currentUrl as string;
 
@@ -152,8 +156,8 @@ export class ProgrammaticResponseStrategy implements ResponseStrategy {
                     source: url || "unknown",
                     externalId: hasSessionId(request) ? request.sessionId : "unknown",
                     crmFlags: handler.data?.crmFlags,
-                    isAbandoned
-                }
+                    isAbandoned,
+                };
 
                 const leadTranscript = context.session.transcript();
                 // Save the old leads before re-starting
@@ -187,7 +191,7 @@ export class ProgrammaticResponseStrategy implements ResponseStrategy {
         // Find the next piece of data
         const nextRequiredData = leadDataList.data.find((data) => {
             // the next one is the one we don't have a value for.
-            return !data.collectedValue
+            return !data.collectedValue;
         });
 
         const nextType = nextRequiredData ? nextRequiredData.type : undefined;
@@ -196,8 +200,10 @@ export class ProgrammaticResponseStrategy implements ResponseStrategy {
         const repeat = nextType === previousType;
 
         log().info(`Asking for ${nextType}, previous was ${previousType}.`);
-        log().info(`${isFirstQuestion ? 'Their first question' : 'Not their first question'} and they ${isLookingForHelp ? 'are looking for help' : 'are not looking for help'} `)
-        log().info(`isFirstQuestion: ${isFirstQuestion}  lookingForHelp: ${isLookingForHelp}`)
+        log().info(
+            `${isFirstQuestion ? "Their first question" : "Not their first question"} and they ${isLookingForHelp ? "are looking for help" : "are not looking for help"} `,
+        );
+        log().info(`isFirstQuestion: ${isFirstQuestion}  lookingForHelp: ${isLookingForHelp}`);
 
         context.session.set(Constants.CONTACT_CAPTURE_CURRENT_DATA, nextType);
 
@@ -225,8 +231,8 @@ export class ProgrammaticResponseStrategy implements ResponseStrategy {
                             displayText: `ERROR: I am not configured correctly. ${errorMessage}`,
                             ssml: `ERROR: I am not configured correctly. ${errorMessage}`,
                         },
-                        tag: "ERROR"
-                    }
+                        tag: "ERROR",
+                    };
                 }
             }
 
@@ -239,9 +245,10 @@ export class ProgrammaticResponseStrategy implements ResponseStrategy {
             } else if (repeat) {
                 // Give them the reprompt on a repeat
                 response.outputSpeech = response.reprompt;
+                // TODO: DO we need to pass through the context here again?  It may be missed and not work
             }
 
-            // if it is the first question, we need to concatentate the lead gen start content at the front
+            // if it is the first question, we need to concatenate the lead gen start content at the front
             if (isFirstQuestion) {
                 let leadStartResponse: Response;
                 if (isLookingForHelp) {
@@ -261,36 +268,34 @@ export class ProgrammaticResponseStrategy implements ResponseStrategy {
 
                     // we only use the chat response on the first response
                     if (useChatResponse && attributes) {
-
                         // See if we have the response on the session data
                         const chatResponse: ResultVariableGeneratedInformation = attributes["CHAT_RESPONSE"];
 
-                        // lets get the 
+                        // lets get the
                         const chatResult = attributes["CHAT_COMPLETION_RESULT"] as ChatResult;
 
                         if (chatResult?.askedForContactInfo) {
-
                             log().info(`Asked for contact info, using chat response for help start content.`);
 
                             if (chatResult.answer) {
                                 leadStartResponse = {
                                     outputSpeech: toResponseOutput(chatResult.answer),
                                     tag: Constants.CONTACT_CAPTURE_HELP_START_CONTENT,
-                                }
+                                };
                             }
 
                             if (chatResult.followUpQuestion) {
                                 response = {
                                     outputSpeech: toResponseOutput(chatResult.followUpQuestion),
-                                    tag: Constants.CONTACT_CAPTURE_HELP_START_CONTENT
-                                }
+                                    tag: Constants.CONTACT_CAPTURE_HELP_START_CONTENT,
+                                };
                             }
                         } else if (chatResponse) {
                             log().info(`Using chat response for help start content`);
                             leadStartResponse = {
                                 outputSpeech: toResponseOutput(chatResponse.markdownText),
-                                tag: Constants.CONTACT_CAPTURE_HELP_START_CONTENT
-                            }
+                                tag: Constants.CONTACT_CAPTURE_HELP_START_CONTENT,
+                            };
                         }
                     }
                     if (!leadStartResponse) {
@@ -301,12 +306,16 @@ export class ProgrammaticResponseStrategy implements ResponseStrategy {
                 }
                 // TODO: What happens when leadStartResponse is empty
 
-                response.outputSpeech = concatResponseOutput(toResponseOutput(leadStartResponse.outputSpeech), toResponseOutput(response.outputSpeech), { delimiter: "\n\n" });
+                response.outputSpeech = concatResponseOutput(
+                    toResponseOutput(leadStartResponse.outputSpeech),
+                    toResponseOutput(response.outputSpeech),
+                    { delimiter: "\n\n" },
+                );
 
                 // since this is a start, we lose a little bit of fidelity
                 // on what question we ask but we need to track the start
                 response.tag = leadStartResponse.tag;
-                // add all the contexts if not 
+                // add all the contexts if not
                 if (!existsAndNotEmpty(response.context?.active)) {
                     response.context = {
                         active: [
@@ -315,43 +324,43 @@ export class ProgrammaticResponseStrategy implements ResponseStrategy {
                                 parameters: null,
                                 timeToLive: {
                                     timeToLiveInSeconds: 400,
-                                    turnsToLive: 2
-                                }
+                                    turnsToLive: 2,
+                                },
                             },
                             {
                                 name: "expecting_email",
                                 parameters: null,
                                 timeToLive: {
                                     timeToLiveInSeconds: 400,
-                                    turnsToLive: 2
-                                }
+                                    turnsToLive: 2,
+                                },
                             },
                             {
                                 name: "expecting_phone",
                                 parameters: null,
                                 timeToLive: {
                                     timeToLiveInSeconds: 400,
-                                    turnsToLive: 2
-                                }
+                                    turnsToLive: 2,
+                                },
                             },
                             {
                                 name: "expecting_address",
                                 parameters: null,
                                 timeToLive: {
                                     timeToLiveInSeconds: 400,
-                                    turnsToLive: 2
-                                }
+                                    turnsToLive: 2,
+                                },
                             },
                             {
                                 name: "expecting_contact_pref",
                                 parameters: null,
                                 timeToLive: {
                                     timeToLiveInSeconds: 400,
-                                    turnsToLive: 2
-                                }
-                            }
-                        ]
-                    }
+                                    turnsToLive: 2,
+                                },
+                            },
+                        ],
+                    };
                 }
             }
 
@@ -377,8 +386,8 @@ export class ProgrammaticResponseStrategy implements ResponseStrategy {
                 currentUrl: url,
                 externalId: hasSessionId(request) ? request.sessionId : "unknown",
                 crmFlags: handler.data?.crmFlags,
-                isAbandoned
-            }
+                isAbandoned,
+            };
 
             const leadTranscript = context.session.transcript();
             // Send the lead time!
