@@ -113,7 +113,7 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
     const PREFERRED_TIME_HEADER = [
         {
             step: "service_request",
-            label: "Service Request",
+            label: "Request",
         },
         {
             step: "contact_info",
@@ -359,27 +359,49 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
                     name: "dateTime",
                     title: "Preferred date",
                     type: "DATE",
-                    mandatory: true,
+                    mandatoryGroup: "date",
+                    mandatoryError: "Please select either a date or first available date",
                     // pass through busy day information
                     defaultBusyDays: data.availabilitySettings?.defaultBusyDays,
+                },
+                {
+                    name: "preferred_date",
+                    type: "CHIPS",
+                    label: "Preferred Date",
+                    style: {
+                        fontWeight: "bold",
+                    },
+                    items: [
+                        {
+                            id: "first_available",
+                            label: "First Available Date",
+                        },
+                    ],
+                    mandatoryGroup: "date",
+                    mandatoryError: "Please select either a date or first available date",
                 },
                 {
                     name: "card_time_preference",
                     variant: "body1",
                     style: {
-                        fontStyle: "italic",
+                        marginTop: "10px",
+                        fontWeight: "bold",
                     },
                     text: "Preferred Time",
                     type: "CARD",
                 },
+
                 {
                     name: "preferred_time",
                     type: "CHIPS",
                     label: "Preferred Time",
+                    style: {
+                        fontWeight: "bold",
+                    },
                     items: [
                         {
                             id: "first_available",
-                            label: "First Available",
+                            label: "First Available Time",
                         },
                         {
                             id: "morning",
@@ -395,9 +417,9 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
                 },
                 {
                     name: "time_request_note_card",
-                    text: "This is a preferred time for a possible visit for the service request.  Someone will call to confirm a time and we may have something sooner than what is shown above.",
+                    text: "These are only date and time preferences.  Someone will confirm the time with you.",
                     style: {
-                        fontStyle: "bold",
+                        fontStyle: "italic",
                     },
                     title: "Card",
                     type: "CARD",
@@ -424,19 +446,33 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
                 {
                     name: "confirmation_card1",
                     variant: "body1",
-                    condition: "!!dateTime && preferred_time.length > 0",
+                    condition: "(!!dateTime || !!preferred_date) && preferred_time.length > 0",
                     style: {
                         fontStyle: "normal",
                         fontWeight: "bold",
                     },
-                    text: "Time Preference",
+                    text: "Date & Time Preference",
                     type: "CARD",
                 },
                 {
-                    name: "confirmation_card12",
+                    name: "confirmation_card1_display_date",
                     variant: "body1",
                     condition: "!!dateTime && preferred_time.length > 0",
                     text: "#{dateTime}, #{preferred_time}",
+                    type: "CARD",
+                },
+                {
+                    name: "confirmation_card1_display_date",
+                    variant: "overline",
+                    condition: "!!dateTime && !!preferred_date && preferred_time.length > 0",
+                    text: "or",
+                    type: "CARD",
+                },
+                {
+                    name: "confirmation_card1_display_preferred_date",
+                    variant: "body1",
+                    condition: "!!preferred_date && preferred_time.length > 0",
+                    text: "#{preferred_date}, #{preferred_time}",
                     type: "CARD",
                 },
                 {
@@ -481,7 +517,7 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
                 {
                     name: "confirmation_card_details",
                     variant: "body1",
-                    text: "Details",
+                    text: "Request Details",
                     style: {
                         fontStyle: "normal",
                         fontWeight: "bold",
@@ -501,10 +537,30 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
                 },
                 {
                     name: "confirmation_card2",
-                    condition: "!!dateTime && preferred_time.length > 0",
-                    text: "Somebody will call you as soon as possible to finalize the time and collect final details.",
+                    condition: "(!!dateTime || !!preferred_date) && preferred_time.length > 0",
+                    text: "IMPORTANT",
                     align: "left",
                     type: "CARD",
+                    style: {
+                        marginTop: "15px",
+                        fontStyle: "normal",
+                        fontWeight: "bold",
+                    },
+                },
+                {
+                    name: "confirmation_card2_message",
+                    condition: "(!!dateTime || !!preferred_date) && preferred_time.length > 0",
+                    text: "This is not a confirmed appointment, someone will contact you soon to confirm the data & time as well as additional details",
+                    type: "CARD",
+                    align: "center",
+                    variant: "caption",
+                    style: {
+                        display: "flex",
+                        margin: "auto",
+                        width: "60%",
+                        fontWeight: "bold",
+                        fontSize: "0.8rem",
+                    },
                 },
             ],
         },
