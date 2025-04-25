@@ -1,3 +1,10 @@
+## [1.12.3](https://github.com/xapp-ai/contact-capture-handler/compare/v1.12.2...v1.12.3) (2025-04-18)
+
+
+### Bug Fixes
+
+* Override Title Ability ([#516](https://github.com/xapp-ai/contact-capture-handler/issues/516)) ([234596b](https://github.com/xapp-ai/contact-capture-handler/commit/234596badfc198c34936e558c18caa6f0d4233e0))
+
 ## [1.12.2](https://github.com/xapp-ai/contact-capture-handler/compare/v1.12.1...v1.12.2) (2025-03-06)
 
 

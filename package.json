@@ -4,7 +4,7 @@
   "publishConfig": {
     "access": "public"
   },
-  "version": "1.12.2",
+  "version": "1.12.3",
   "description": "A data driven contact information collector for 📣 stentor",
   "types": "lib/index",
   "typings": "lib/index",
@@ -42,17 +42,17 @@
     "semantic-release": "24.2.3",
     "sinon": "19.0.2",
     "sinon-chai": "3.7.0",
-    "stentor-constants": "1.60.5",
-    "stentor-context": "1.60.5",
-    "stentor-handler": "1.60.5",
-    "stentor-logger": "1.60.5",
-    "stentor-models": "1.60.5",
-    "stentor-request": "1.60.5",
-    "stentor-response": "1.60.5",
-    "stentor-service-fetch": "1.60.5",
-    "stentor-utils": "1.60.5",
+    "stentor-constants": "1.60.20",
+    "stentor-context": "1.60.21",
+    "stentor-handler": "1.60.21",
+    "stentor-logger": "1.60.21",
+    "stentor-models": "1.60.20",
+    "stentor-request": "1.60.21",
+    "stentor-response": "1.60.21",
+    "stentor-service-fetch": "1.60.20",
+    "stentor-utils": "1.60.21",
     "ts-node": "10.9.2",
-    "typescript": "5.8.2"
+    "typescript": "5.8.3"
   },
   "scripts": {
     "build": "tsc -d true -p .",
