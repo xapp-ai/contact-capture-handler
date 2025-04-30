@@ -146,15 +146,20 @@ describe(`#${getFormResponse.name}()`, () => {
                     expect(step.fields).to.have.length(2);
 
                     const chips = (step.fields[0] as FormChipsInput).items;
-                    expect(chips).to.have.length(3);
-                    //console.log(chips);
+                    expect(chips).to.have.length(2);
+
                     const chip1 = chips[0];
                     expect(chip1.id).to.equal("schedule_maintenance");
                     expect(chip1.label).to.equal("Schedule Maintenance");
 
-                    const chip3 = chips[2];
-                    expect(chip3.id).to.equal("contact_us");
-                    expect(chip3.label).to.equal("Contact Us");
+                    const chip2 = chips[1];
+                    expect(chip2.id).to.equal("emergency_service");
+                    expect(chip2.label).to.equal("Emergency Service");
+
+                    // Old behavior, we used to add a contact us chip if it wasn't there
+                    //const chip3 = chips[2];
+                    //expect(chip3.id).to.equal("contact_us");
+                    //expect(chip3.label).to.equal("Contact Us");
                 }
             });
         });
@@ -270,7 +275,7 @@ describe(`#${getFormResponse.name}()`, () => {
                     expect(step).to.exist;
 
                     const chips = (step.fields[0] as FormChipsInput).items;
-                    expect(chips).to.have.length(5);
+                    expect(chips).to.have.length(4);
 
                     const contactInfoStep = form.steps[1];
                     expect(contactInfoStep).to.exist;
@@ -353,15 +358,20 @@ describe(`#${getFormResponse.name}()`, () => {
                 expect(step.fields).to.have.length(2);
 
                 const chips = (step.fields[0] as FormChipsInput).items;
-                expect(chips).to.have.length(3);
+                expect(chips).to.have.length(2);
                 //console.log(chips);
                 const chip1 = chips[0];
                 expect(chip1.id).to.equal("schedule_maintenance");
                 expect(chip1.label).to.equal("Schedule Maintenance");
 
-                const chip3 = chips[2];
-                expect(chip3.id).to.equal("contact_us");
-                expect(chip3.label).to.equal("Contact Us");
+                const chip2 = chips[1];
+                expect(chip2.id).to.equal("emergency_service");
+                expect(chip2.label).to.equal("Emergency Service");
+
+                // old behavior, we used to add a contact us chip if it wasn't there
+                // const chip3 = chips[2];
+                // expect(chip3.id).to.equal("contact_us");
+                // expect(chip3.label).to.equal("Contact Us");
             }
         });
         it("returns a custom form", () => {
