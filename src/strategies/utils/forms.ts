@@ -134,25 +134,11 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
     ];
 
     let chips: SelectableItem[] = [...DEFAULT_SERVICE_CHIP_ITEMS];
-    // this is the default one
-    let contactUsChip = "contact_us";
+
+    // let contactUsChip = "contact_us";
 
     if (existsAndNotEmpty(props.serviceOptions)) {
         chips = props.serviceOptions;
-
-        // make sure it has a contact_us chip by determining if the label has "Contact" or "Get in Touch"
-        const found = chips.find((item) => {
-            return item.label.toLowerCase().includes("contact") || item.label.toLowerCase().includes("touch");
-        });
-
-        if (found) {
-            contactUsChip = found.id;
-        } else {
-            chips.push({
-                id: contactUsChip,
-                label: "Contact Us",
-            });
-        }
     }
 
     if (props?.service) {
@@ -306,12 +292,13 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
         });
     }
 
-    // figure out a preferred time conditional
-    // this is the default
-    let preferredTimeConditional = `!help_type.includes('${contactUsChip}')`;
+    // figure out a preferred time conditional based on the service options
+    let preferredTimeConditional = `!help_type.includes('contact_us')`;
+
     // we now loop through our services and build the conditional
-    if (existsAndNotEmpty(data?.capture?.serviceOptions)) {
-        preferredTimeConditional = data.capture.serviceOptions
+    // these will override the default, it turns into a
+    if (existsAndNotEmpty(props.serviceOptions)) {
+        preferredTimeConditional = props.serviceOptions
             .filter((service) => service.requiresDate)
             .map((chip) => {
                 return `help_type.includes('${chip.id}')`;
@@ -550,7 +537,7 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
                 {
                     name: "confirmation_card2_message",
                     condition: "(!!dateTime || !!preferred_date) && preferred_time.length > 0",
-                    text: "This is not a confirmed appointment, someone will contact you soon to confirm the data & time as well as additional details",
+                    text: "Someone will contact you soon to confirm the date & time as well as additional details",
                     type: "CARD",
                     align: "center",
                     variant: "caption",
