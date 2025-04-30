@@ -1,3 +1,10 @@
+## [1.13.1](https://github.com/xapp-ai/contact-capture-handler/compare/v1.13.0...v1.13.1) (2025-04-30)
+
+
+### Bug Fixes
+
+* No More Default Contact Us ([#523](https://github.com/xapp-ai/contact-capture-handler/issues/523)) ([14c2f68](https://github.com/xapp-ai/contact-capture-handler/commit/14c2f687c512af4937978de77e41afda53f985f7))
+
 # [1.13.0](https://github.com/xapp-ai/contact-capture-handler/compare/v1.12.3...v1.13.0) (2025-04-25)
 
 
