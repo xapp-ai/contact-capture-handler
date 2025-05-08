@@ -1,3 +1,10 @@
+## [1.13.2](https://github.com/xapp-ai/contact-capture-handler/compare/v1.13.1...v1.13.2) (2025-05-08)
+
+
+### Bug Fixes
+
+* Bug when no service options require a date ([#526](https://github.com/xapp-ai/contact-capture-handler/issues/526)) ([4cade78](https://github.com/xapp-ai/contact-capture-handler/commit/4cade780e1d08005666d6200e9c18e0f5c941317))
+
 ## [1.13.1](https://github.com/xapp-ai/contact-capture-handler/compare/v1.13.0...v1.13.1) (2025-04-30)
 
 
