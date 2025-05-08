@@ -304,6 +304,11 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
                 return `help_type.includes('${chip.id}')`;
             })
             .join(" || ");
+
+        // edge case, if we have an empty string, meaning they didn't want any of the chips to go to preferred time, we just false
+        if (preferredTimeConditional.length === 0) {
+            preferredTimeConditional = "false";
+        }
     }
 
     // make sure there is some kind of "contact" chip

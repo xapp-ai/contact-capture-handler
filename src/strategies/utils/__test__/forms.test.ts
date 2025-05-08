@@ -585,4 +585,39 @@ describe(`#${getContactFormFallback.name}()`, () => {
             expect(phone.name).to.equal("phone");
         });
     });
+    describe("when passed props with serviceOptions without any that need a date", () => {
+        it("returns as expected", () => {
+            const form = getContactFormFallback(
+                {
+                    capture: {
+                        data: [...SIMPLE_BLUEPRINT.data],
+                        serviceOptions: [
+                            {
+                                id: "schedule_maintenance",
+                                label: "Schedule Maintenance",
+                                requiresDate: false,
+                            },
+                            {
+                                id: "contact_us",
+                                label: "Contact Us",
+                                requiresDate: false,
+                            },
+                        ],
+                    },
+                },
+                { enablePreferredTime: true, service: "schedule_maintenance" },
+            );
+
+            expect(form).to.exist;
+
+            //  console.log(JSON.stringify(form, null, 2));
+
+            // get third step
+            const step = form.steps[2];
+            expect(step).to.exist;
+            // service field and message field
+            // make sure it has a condition
+            expect(step.condition).to.equal("false");
+        });
+    });
 });
