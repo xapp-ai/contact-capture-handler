@@ -752,7 +752,7 @@ function getForm(data: ContactCaptureData, props: FormResponseProps): MultistepF
                     });
 
                     if (serviceChip) {
-                        serviceChip.selected = true;
+                        (serviceChip as SelectableItem).selected = true;
                     }
                 }
             }
