@@ -1,3 +1,10 @@
+## [1.13.3](https://github.com/xapp-ai/contact-capture-handler/compare/v1.13.2...v1.13.3) (2025-06-26)
+
+
+### Bug Fixes
+
+* Support for Service Area Zip Code Whitelisting ([#537](https://github.com/xapp-ai/contact-capture-handler/issues/537)) ([ccb5f73](https://github.com/xapp-ai/contact-capture-handler/commit/ccb5f732c188f596e3331e9001226de0f5bc509a))
+
 ## [1.13.2](https://github.com/xapp-ai/contact-capture-handler/compare/v1.13.1...v1.13.2) (2025-05-08)
 
 
