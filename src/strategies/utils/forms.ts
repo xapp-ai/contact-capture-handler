@@ -173,7 +173,7 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
     // Setup the contact information capture
     let CONTACT_FIELDS: FormField[] = [...DEFAULT_CONTACT_FIELDS];
 
-    // see if we have any data fields and overide the defaults
+    // see if we have any data fields and override the defaults
     if (existsAndNotEmpty(data.capture.data)) {
         // first filter to make sure we only adding ones meant for form
         // and are active
@@ -311,8 +311,6 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
         }
     }
 
-    // make sure there is some kind of "contact" chip
-
     const PREFERRED_TIME_STEPS: FormStep[] = [
         {
             name: "service_request",
@@ -436,9 +434,9 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
                     type: "CARD",
                 },
                 {
-                    name: "confirmation_card1",
+                    name: "confirmation_card_data_and_time_preference",
                     variant: "body1",
-                    condition: "(!!dateTime || !!preferred_date) && preferred_time.length > 0",
+                    condition: "(!!dateTime || !!preferred_date) || preferred_time?.length > 0",
                     style: {
                         fontStyle: "normal",
                         fontWeight: "bold",
@@ -447,23 +445,23 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
                     type: "CARD",
                 },
                 {
-                    name: "confirmation_card1_display_date",
+                    name: "confirmation_card1_display_date_with_preferred_time",
                     variant: "body1",
-                    condition: "!!dateTime && preferred_time.length > 0",
+                    condition: "!!dateTime && preferred_time?.length > 0",
                     text: "#{dateTime}, #{preferred_time}",
                     type: "CARD",
                 },
                 {
-                    name: "confirmation_card1_display_date",
+                    name: "confirmation_card1_display_date_or_display",
                     variant: "overline",
-                    condition: "!!dateTime && !!preferred_date && preferred_time.length > 0",
+                    condition: "!!dateTime && !!preferred_date && preferred_time?.length > 0",
                     text: "or",
                     type: "CARD",
                 },
                 {
-                    name: "confirmation_card1_display_preferred_date",
+                    name: "confirmation_card1_display_preferred_date_with_preferred_time",
                     variant: "body1",
-                    condition: "!!preferred_date && preferred_time.length > 0",
+                    condition: "!!preferred_date && preferred_time?.length > 0",
                     text: "#{preferred_date}, #{preferred_time}",
                     type: "CARD",
                 },
@@ -528,8 +526,8 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
                     type: "CARD",
                 },
                 {
-                    name: "confirmation_card2",
-                    condition: "(!!dateTime || !!preferred_date) && preferred_time.length > 0",
+                    name: "confirmation_card2_important",
+                    condition: "(!!dateTime || !!preferred_date) && preferred_time?.length > 0",
                     text: "IMPORTANT",
                     align: "left",
                     type: "CARD",
@@ -541,7 +539,7 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
                 },
                 {
                     name: "confirmation_card2_message",
-                    condition: "(!!dateTime || !!preferred_date) && preferred_time.length > 0",
+                    condition: "(!!dateTime || !!preferred_date) && preferred_time?.length > 0",
                     text: "Someone will contact you soon to confirm the date & time as well as additional details",
                     type: "CARD",
                     align: "center",
@@ -583,6 +581,34 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
             ],
         },
     ];
+
+    // See if we have serviceArea on the capture blueprint data and we have either zip code or address input
+    const hasZipCodeInput = CONTACT_FIELDS.some((field) => {
+        return (
+            field.name.toLowerCase() === "zip" ||
+            (field.name.toLowerCase() === "address" && (field as FormFieldTextAddressInput).format === "ADDRESS")
+        );
+    });
+
+    if (hasZipCodeInput && existsAndNotEmpty(data?.capture?.serviceArea?.zipCodes)) {
+        // create the zip code string, which is just a comma separated list of zip codes
+        const zip = data.capture.serviceArea.zipCodes;
+
+        // insert a step at index 2
+        PREFERRED_TIME_STEPS.splice(2, 0, {
+            name: "out_of_service_area",
+            condition: `!isInServiceArea(zip, ['${zip.join("', '")}'])`,
+            nextAction: "omit",
+            fields: [
+                {
+                    name: "out_of_service_area",
+                    type: "CARD",
+                    variant: "body1",
+                    text: "We are sorry, your address is outside of our service area.",
+                },
+            ],
+        });
+    }
 
     const indexForPhoneOrEmail = emailFieldIndex >= 0 ? emailFieldIndex : phoneFieldIndex;
 

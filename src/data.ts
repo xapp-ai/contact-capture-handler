@@ -119,6 +119,19 @@ export interface ContactCaptureBlueprint {
      * Autocomplete parameters for any address fields.
      */
     addressAutocompleteParams?: AddressAutocompleteParameters;
+    /**
+     * Optional service area to restrict the capture to a certain area.
+     *
+     * If provided, the user will be told they are outside the service area if they provide a zip code that is not in the whitelist.  They will not be able to proceed with the capture.
+     */
+    serviceArea?: {
+        /**
+         * Whitelist of zip codes within the service area.
+         *
+         * Supports also zip code masks with asterisks, e.g. "12345", "1234*", "123*5", "12*45".
+         */
+        zipCodes?: string[];
+    };
 }
 
 export interface DataDescriptorBase {

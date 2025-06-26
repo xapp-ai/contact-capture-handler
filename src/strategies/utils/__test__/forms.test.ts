@@ -6,7 +6,13 @@ import { FormChipsInput, FormFieldTextAddressInput } from "stentor-models";
 
 import { isFormDateInput, isMultistepForm } from "../../../guards";
 import { getFormResponse, getContactFormFallback } from "../forms";
-import { CUSTOM_FORM, SIMPLE_BLUEPRINT, BLUEPRINT_WITHOUT_FULL_NAME, CUSTOM_FORM_WITH_DATE } from "./assets";
+import {
+    CUSTOM_FORM,
+    SIMPLE_BLUEPRINT,
+    BLUEPRINT_WITHOUT_FULL_NAME,
+    BLUEPRINT_WITH_SERVICE_AREA_ZIP_CODES,
+    CUSTOM_FORM_WITH_DATE,
+} from "./assets";
 
 chai.use(sinonChai);
 const expect = chai.expect;
@@ -618,6 +624,28 @@ describe(`#${getContactFormFallback.name}()`, () => {
             // service field and message field
             // make sure it has a condition
             expect(step.condition).to.equal("false");
+        });
+    });
+    describe("when passed props that have serviceArea", () => {
+        it("adds the out_of_service_area step", () => {
+            const form = getContactFormFallback(
+                { capture: BLUEPRINT_WITH_SERVICE_AREA_ZIP_CODES, enablePreferredTime: true },
+                {},
+            );
+            expect(form).to.exist;
+
+            //  console.log(JSON.stringify(form, null, 2));
+
+            expect(form.steps).to.have.length(6);
+
+            // get the third step
+            const step = form.steps[2];
+
+            //  console.log(JSON.stringify(step, null, 2));
+            expect(step).to.exist;
+            expect(step.name).to.equal("out_of_service_area");
+            // check the condition
+            expect(step.condition).to.equal("!isInServiceArea(zip, ['22***', '20***'])");
         });
     });
 });
