@@ -340,7 +340,6 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
             title: "Contact Information",
             fields: CONTACT_FIELDS,
         },
-        // Add potential out_of_service_area step here.
         {
             name: "preferred_time",
             nextAction: "submit",
