@@ -1,3 +1,10 @@
+## [1.13.4](https://github.com/xapp-ai/contact-capture-handler/compare/v1.13.3...v1.13.4) (2025-06-26)
+
+
+### Bug Fixes
+
+* Style Tweaks to Outside Service Area Message ([#538](https://github.com/xapp-ai/contact-capture-handler/issues/538)) ([a8c8014](https://github.com/xapp-ai/contact-capture-handler/commit/a8c8014dbafa08defbf227948699daf25e5c8b08))
+
 ## [1.13.3](https://github.com/xapp-ai/contact-capture-handler/compare/v1.13.2...v1.13.3) (2025-06-26)
 
 
