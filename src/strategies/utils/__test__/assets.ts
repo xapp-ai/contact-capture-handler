@@ -328,7 +328,7 @@ export const BLUEPRINT_WITH_SERVICE_AREA_ZIP_CODES: ContactCaptureBlueprint = {
         },
         {
             slotName: "zip",
-            active: false,
+            active: true,
             type: "ZIP",
             questionContentKey: "ZipQuestionContent",
         },

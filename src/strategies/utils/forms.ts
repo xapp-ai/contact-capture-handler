@@ -173,7 +173,7 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
     // Setup the contact information capture
     let CONTACT_FIELDS: FormField[] = [...DEFAULT_CONTACT_FIELDS];
 
-    // see if we have any data fields and overide the defaults
+    // see if we have any data fields and override the defaults
     if (existsAndNotEmpty(data.capture.data)) {
         // first filter to make sure we only adding ones meant for form
         // and are active
@@ -583,8 +583,15 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
         },
     ];
 
-    // See if we have serviceArea on the capture blueprint data.
-    if (existsAndNotEmpty(data?.capture?.serviceArea?.zipCodes)) {
+    // See if we have serviceArea on the capture blueprint data and we have either zip code or address input
+    const hasZipCodeInput = CONTACT_FIELDS.some((field) => {
+        return (
+            field.name.toLowerCase() === "zip" ||
+            (field.name.toLowerCase() === "address" && (field as FormFieldTextAddressInput).format === "ADDRESS")
+        );
+    });
+
+    if (hasZipCodeInput && existsAndNotEmpty(data?.capture?.serviceArea?.zipCodes)) {
         // create the zip code string, which is just a comma separated list of zip codes
         const zip = data.capture.serviceArea.zipCodes;
 
