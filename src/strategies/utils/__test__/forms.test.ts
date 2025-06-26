@@ -2,7 +2,7 @@
 import * as chai from "chai";
 import * as sinonChai from "sinon-chai";
 
-import { FormChipsInput, FormFieldTextAddressInput } from "stentor-models";
+import { FormChipsInput, FormFieldTextAddressInput, SelectableItem } from "stentor-models";
 
 import { isFormDateInput, isMultistepForm } from "../../../guards";
 import { getFormResponse, getContactFormFallback } from "../forms";
@@ -512,7 +512,7 @@ describe(`#${getContactFormFallback.name}()`, () => {
                 const items = (chipItem as FormChipsInput).items;
                 expect(items).to.have.length(4);
                 const schedule = items[0];
-                expect(schedule.selected).to.be.true;
+                expect((schedule as SelectableItem).selected).to.be.true;
                 expect(schedule.id).to.equal("schedule_maintenance");
                 expect(schedule.label).to.equal("Schedule Maintenance");
             }
@@ -540,7 +540,7 @@ describe(`#${getContactFormFallback.name}()`, () => {
                     const items = (chipItem as FormChipsInput).items;
                     expect(items).to.have.length(3);
                     const schedule = items[2];
-                    expect(schedule.selected).to.be.true;
+                    expect((schedule as SelectableItem).selected).to.be.true;
                     expect(schedule.id).to.equal("contact_us");
                     expect(schedule.label).to.equal("Contact Us");
                 }
