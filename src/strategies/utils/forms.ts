@@ -120,6 +120,10 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
             label: "Contact Info",
         },
         {
+            step: "out_of_service_area",
+            label: "Out of Service Area",
+        },
+        {
             step: "preferred_time",
             label: "Preferred Date",
         },
@@ -603,8 +607,14 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
                 {
                     name: "out_of_service_area",
                     type: "CARD",
-                    variant: "body1",
+                    variant: "h4",
                     text: "We are sorry, your address is outside of our service area.",
+                    style: {
+                        minHeight: "200px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                    },
                 },
             ],
         });
