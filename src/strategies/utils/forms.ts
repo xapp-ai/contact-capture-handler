@@ -120,10 +120,6 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
             label: "Contact Info",
         },
         {
-            step: "out_of_service_area",
-            label: "Out of Service Area",
-        },
-        {
             step: "preferred_time",
             label: "Preferred Date",
         },
@@ -617,6 +613,12 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
                     },
                 },
             ],
+        });
+
+        // add the header too.
+        PREFERRED_TIME_HEADER.splice(2, 0, {
+            step: "out_of_service_area",
+            label: "Out of Service Area",
         });
     }
 

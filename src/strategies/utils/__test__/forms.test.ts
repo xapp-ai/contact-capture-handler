@@ -638,6 +638,11 @@ describe(`#${getContactFormFallback.name}()`, () => {
 
             expect(form.steps).to.have.length(6);
 
+            // make sure we added the header
+            expect(form.header).to.have.length(6);
+            expect(form.header[2].label).to.equal("Out of Service Area");
+            expect(form.header[2].step).to.equal("out_of_service_area");
+
             // get the third step
             const step = form.steps[2];
 
