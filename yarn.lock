@@ -1111,12 +1111,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:22.16.0":
-  version: 22.16.0
-  resolution: "@types/node@npm:22.16.0"
+"@types/node@npm:22.16.4":
+  version: 22.16.4
+  resolution: "@types/node@npm:22.16.4"
   dependencies:
     undici-types: ~6.21.0
-  checksum: fccc24b9cfa95e165fb6a22871c812c9b021b0c686ced9b1572e1bd79ac3f8c78b36c04edfb2c96e10a8a1247c026d1dcad91c0c3e62dccf414057a37bac729d
+  checksum: 8a8cb8468187845c77403a41e98fe0fdd148741456382eb01bfaee6431303111eae5f2716ce9069b884518862ab96bcc04adf1c90a10ff35e88db19732b383c0
   languageName: node
   linkType: hard
 
@@ -1361,7 +1361,7 @@ __metadata:
     "@semantic-release/release-notes-generator": 14.0.3
     "@types/chai": 4.3.20
     "@types/mocha": 10.0.10
-    "@types/node": 22.16.0
+    "@types/node": 22.16.4
     "@types/sinon": 17.0.4
     "@types/sinon-chai": 3.2.12
     "@types/sparkpost": ^2.1.8
