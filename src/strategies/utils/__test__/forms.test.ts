@@ -653,4 +653,118 @@ describe(`#${getContactFormFallback.name}()`, () => {
             expect(step.condition).to.equal("!isInServiceArea(zip, ['22***', '20***'])");
         });
     });
+    describe("when passed props with selection dataField", () => {
+        it("creates a chips field with enum options", () => {
+            const form = getContactFormFallback(
+                {
+                    capture: {
+                        data: [
+                            {
+                                slotName: "full_name",
+                                questionContentKey: "name",
+                                type: "FULL_NAME",
+                                required: true,
+                                active: true,
+                            },
+                            {
+                                slotName: "phone",
+                                questionContentKey: "phone",
+                                type: "PHONE",
+                                required: true,
+                                active: true,
+                            },
+                            {
+                                slotName: "selection",
+                                questionContentKey: "service_type",
+                                type: "SELECTION",
+                                required: true,
+                                active: true,
+                                title: "Select a Service",
+                                enums: ["Solar Installation", "Roof Repair", "Gutter Cleaning"],
+                                radio: true,
+                            },
+                        ],
+                    },
+                },
+                { enablePreferredTime: true },
+            );
+
+            expect(form).to.exist;
+            expect(form.steps).to.have.length(5);
+
+            const step = form.steps[1]; // contact_info step in preferred time form
+            expect(step).to.exist;
+            // name, phone, selection (message is in step 0)
+            expect(step.fields).to.have.length(3);
+
+            // Find the selection field
+            const selectionField = step.fields.find((field) => field.name === "selection");
+            expect(selectionField).to.exist;
+            expect(selectionField?.type).to.equal("CHIPS");
+
+            if (selectionField?.type === "CHIPS") {
+                const chipsField = selectionField as FormChipsInput;
+                expect(chipsField.title).to.equal("Select a Service");
+                expect(chipsField.mandatory).to.be.true;
+                expect(chipsField.radio).to.be.true;
+                expect(chipsField.items).to.have.length(3);
+                
+                expect(chipsField.items[0].label).to.equal("Solar Installation");
+                expect(chipsField.items[0].id).to.equal("SOLAR INSTALLATION");
+                expect(chipsField.items[1].label).to.equal("Roof Repair");
+                expect(chipsField.items[1].id).to.equal("ROOF REPAIR");
+                expect(chipsField.items[2].label).to.equal("Gutter Cleaning");
+                expect(chipsField.items[2].id).to.equal("GUTTER CLEANING");
+            }
+        });
+    });
+    describe("when passed props with selection dataField without radio", () => {
+        it("creates a chips field allowing multiple selection", () => {
+            const form = getContactFormFallback(
+                {
+                    capture: {
+                        data: [
+                            {
+                                slotName: "full_name",
+                                questionContentKey: "name",
+                                type: "FULL_NAME",
+                                required: true,
+                                active: true,
+                            },
+                            {
+                                slotName: "phone",
+                                questionContentKey: "phone",
+                                type: "PHONE",
+                                required: true,
+                                active: true,
+                            },
+                            {
+                                slotName: "selection",
+                                questionContentKey: "interests",
+                                type: "SELECTION",
+                                required: false,
+                                active: true,
+                                enums: ["Solar", "Roofing", "Windows"],
+                            },
+                        ],
+                    },
+                },
+                { enablePreferredTime: true },
+            );
+
+            expect(form).to.exist;
+            
+            const step = form.steps[1]; // contact_info step in preferred time form
+            const selectionField = step.fields.find((field) => field.name === "selection");
+            expect(selectionField).to.exist;
+
+            if (selectionField?.type === "CHIPS") {
+                const chipsField = selectionField as FormChipsInput;
+                expect(chipsField.title).to.equal("Select an option"); // default title
+                expect(chipsField.mandatory).to.be.false;
+                expect(chipsField.radio).to.be.false; // default radio value
+                expect(chipsField.items).to.have.length(3);
+            }
+        });
+    });
 });
