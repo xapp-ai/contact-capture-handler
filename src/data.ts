@@ -167,6 +167,14 @@ export interface DataDescriptorBase {
      */
     required?: boolean;
     /**
+     * Optional title to be used for the field
+     */
+    title?: string;
+    /**
+     * On certain fields types, this will determine if they can select just one or more than one.  Supported on type "SELECTION".
+     */
+    radio?: boolean;
+    /**
      * Is the value being collected or not
      */
     active?: boolean;

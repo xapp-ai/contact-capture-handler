@@ -241,6 +241,25 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
                 if (typeof dataField.required === "boolean") {
                     requiredMessage = dataField.required;
                 }
+            } else if (dataField.slotName === "selection") {
+                const selectionField: FormChipsInput = {
+                    type: "CHIPS",
+                    name: "selection",
+                    radio: dataField.radio || false,
+                    title: dataField.title || "Select an option",
+                    mandatory: dataField.required || false,
+                    items: [],
+                };
+
+                // go through the enums on the dataField and make items
+                (dataField.enums || [])?.forEach((enumOption) => {
+                    selectionField.items.push({
+                        label: enumOption,
+                        id: enumOption.toUpperCase(),
+                    });
+                });
+
+                CONTACT_FIELDS.push(selectionField);
             }
         });
     }
