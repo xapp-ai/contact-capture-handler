@@ -1,3 +1,10 @@
+## [1.13.5](https://github.com/xapp-ai/contact-capture-handler/compare/v1.13.4...v1.13.5) (2025-08-26)
+
+
+### Bug Fixes
+
+* Selection Field Type Support in the Form ([#559](https://github.com/xapp-ai/contact-capture-handler/issues/559)) ([f2a95de](https://github.com/xapp-ai/contact-capture-handler/commit/f2a95def8690e6beb7f1ceae657154570f804af3))
+
 ## [1.13.4](https://github.com/xapp-ai/contact-capture-handler/compare/v1.13.3...v1.13.4) (2025-06-26)
 
 
