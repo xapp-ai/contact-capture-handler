@@ -11,7 +11,7 @@ import {
     Response,
     Request,
     RequestSlotMap,
-    SessionStore
+    SessionStore,
 } from "stentor-models";
 import { requestSlotValueToString } from "stentor-utils";
 import { compileResponse } from "stentor-response";
@@ -42,7 +42,6 @@ export interface FormActionResponseData {
     followupForm?: string;
 }
 
-
 function leadSummary(slots: RequestSlotMap, leadDataList: CaptureRuntimeData): string {
     if (!leadDataList?.data) {
         return "";
@@ -69,13 +68,13 @@ function leadSummary(slots: RequestSlotMap, leadDataList: CaptureRuntimeData): s
 
 /**
  * Turns the busy days to date strings comma delimited for easier widget consumption.
- * 
+ *
  * @param busyDays
  */
 function formatBusyDays(busyDays: CrmServiceAvailability): string {
     const busyDates: string[] = [];
 
-    busyDays.unavailabilities.forEach(value => {
+    busyDays.unavailabilities.forEach((value) => {
         if (!value.available) {
             busyDates.push(value.date.date);
         }
@@ -86,7 +85,6 @@ function formatBusyDays(busyDays: CrmServiceAvailability): string {
 
 export class FormResponseStrategy implements ResponseStrategy {
     public async getResponse(handler: ContactCaptureHandler, request: Request, context: Context): Promise<Response> {
-
         const slots: RequestSlotMap = context.session.get(Constants.CONTACT_CAPTURE_SLOTS);
 
         // Our response that we will end up returning
@@ -107,24 +105,33 @@ export class FormResponseStrategy implements ResponseStrategy {
             enablePreferredTime = true;
         }
 
-        const service: string | undefined = typeof request?.attributes?.service === "string" ? request.attributes.service : undefined;
+        const service: string | undefined =
+            typeof request?.attributes?.service === "string" ? request.attributes.service : undefined;
 
         // First request through, they don't have the lead data list
         // so we generate one and send it on.  This handles a majority of the form requests
         // Note: We check isIntentRequest because it is possible that we have existing leads data BUT we are in a new session
         // which means we have to just start over.
         if (!leadDataList || request.isNewSession) {
-
             leadDataList = newLeadGenerationData(handler.data, "FORM");
 
             // First call - send the main form
-            response = getFormResponse(handler.data, { formName: handler.data.CAPTURE_MAIN_FORM, service, enablePreferredTime });
+            response = getFormResponse(handler.data, {
+                formName: handler.data.CAPTURE_MAIN_FORM,
+                service,
+                enablePreferredTime,
+            });
 
             // Update the list on session
             context.session.set(Constants.CONTACT_CAPTURE_LIST, leadDataList);
 
             // First availability
-            await this.addAvailability(response, context.services.crmService, context.session, handler.data?.availabilitySettings);
+            await this.addAvailability(
+                response,
+                context.services.crmService,
+                context.session,
+                handler.data?.availabilitySettings,
+            );
 
             return response;
         }
@@ -158,7 +165,7 @@ export class FormResponseStrategy implements ResponseStrategy {
             // Data will only exist when it is a ChannelActionRequest
             const data: FormActionResponseData = request.attributes?.data as FormActionResponseData;
 
-            // debug here 
+            // debug here
             if (!data?.step) {
                 log().warn("No step in the data");
                 // eslint-disable-next-line no-console
@@ -166,19 +173,33 @@ export class FormResponseStrategy implements ResponseStrategy {
                 // eslint-disable-next-line no-console
                 console.log(data);
             }
-            const stepFromData = getStepFromData(handler.data, { formName: data?.form, enablePreferredTime, service }, data?.step);
+            const stepFromData = getStepFromData(
+                handler.data,
+                { formName: data?.form, enablePreferredTime, service },
+                data?.step,
+            );
 
             // Send the requested form
             if (data.followupForm) {
                 response = getFormResponse(handler.data, { formName: data.followupForm, enablePreferredTime, service });
-                await this.addAvailability(response, context.services.crmService, context.session, handler.data?.availabilitySettings);
+                await this.addAvailability(
+                    response,
+                    context.services.crmService,
+                    context.session,
+                    handler.data?.availabilitySettings,
+                );
                 return response;
             }
 
             // Don't submit until the form says so
             if (!stepFromData.crmSubmit) {
                 response = {};
-                await this.addAvailability(response, context.services.crmService, context.session, handler.data?.availabilitySettings);
+                await this.addAvailability(
+                    response,
+                    context.services.crmService,
+                    context.session,
+                    handler.data?.availabilitySettings,
+                );
                 return response;
             }
 
@@ -245,24 +266,38 @@ export class FormResponseStrategy implements ResponseStrategy {
 
         // form widget - no response
         response = {};
-        await this.addAvailability(response, context.services.crmService, context.session, handler.data?.availabilitySettings);
+        await this.addAvailability(
+            response,
+            context.services.crmService,
+            context.session,
+            handler.data?.availabilitySettings,
+        );
         return response;
     }
 
-    private async addAvailability(response: Response, crmService: CrmService, session: SessionStore, settings?: CrmServiceAvailabilitySettings): Promise<Response> {
+    private async addAvailability(
+        response: Response,
+        crmService: CrmService,
+        session: SessionStore,
+        settings?: CrmServiceAvailabilitySettings,
+    ): Promise<Response> {
         const leadDataList: CaptureRuntimeData = session.get(Constants.CONTACT_CAPTURE_LIST);
 
-        let busyDays: CrmServiceAvailability = session.get(Constants.CONTACT_CAPTURE_BUSY_DAYS) as CrmServiceAvailability;
+        let busyDays: CrmServiceAvailability = session.get(
+            Constants.CONTACT_CAPTURE_BUSY_DAYS,
+        ) as CrmServiceAvailability;
 
         // First time?
         if (!busyDays && typeof crmService?.getAvailability === "function") {
-
             const options: CrmServiceAvailabilityOptions = { ...settings };
 
-            busyDays = await crmService.getAvailability({
-                start: null,
-                end: null,
-            }, options);
+            busyDays = await crmService.getAvailability(
+                {
+                    start: null,
+                    end: null,
+                },
+                options,
+            );
 
             session.set(Constants.CONTACT_CAPTURE_BUSY_DAYS, busyDays);
         } else {
@@ -287,7 +322,7 @@ export class FormResponseStrategy implements ResponseStrategy {
                         session.set(Constants.CONTACT_CAPTURE_JOB_TYPE, jobType);
 
                         let options: CrmServiceAvailabilityOptions = {
-                            jobType
+                            jobType,
                         };
 
                         if (settings) {
@@ -302,7 +337,7 @@ export class FormResponseStrategy implements ResponseStrategy {
                                 start: null,
                                 end: null,
                             },
-                            options
+                            options,
                         );
 
                         session.set(Constants.CONTACT_CAPTURE_BUSY_DAYS, busyDays);
@@ -318,7 +353,7 @@ export class FormResponseStrategy implements ResponseStrategy {
                     timeToLive: {},
                     parameters: {
                         busyDays: formatBusyDays(busyDays),
-                    }
+                    },
                 },
             ],
         };
@@ -326,4 +361,3 @@ export class FormResponseStrategy implements ResponseStrategy {
         return response;
     }
 }
-

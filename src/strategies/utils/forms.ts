@@ -71,7 +71,16 @@ export interface FormResponseProps {
      */
     formName?: string;
     /**
-     * Optional service options to display in the fallback form
+     * Optional disclaimer to show before submitting the form.
+     */
+    disclaimer?: {
+        text: string;
+        requireAccepted?: boolean;
+    };
+    /**
+     * Optional services that will be displayed to the user in the form widget.
+     *
+     * For example: "Get Quote", "Request HVAC Service", "Schedule Appointment"
      */
     serviceOptions?: ContactCaptureService[];
     /**
@@ -108,6 +117,10 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
 
     if (data.capture?.messageDescription) {
         props.messageDescription = data.capture?.messageDescription;
+    }
+
+    if (data.capture?.disclaimer) {
+        props.disclaimer = data.capture?.disclaimer;
     }
 
     const PREFERRED_TIME_HEADER = [
@@ -330,6 +343,184 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
         }
     }
 
+    const confirmationFields: FormField[] = [
+        {
+            name: "confirmation_card0",
+            variant: "h6",
+            style: {
+                fontStyle: "normal",
+                fontWeight: "bold",
+            },
+            text: "#{help_type} Request",
+            type: "CARD",
+        },
+        {
+            name: "confirmation_card_data_and_time_preference",
+            variant: "body1",
+            condition: "(!!dateTime || !!preferred_date) || preferred_time?.length > 0",
+            style: {
+                fontStyle: "normal",
+                fontWeight: "bold",
+            },
+            text: "Date & Time Preference",
+            type: "CARD",
+        },
+        {
+            name: "confirmation_card1_display_date_with_preferred_time",
+            variant: "body1",
+            condition: "!!dateTime && preferred_time?.length > 0",
+            text: "#{dateTime}, #{preferred_time}",
+            type: "CARD",
+        },
+        {
+            name: "confirmation_card1_display_date_or_display",
+            variant: "overline",
+            condition: "!!dateTime && !!preferred_date && preferred_time?.length > 0",
+            text: "or",
+            type: "CARD",
+        },
+        {
+            name: "confirmation_card1_display_preferred_date_with_preferred_time",
+            variant: "body1",
+            condition: "!!preferred_date && preferred_time?.length > 0",
+            text: "#{preferred_date}, #{preferred_time}",
+            type: "CARD",
+        },
+        {
+            name: "confirmation_card_details",
+            variant: "body1",
+            text: "Contact Information",
+            style: {
+                fontStyle: "normal",
+                fontWeight: "bold",
+            },
+            condition: "!!message || !!address || !!phone || !!email",
+            type: "CARD",
+        },
+        {
+            name: "confirmation_card_name",
+            variant: "body1",
+            text: "#{full_name}",
+            condition: "!!full_name",
+            type: "CARD",
+        },
+        {
+            name: "confirmation_card_address",
+            variant: "body1",
+            text: "#{address}",
+            condition: "!!address",
+            type: "CARD",
+        },
+        {
+            name: "confirmation_card_phone",
+            variant: "body1",
+            text: "#{phone}",
+            condition: "!!phone",
+            type: "CARD",
+        },
+        {
+            name: "confirmation_card_email",
+            variant: "body1",
+            text: "#{email}",
+            condition: "!!email",
+            type: "CARD",
+        },
+        {
+            name: "confirmation_card_details",
+            variant: "body1",
+            text: "Request Details",
+            style: {
+                fontStyle: "normal",
+                fontWeight: "bold",
+            },
+            condition: "!!message",
+            type: "CARD",
+        },
+        {
+            name: "confirmation_card_message",
+            variant: "body1",
+            text: "#{message}",
+            condition: "!!message",
+            style: {
+                fontStyle: "italic",
+            },
+            type: "CARD",
+        },
+        {
+            name: "confirmation_card2_important",
+            condition: "(!!dateTime || !!preferred_date) && preferred_time?.length > 0",
+            text: "IMPORTANT",
+            align: "left",
+            type: "CARD",
+            style: {
+                marginTop: "15px",
+                fontStyle: "normal",
+                fontWeight: "bold",
+            },
+        },
+        {
+            name: "confirmation_card2_message",
+            condition: "(!!dateTime || !!preferred_date) && preferred_time?.length > 0",
+            text: "Someone from our team will contact you soon to confirm the date & time as well as additional details",
+            type: "CARD",
+            align: "center",
+            variant: "caption",
+            style: {
+                display: "flex",
+                margin: "auto",
+                width: "60%",
+                fontWeight: "bold",
+                fontSize: "0.8rem",
+            },
+        },
+    ];
+
+    // Add disclaimer fields if provided
+    if (props.disclaimer) {
+        confirmationFields.push({
+            name: "confirmation_card3_disclaimer",
+            //   condition: "!!help_type && !help_type.includes('contact_us')",
+            text: "DISCLAIMER",
+            align: "left",
+            type: "CARD",
+            style: {
+                marginTop: "15px",
+                fontStyle: "normal",
+                fontWeight: "bold",
+            },
+        });
+        confirmationFields.push({
+            name: "confirmation_card3",
+            //   condition: "!!help_type && !help_type.includes('contact_us')",
+            text: props.disclaimer.text,
+            type: "CARD",
+            style: {
+                display: "flex",
+                margin: "auto",
+                width: "60%",
+                fontWeight: "bold",
+                fontSize: "0.8rem",
+            },
+        });
+
+        // Add consent checkbox if required
+        if (props.disclaimer.requireAccepted) {
+            confirmationFields.push({
+                name: "consent_approval",
+                //   condition: "!!help_type && !help_type.includes('contact_us')",
+                type: "CHECK",
+                items: [
+                    {
+                        id: "agreed",
+                        label: "I agree",
+                    },
+                ],
+                mandatory: true,
+                mandatoryError: 'Please click "I agree" to submit your request.',
+            });
+        }
+    }
+
     const PREFERRED_TIME_STEPS: FormStep[] = [
         {
             name: "service_request",
@@ -426,7 +617,7 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
                 },
                 {
                     name: "time_request_note_card",
-                    text: "These are only date and time preferences.  Someone will confirm the time with you.",
+                    text: "These are only date and time preferences. Someone will confirm the date & time with you.",
                     style: {
                         fontStyle: "italic",
                     },
@@ -441,137 +632,7 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
             nextLabel: "Submit",
             crmSubmit: true,
             nextAction: "submit",
-            fields: [
-                {
-                    name: "confirmation_card0",
-                    variant: "h6",
-                    style: {
-                        fontStyle: "normal",
-                        fontWeight: "bold",
-                    },
-                    text: "#{help_type} Request",
-                    type: "CARD",
-                },
-                {
-                    name: "confirmation_card_data_and_time_preference",
-                    variant: "body1",
-                    condition: "(!!dateTime || !!preferred_date) || preferred_time?.length > 0",
-                    style: {
-                        fontStyle: "normal",
-                        fontWeight: "bold",
-                    },
-                    text: "Date & Time Preference",
-                    type: "CARD",
-                },
-                {
-                    name: "confirmation_card1_display_date_with_preferred_time",
-                    variant: "body1",
-                    condition: "!!dateTime && preferred_time?.length > 0",
-                    text: "#{dateTime}, #{preferred_time}",
-                    type: "CARD",
-                },
-                {
-                    name: "confirmation_card1_display_date_or_display",
-                    variant: "overline",
-                    condition: "!!dateTime && !!preferred_date && preferred_time?.length > 0",
-                    text: "or",
-                    type: "CARD",
-                },
-                {
-                    name: "confirmation_card1_display_preferred_date_with_preferred_time",
-                    variant: "body1",
-                    condition: "!!preferred_date && preferred_time?.length > 0",
-                    text: "#{preferred_date}, #{preferred_time}",
-                    type: "CARD",
-                },
-                {
-                    name: "confirmation_card_details",
-                    variant: "body1",
-                    text: "Contact Information",
-                    style: {
-                        fontStyle: "normal",
-                        fontWeight: "bold",
-                    },
-                    condition: "!!message || !!address || !!phone || !!email",
-                    type: "CARD",
-                },
-                {
-                    name: "confirmation_card_name",
-                    variant: "body1",
-                    text: "#{full_name}",
-                    condition: "!!full_name",
-                    type: "CARD",
-                },
-                {
-                    name: "confirmation_card_address",
-                    variant: "body1",
-                    text: "#{address}",
-                    condition: "!!address",
-                    type: "CARD",
-                },
-                {
-                    name: "confirmation_card_phone",
-                    variant: "body1",
-                    text: "#{phone}",
-                    condition: "!!phone",
-                    type: "CARD",
-                },
-                {
-                    name: "confirmation_card_email",
-                    variant: "body1",
-                    text: "#{email}",
-                    condition: "!!email",
-                    type: "CARD",
-                },
-                {
-                    name: "confirmation_card_details",
-                    variant: "body1",
-                    text: "Request Details",
-                    style: {
-                        fontStyle: "normal",
-                        fontWeight: "bold",
-                    },
-                    condition: "!!message",
-                    type: "CARD",
-                },
-                {
-                    name: "confirmation_card_message",
-                    variant: "body1",
-                    text: "#{message}",
-                    condition: "!!message",
-                    style: {
-                        fontStyle: "italic",
-                    },
-                    type: "CARD",
-                },
-                {
-                    name: "confirmation_card2_important",
-                    condition: "(!!dateTime || !!preferred_date) && preferred_time?.length > 0",
-                    text: "IMPORTANT",
-                    align: "left",
-                    type: "CARD",
-                    style: {
-                        marginTop: "15px",
-                        fontStyle: "normal",
-                        fontWeight: "bold",
-                    },
-                },
-                {
-                    name: "confirmation_card2_message",
-                    condition: "(!!dateTime || !!preferred_date) && preferred_time?.length > 0",
-                    text: "Someone will contact you soon to confirm the date & time as well as additional details",
-                    type: "CARD",
-                    align: "center",
-                    variant: "caption",
-                    style: {
-                        display: "flex",
-                        margin: "auto",
-                        width: "60%",
-                        fontWeight: "bold",
-                        fontSize: "0.8rem",
-                    },
-                },
-            ],
+            fields: confirmationFields,
         },
         {
             name: "thank_you",
@@ -643,6 +704,67 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
 
     const indexForPhoneOrEmail = emailFieldIndex >= 0 ? emailFieldIndex : phoneFieldIndex;
 
+    // Build contact-only form fields
+    const contactOnlyFields: FormField[] = [
+        // name
+        { ...CONTACT_FIELDS[nameFieldIndex] },
+        // phone (or email)
+        { ...CONTACT_FIELDS[indexForPhoneOrEmail] },
+        // message
+        {
+            name: "message",
+            label: props.messageDescription || "Let us know what we can help you with.",
+            rows: 3,
+            type: "TEXT",
+            multiline: true,
+            mandatory: true,
+        },
+    ];
+
+    // Add disclaimer fields to contact-only form if provided
+    if (props.disclaimer) {
+        contactOnlyFields.push({
+            name: "confirmation_card3_disclaimer",
+            text: "DISCLAIMER",
+            align: "left",
+            type: "CARD",
+            style: {
+                marginTop: "15px",
+                fontStyle: "normal",
+                fontWeight: "bold",
+            },
+        });
+
+        contactOnlyFields.push({
+            name: "confirmation_card3_disclaimer_text",
+            text: props.disclaimer.text,
+            type: "CARD",
+            style: {
+                display: "flex",
+                margin: "auto",
+                width: "60%",
+                fontWeight: "bold",
+                fontSize: "0.8rem",
+            },
+        });
+
+        // Add consent checkbox if required
+        if (props.disclaimer.requireAccepted) {
+            contactOnlyFields.push({
+                name: "consent_approval",
+                type: "CHECK",
+                items: [
+                    {
+                        id: "agreed",
+                        label: "I agree",
+                    },
+                ],
+                mandatory: true,
+                mandatoryError: 'Please click "I agree" to submit your request.',
+            });
+        }
+    }
+
     const CONTACT_ONLY_STEPS: FormStep[] = [
         {
             crmSubmit: true,
@@ -650,21 +772,7 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
             name: "contact_info",
             nextLabel: "Submit",
             nextAction: "submit",
-            fields: [
-                // name
-                { ...CONTACT_FIELDS[nameFieldIndex] },
-                // phone (or email)
-                { ...CONTACT_FIELDS[indexForPhoneOrEmail] },
-                // message
-                {
-                    name: "message",
-                    label: props.messageDescription || "Let us know what we can help you with.",
-                    rows: 3,
-                    type: "TEXT",
-                    multiline: true,
-                    mandatory: true,
-                },
-            ],
+            fields: contactOnlyFields,
             title: "Contact Information",
         },
         {
@@ -674,7 +782,7 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
                     header: {
                         title: "Thank You",
                     },
-                    text: "Somebody will contact you as soon as possible to follow up with your request.",
+                    text: "Somebody from our team will contact you as soon as possible to follow up with your request.",
                     type: "CARD",
                 },
             ],
