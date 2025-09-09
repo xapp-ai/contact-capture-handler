@@ -455,7 +455,7 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
         {
             name: "confirmation_card2_message",
             condition: "(!!dateTime || !!preferred_date) && preferred_time?.length > 0",
-            text: "Someone will contact you soon to confirm the date & time as well as additional details",
+            text: "Someone from our team will contact you soon to confirm the date & time as well as additional details",
             type: "CARD",
             align: "center",
             variant: "caption",
@@ -491,7 +491,7 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
                     },
                 ],
                 mandatory: true,
-                mandatoryError: 'Please click "I agree" to submit!',
+                mandatoryError: 'Please click "I agree" to submit your request.',
             });
         }
     }
@@ -738,7 +738,7 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
                     header: {
                         title: "Thank You",
                     },
-                    text: "Somebody will contact you as soon as possible to follow up with your request.",
+                    text: "Somebody from our team will contact you as soon as possible to follow up with your request.",
                     type: "CARD",
                 },
             ],
