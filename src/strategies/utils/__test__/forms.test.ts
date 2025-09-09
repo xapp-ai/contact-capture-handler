@@ -793,7 +793,7 @@ describe(`#${getContactFormFallback.name}()`, () => {
             expect((disclaimerField as FormCardInput)?.text).to.equal(
                 "Estimates to replace heating and cooling systems are free of charge. Repair jobs include a diagnostic fee of $99*. Service agreement customers pay $0 diagnostic fee.",
             );
-            expect(disclaimerField?.condition).to.equal("!!help_type && !help_type.includes('contact_us')");
+            // expect(disclaimerField?.condition).to.equal("!!help_type && !help_type.includes('contact_us')");
         });
 
         it("adds disclaimer and consent checkbox when requireAccepted is true", () => {
@@ -808,22 +808,37 @@ describe(`#${getContactFormFallback.name}()`, () => {
                 },
             );
 
+            // console.log(JSON.stringify(form, null, 2));
+
             expect(form).to.exist;
             const confirmationStep = form.steps[3]; // confirmation step
             expect(confirmationStep).to.exist;
+
+            // Find the DISCLAIMER title field
+            const titleField = confirmationStep.fields.find((field) => field.name === "confirmation_card3_disclaimer");
+            expect(titleField).to.exist;
+            expect(titleField?.type).to.equal("CARD");
+            if (titleField?.type === "CARD") {
+                expect((titleField as FormCardInput)?.text).to.equal("DISCLAIMER");
+            }
 
             // Find the disclaimer field
             const disclaimerField = confirmationStep.fields.find((field) => field.name === "confirmation_card3");
             expect(disclaimerField).to.exist;
             expect(disclaimerField?.type).to.equal("CARD");
+            if (disclaimerField?.type === "CARD") {
+                expect((disclaimerField as FormCardInput)?.text).to.equal(
+                    "Estimates to replace heating and cooling systems are free of charge. Repair jobs include a diagnostic fee of $99*. Service agreement customers pay $0 diagnostic fee.",
+                );
+            }
 
             // Find the consent checkbox field
             const consentField = confirmationStep.fields.find((field) => field.name === "consent_approval");
             expect(consentField).to.exist;
             expect(consentField?.type).to.equal("CHECK");
             expect(consentField?.mandatory).to.be.true;
-            expect(consentField?.mandatoryError).to.equal('Please click "I agree" to submit!');
-            expect(consentField?.condition).to.equal("!!help_type && !help_type.includes('contact_us')");
+            expect(consentField?.mandatoryError).to.equal('Please click "I agree" to submit your request.');
+            // expect(consentField?.condition).to.equal("!!help_type && !help_type.includes('contact_us')");
         });
 
         it("adds disclaimer to contact-only form", () => {
@@ -844,7 +859,9 @@ describe(`#${getContactFormFallback.name}()`, () => {
             expect(contactStep.name).to.equal("contact_info");
 
             // Find the disclaimer field
-            const disclaimerField = contactStep.fields.find((field) => field.name === "confirmation_card3");
+            const disclaimerField = contactStep.fields.find(
+                (field) => field.name === "confirmation_card3_disclaimer_text",
+            );
             expect(disclaimerField).to.exist;
             expect(disclaimerField?.type).to.equal("CARD");
             expect((disclaimerField as FormCardInput)?.text).to.equal("This is a disclaimer for contact form.");

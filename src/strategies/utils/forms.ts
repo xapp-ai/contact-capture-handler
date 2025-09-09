@@ -472,17 +472,36 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
     // Add disclaimer fields if provided
     if (props.disclaimer) {
         confirmationFields.push({
+            name: "confirmation_card3_disclaimer",
+            //   condition: "!!help_type && !help_type.includes('contact_us')",
+            text: "DISCLAIMER",
+            align: "left",
+            type: "CARD",
+            style: {
+                marginTop: "15px",
+                fontStyle: "normal",
+                fontWeight: "bold",
+            },
+        });
+        confirmationFields.push({
             name: "confirmation_card3",
-            condition: "!!help_type && !help_type.includes('contact_us')",
+            //   condition: "!!help_type && !help_type.includes('contact_us')",
             text: props.disclaimer.text,
             type: "CARD",
+            style: {
+                display: "flex",
+                margin: "auto",
+                width: "60%",
+                fontWeight: "bold",
+                fontSize: "0.8rem",
+            },
         });
 
         // Add consent checkbox if required
         if (props.disclaimer.requireAccepted) {
             confirmationFields.push({
                 name: "consent_approval",
-                condition: "!!help_type && !help_type.includes('contact_us')",
+                //   condition: "!!help_type && !help_type.includes('contact_us')",
                 type: "CHECK",
                 items: [
                     {
@@ -592,7 +611,7 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
                 },
                 {
                     name: "time_request_note_card",
-                    text: "These are only date and time preferences.  Someone will confirm the time with you.",
+                    text: "These are only date and time preferences. Someone will confirm the date & time with you.",
                     style: {
                         fontStyle: "italic",
                     },
@@ -699,9 +718,28 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
     // Add disclaimer fields to contact-only form if provided
     if (props.disclaimer) {
         contactOnlyFields.push({
-            name: "confirmation_card3",
+            name: "confirmation_card3_disclaimer",
+            text: "DISCLAIMER",
+            align: "left",
+            type: "CARD",
+            style: {
+                marginTop: "15px",
+                fontStyle: "normal",
+                fontWeight: "bold",
+            },
+        });
+
+        contactOnlyFields.push({
+            name: "confirmation_card3_disclaimer_text",
             text: props.disclaimer.text,
             type: "CARD",
+            style: {
+                display: "flex",
+                margin: "auto",
+                width: "60%",
+                fontWeight: "bold",
+                fontSize: "0.8rem",
+            },
         });
 
         // Add consent checkbox if required
@@ -716,7 +754,7 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
                     },
                 ],
                 mandatory: true,
-                mandatoryError: 'Please click "I agree" to submit!',
+                mandatoryError: 'Please click "I agree" to submit your request.',
             });
         }
     }
