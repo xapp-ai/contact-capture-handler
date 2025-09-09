@@ -107,10 +107,6 @@ export interface ContactCaptureBlueprint
      */
     data: DataDescriptorBase[];
     /**
-     * Optional message description to help people leave meaningful messages, overrides the multiline text field default message.
-     */
-    messageDescription?: string;
-    /**
      * Autocomplete parameters for any address fields.
      */
     addressAutocompleteParams?: AddressAutocompleteParameters;
