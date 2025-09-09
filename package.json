@@ -4,7 +4,7 @@
   "publishConfig": {
     "access": "public"
   },
-  "version": "1.13.5",
+  "version": "1.14.0",
   "description": "A data driven contact information collector for 📣 stentor",
   "types": "lib/index",
   "typings": "lib/index",
@@ -14,7 +14,7 @@
     "lib"
   ],
   "engines": {
-    "node": "^12 || ^14 || ^16 || ^18 || ^20 || ^22.0.0"
+    "node": "^12 || ^14 || ^16 || ^18 || ^20 || ^22"
   },
   "devDependencies": {
     "@semantic-release/changelog": "6.0.3",
@@ -58,7 +58,7 @@
     "build": "tsc -d true -p .",
     "clean": "rm -rf ./lib/*",
     "lint": "eslint 'src/**/*.{ts,tsx}'",
-    "test": "mocha --recursive -r ts-node/register \"./src/**/*.test.ts\"",
+    "test": "NODE_OPTIONS=\"--loader=ts-node/esm\" mocha --recursive -r ts-node/register \"./src/**/*.test.ts\"",
     "ftest": "mocha --recursive -r ts-node/register \"./src/**/*.ftest.ts\""
   },
   "peerDependencies": {
