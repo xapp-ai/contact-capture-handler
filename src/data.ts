@@ -100,19 +100,14 @@ export interface ContactCaptureData extends QuestionAnsweringData, Pick<FormResp
     availabilitySettings?: CrmServiceAvailabilitySettings;
 }
 
-export interface ContactCaptureBlueprint {
+export interface ContactCaptureBlueprint
+    extends Pick<FormResponseProps, "disclaimer" | "messageDescription" | "serviceOptions"> {
     /**
      * The items to capture from the user.
      */
     data: DataDescriptorBase[];
     /**
-     * Optional services that will be displayed to the user in the form widget.
-     *
-     * For example: "Get Quote", "Request HVAC Service", "Schedule Appointment"
-     */
-    serviceOptions?: ContactCaptureService[];
-    /**
-     * Option to override the default message description in the multiline text field.
+     * Optional message description to help people leave meaningful messages, overrides the multiline text field default message.
      */
     messageDescription?: string;
     /**

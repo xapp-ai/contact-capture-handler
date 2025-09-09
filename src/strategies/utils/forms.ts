@@ -71,7 +71,16 @@ export interface FormResponseProps {
      */
     formName?: string;
     /**
-     * Optional service options to display in the fallback form
+     * Optional disclaimer to show before submitting the form.
+     */
+    disclaimer?: {
+        text: string;
+        requireAccepted?: boolean;
+    };
+    /**
+     * Optional services that will be displayed to the user in the form widget.
+     *
+     * For example: "Get Quote", "Request HVAC Service", "Schedule Appointment"
      */
     serviceOptions?: ContactCaptureService[];
     /**
@@ -90,13 +99,6 @@ export interface FormResponseProps {
      * The fields to capture
      */
     fields?: DataDescriptorBase[];
-    /**
-     * Optional disclaimer to show before submitting the form.
-     */
-    disclaimer?: {
-        text: string;
-        requireAccepted?: boolean;
-    };
 }
 
 /**
@@ -115,6 +117,10 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
 
     if (data.capture?.messageDescription) {
         props.messageDescription = data.capture?.messageDescription;
+    }
+
+    if (data.capture?.disclaimer) {
+        props.disclaimer = data.capture?.disclaimer;
     }
 
     const PREFERRED_TIME_HEADER = [
