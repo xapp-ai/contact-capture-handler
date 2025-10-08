@@ -44,8 +44,8 @@ describe(`#${getFormResponse.name}()`, () => {
 
                 const step = form.steps[0];
                 expect(step).to.exist;
-                // name, phone, message
-                expect(step.fields).to.have.length(3);
+                // name, phone, email, message
+                expect(step.fields).to.have.length(4);
             }
         });
     });
@@ -95,16 +95,19 @@ describe(`#${getFormResponse.name}()`, () => {
                 // Get step 2, make sure we have the default fields
                 const step2 = form.steps[1];
                 expect(step2).to.exist;
-                expect(step2.fields).to.have.length(3);
-                // we need to have name, phone, address
+                expect(step2.fields).to.have.length(4);
+                // we need to have name, phone, email, zip
                 const nameField = step2.fields[0];
                 expect(nameField.name).to.equal("full_name");
 
                 const phoneField = step2.fields[1];
                 expect(phoneField.name).to.equal("phone");
 
-                const addressField = step2.fields[2];
-                expect(addressField.name).to.equal("address");
+                const emailField = step2.fields[2];
+                expect(emailField.name).to.equal("email");
+
+                const zipField = step2.fields[3];
+                expect(zipField.name).to.equal("zip");
             }
         });
         describe("when passes serviceOptions", () => {
@@ -486,8 +489,8 @@ describe(`#${getContactFormFallback.name}()`, () => {
 
             const step = form.steps[0];
             expect(step).to.exist;
-            // name, phone, message
-            expect(step.fields).to.have.length(3);
+            // name, phone, email, message
+            expect(step.fields).to.have.length(4);
         });
     });
     describe("when passed fallback props", () => {

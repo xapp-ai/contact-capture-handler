@@ -45,16 +45,25 @@ export const DEFAULT_CONTACT_FIELDS: FormField[] = [
         label: "Phone",
         placeholder: "Your 10 digit phone number",
         type: "TEXT",
-        mandatory: true,
+        mandatoryGroup: "contact_method",
+        mandatoryError: "Please provide either a phone number or email address",
     },
     {
-        format: "ADDRESS",
-        name: "address",
-        label: "Address",
+        format: "EMAIL",
+        name: "email",
+        label: "Email",
+        placeholder: "Your email address",
         type: "TEXT",
-        mandatory: false,
-        mapsBaseUrl: "https://places.xapp.ai",
-    } as FormFieldTextAddressInput,
+        mandatoryGroup: "contact_method",
+        mandatoryError: "Please provide either a phone number or email address",
+    },
+    {
+        name: "zip",
+        label: "Zip Code",
+        placeholder: "Your zip code",
+        type: "TEXT",
+        mandatory: true,
+    },
 ];
 
 export interface FieldSettings {
@@ -702,24 +711,29 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
         });
     }
 
-    const indexForPhoneOrEmail = emailFieldIndex >= 0 ? emailFieldIndex : phoneFieldIndex;
-
     // Build contact-only form fields
     const contactOnlyFields: FormField[] = [
         // name
         { ...CONTACT_FIELDS[nameFieldIndex] },
-        // phone (or email)
-        { ...CONTACT_FIELDS[indexForPhoneOrEmail] },
-        // message
-        {
-            name: "message",
-            label: props.messageDescription || "Let us know what we can help you with.",
-            rows: 3,
-            type: "TEXT",
-            multiline: true,
-            mandatory: true,
-        },
     ];
+
+    // Add both phone and email if they exist (they should have mandatoryGroup set)
+    if (phoneFieldIndex >= 0) {
+        contactOnlyFields.push({ ...CONTACT_FIELDS[phoneFieldIndex] });
+    }
+    if (emailFieldIndex >= 0) {
+        contactOnlyFields.push({ ...CONTACT_FIELDS[emailFieldIndex] });
+    }
+
+    // message
+    contactOnlyFields.push({
+        name: "message",
+        label: props.messageDescription || "Let us know what we can help you with.",
+        rows: 3,
+        type: "TEXT",
+        multiline: true,
+        mandatory: true,
+    });
 
     // Add disclaimer fields to contact-only form if provided
     if (props.disclaimer) {
