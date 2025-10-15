@@ -108,6 +108,16 @@ export interface FormResponseProps {
      * The fields to capture
      */
     fields?: DataDescriptorBase[];
+    /**
+     * When true, removes the 'preferred_date' field from the preferred time form,
+     * removes the mandatoryGroup from the dateTime field, and makes dateTime mandatory.
+     */
+    turnOffFirstAvailableDay?: boolean;
+    /**
+     * Custom options for the preferred time field. Replaces the default items
+     * (First Available Time, Morning, Afternoon) with user-defined options.
+     */
+    preferredTimeOptions?: SelectableItem[];
 }
 
 /**
@@ -118,6 +128,14 @@ export interface FormResponseProps {
 export function getContactFormFallback(data: ContactCaptureData, props: FormResponseProps): MultistepForm {
     if (typeof data.enablePreferredTime === "boolean") {
         props.enablePreferredTime = data.enablePreferredTime;
+    }
+
+    if (typeof data.turnOffFirstAvailableDay === "boolean") {
+        props.turnOffFirstAvailableDay = data.turnOffFirstAvailableDay;
+    }
+
+    if (existsAndNotEmpty(data.preferredTimeOptions)) {
+        props.preferredTimeOptions = data.preferredTimeOptions;
     }
 
     if (existsAndNotEmpty(data.capture?.serviceOptions)) {
@@ -530,6 +548,103 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
         }
     }
 
+    // Build the preferred_time step fields based on configuration
+    const preferredTimeFields: FormField[] = [];
+
+    // Add dateTime field
+    if (props.turnOffFirstAvailableDay) {
+        // When turnOffFirstAvailableDay is true, make dateTime mandatory without mandatoryGroup
+        preferredTimeFields.push({
+            name: "dateTime",
+            title: "Preferred date",
+            type: "DATE",
+            mandatory: true,
+            mandatoryError: "Please select a date",
+            // pass through busy day information
+            defaultBusyDays: data.availabilitySettings?.defaultBusyDays,
+        });
+    } else {
+        // Default behavior with mandatoryGroup
+        preferredTimeFields.push({
+            name: "dateTime",
+            title: "Preferred date",
+            type: "DATE",
+            mandatoryGroup: "date",
+            mandatoryError: "Please select either a date or first available date",
+            // pass through busy day information
+            defaultBusyDays: data.availabilitySettings?.defaultBusyDays,
+        });
+
+        // Only add preferred_date field if turnOffFirstAvailableDay is not set
+        preferredTimeFields.push({
+            name: "preferred_date",
+            type: "CHIPS",
+            label: "Preferred Date",
+            style: {
+                fontWeight: "bold",
+            },
+            items: [
+                {
+                    id: "first_available",
+                    label: "First Available Date",
+                },
+            ],
+            mandatoryGroup: "date",
+            mandatoryError: "Please select either a date or first available date",
+        });
+    }
+
+    // Add time preference card
+    preferredTimeFields.push({
+        name: "card_time_preference",
+        variant: "body1",
+        style: {
+            marginTop: "10px",
+            fontWeight: "bold",
+        },
+        text: "Preferred Time",
+        type: "CARD",
+    });
+
+    // Add preferred_time field with custom or default items
+    const preferredTimeItems = props.preferredTimeOptions || [
+        {
+            id: "first_available",
+            label: "First Available Time",
+        },
+        {
+            id: "morning",
+            label: "Morning",
+        },
+        {
+            id: "afternoon",
+            label: "Afternoon",
+        },
+    ];
+
+    preferredTimeFields.push({
+        name: "preferred_time",
+        type: "CHIPS",
+        label: "Preferred Time",
+        style: {
+            fontWeight: "bold",
+        },
+        items: preferredTimeItems,
+        mandatory: true,
+        radio: true,
+    });
+
+    // Add note card
+    preferredTimeFields.push({
+        name: "time_request_note_card",
+        text: "These are only date and time preferences. Someone will confirm the date & time with you.",
+        style: {
+            fontStyle: "italic",
+        },
+        title: "Card",
+        type: "CARD",
+    });
+
     const PREFERRED_TIME_STEPS: FormStep[] = [
         {
             name: "service_request",
@@ -563,77 +678,7 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
             name: "preferred_time",
             nextAction: "submit",
             condition: preferredTimeConditional,
-            fields: [
-                {
-                    name: "dateTime",
-                    title: "Preferred date",
-                    type: "DATE",
-                    mandatoryGroup: "date",
-                    mandatoryError: "Please select either a date or first available date",
-                    // pass through busy day information
-                    defaultBusyDays: data.availabilitySettings?.defaultBusyDays,
-                },
-                {
-                    name: "preferred_date",
-                    type: "CHIPS",
-                    label: "Preferred Date",
-                    style: {
-                        fontWeight: "bold",
-                    },
-                    items: [
-                        {
-                            id: "first_available",
-                            label: "First Available Date",
-                        },
-                    ],
-                    mandatoryGroup: "date",
-                    mandatoryError: "Please select either a date or first available date",
-                },
-                {
-                    name: "card_time_preference",
-                    variant: "body1",
-                    style: {
-                        marginTop: "10px",
-                        fontWeight: "bold",
-                    },
-                    text: "Preferred Time",
-                    type: "CARD",
-                },
-
-                {
-                    name: "preferred_time",
-                    type: "CHIPS",
-                    label: "Preferred Time",
-                    style: {
-                        fontWeight: "bold",
-                    },
-                    items: [
-                        {
-                            id: "first_available",
-                            label: "First Available Time",
-                        },
-                        {
-                            id: "morning",
-                            label: "Morning",
-                        },
-                        {
-                            id: "afternoon",
-                            label: "Afternoon",
-                        },
-                    ],
-                    mandatory: true,
-                    radio: true,
-                },
-                {
-                    name: "time_request_note_card",
-                    text: "These are only date and time preferences. Someone will confirm the date & time with you.",
-                    style: {
-                        fontStyle: "italic",
-                    },
-                    title: "Card",
-                    type: "CARD",
-                },
-            ],
+            fields: preferredTimeFields,
         },
         {
             final: true,

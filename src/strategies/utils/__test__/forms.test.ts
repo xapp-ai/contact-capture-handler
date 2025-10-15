@@ -872,4 +872,164 @@ describe(`#${getContactFormFallback.name}()`, () => {
             expect(disclaimerField?.condition).to.be.undefined;
         });
     });
+    describe("when passed turnOffFirstAvailableDay", () => {
+        it("removes preferred_date field and makes dateTime mandatory", () => {
+            const form = getContactFormFallback(
+                {
+                    capture: SIMPLE_BLUEPRINT,
+                    turnOffFirstAvailableDay: true,
+                },
+                { enablePreferredTime: true },
+            );
+
+            expect(form).to.exist;
+            expect(form.steps).to.have.length(5);
+
+            const preferredTimeStep = form.steps[2]; // preferred_time step
+            expect(preferredTimeStep).to.exist;
+            expect(preferredTimeStep.name).to.equal("preferred_time");
+
+            // Check that preferred_date field does not exist
+            const preferredDateField = preferredTimeStep.fields.find((field) => field.name === "preferred_date");
+            expect(preferredDateField).to.be.undefined;
+
+            // Check that dateTime field exists and is mandatory without mandatoryGroup
+            const dateTimeField = preferredTimeStep.fields.find((field) => field.name === "dateTime");
+            expect(dateTimeField).to.exist;
+            expect(dateTimeField?.mandatory).to.be.true;
+            expect(dateTimeField?.mandatoryGroup).to.be.undefined;
+            expect(dateTimeField?.mandatoryError).to.equal("Please select a date");
+        });
+
+        it("keeps default behavior when turnOffFirstAvailableDay is false", () => {
+            const form = getContactFormFallback(
+                {
+                    capture: SIMPLE_BLUEPRINT,
+                    turnOffFirstAvailableDay: false,
+                },
+                { enablePreferredTime: true },
+            );
+
+            expect(form).to.exist;
+
+            const preferredTimeStep = form.steps[2]; // preferred_time step
+            expect(preferredTimeStep).to.exist;
+
+            // Check that preferred_date field exists
+            const preferredDateField = preferredTimeStep.fields.find((field) => field.name === "preferred_date");
+            expect(preferredDateField).to.exist;
+            expect(preferredDateField?.type).to.equal("CHIPS");
+
+            // Check that dateTime field has mandatoryGroup
+            const dateTimeField = preferredTimeStep.fields.find((field) => field.name === "dateTime");
+            expect(dateTimeField).to.exist;
+            expect(dateTimeField?.mandatory).to.be.undefined;
+            expect(dateTimeField?.mandatoryGroup).to.equal("date");
+            expect(dateTimeField?.mandatoryError).to.equal("Please select either a date or first available date");
+        });
+    });
+    describe("when passed preferredTimeOptions", () => {
+        it("replaces default preferred_time items with custom options", () => {
+            const customTimeOptions: SelectableItem[] = [
+                { id: "morning_8am", label: "Morning (8:00 AM - 12:00 PM)" },
+                { id: "afternoon_12pm", label: "Afternoon (12:00 PM - 5:00 PM)" },
+                { id: "evening_5pm", label: "Evening (5:00 PM - 8:00 PM)" },
+            ];
+
+            const form = getContactFormFallback(
+                {
+                    capture: SIMPLE_BLUEPRINT,
+                    preferredTimeOptions: customTimeOptions,
+                },
+                { enablePreferredTime: true },
+            );
+
+            expect(form).to.exist;
+
+            const preferredTimeStep = form.steps[2]; // preferred_time step
+            expect(preferredTimeStep).to.exist;
+
+            // Find the preferred_time field
+            const preferredTimeField = preferredTimeStep.fields.find((field) => field.name === "preferred_time");
+            expect(preferredTimeField).to.exist;
+            expect(preferredTimeField?.type).to.equal("CHIPS");
+
+            if (preferredTimeField?.type === "CHIPS") {
+                const chipsField = preferredTimeField as FormChipsInput;
+                expect(chipsField.items).to.have.length(3);
+                expect(chipsField.items[0].id).to.equal("morning_8am");
+                expect(chipsField.items[0].label).to.equal("Morning (8:00 AM - 12:00 PM)");
+                expect(chipsField.items[1].id).to.equal("afternoon_12pm");
+                expect(chipsField.items[1].label).to.equal("Afternoon (12:00 PM - 5:00 PM)");
+                expect(chipsField.items[2].id).to.equal("evening_5pm");
+                expect(chipsField.items[2].label).to.equal("Evening (5:00 PM - 8:00 PM)");
+            }
+        });
+
+        it("uses default options when preferredTimeOptions is not provided", () => {
+            const form = getContactFormFallback({ capture: SIMPLE_BLUEPRINT }, { enablePreferredTime: true });
+
+            expect(form).to.exist;
+
+            const preferredTimeStep = form.steps[2]; // preferred_time step
+            const preferredTimeField = preferredTimeStep.fields.find((field) => field.name === "preferred_time");
+            expect(preferredTimeField).to.exist;
+
+            if (preferredTimeField?.type === "CHIPS") {
+                const chipsField = preferredTimeField as FormChipsInput;
+                expect(chipsField.items).to.have.length(3);
+                expect(chipsField.items[0].id).to.equal("first_available");
+                expect(chipsField.items[0].label).to.equal("First Available Time");
+                expect(chipsField.items[1].id).to.equal("morning");
+                expect(chipsField.items[1].label).to.equal("Morning");
+                expect(chipsField.items[2].id).to.equal("afternoon");
+                expect(chipsField.items[2].label).to.equal("Afternoon");
+            }
+        });
+    });
+    describe("when both turnOffFirstAvailableDay and preferredTimeOptions are passed", () => {
+        it("applies both configurations correctly", () => {
+            const customTimeOptions: SelectableItem[] = [
+                { id: "9am_12pm", label: "9 AM - 12 PM" },
+                { id: "12pm_5pm", label: "12 PM - 5 PM" },
+            ];
+
+            const form = getContactFormFallback(
+                {
+                    capture: SIMPLE_BLUEPRINT,
+                    turnOffFirstAvailableDay: true,
+                    preferredTimeOptions: customTimeOptions,
+                },
+                { enablePreferredTime: true },
+            );
+
+            expect(form).to.exist;
+
+            const preferredTimeStep = form.steps[2]; // preferred_time step
+            expect(preferredTimeStep).to.exist;
+
+            // Verify preferred_date field is removed
+            const preferredDateField = preferredTimeStep.fields.find((field) => field.name === "preferred_date");
+            expect(preferredDateField).to.be.undefined;
+
+            // Verify dateTime is mandatory
+            const dateTimeField = preferredTimeStep.fields.find((field) => field.name === "dateTime");
+            expect(dateTimeField).to.exist;
+            expect(dateTimeField?.mandatory).to.be.true;
+            expect(dateTimeField?.mandatoryGroup).to.be.undefined;
+
+            // Verify custom time options are used
+            const preferredTimeField = preferredTimeStep.fields.find((field) => field.name === "preferred_time");
+            expect(preferredTimeField).to.exist;
+
+            if (preferredTimeField?.type === "CHIPS") {
+                const chipsField = preferredTimeField as FormChipsInput;
+                expect(chipsField.items).to.have.length(2);
+                expect(chipsField.items[0].id).to.equal("9am_12pm");
+                expect(chipsField.items[0].label).to.equal("9 AM - 12 PM");
+                expect(chipsField.items[1].id).to.equal("12pm_5pm");
+                expect(chipsField.items[1].label).to.equal("12 PM - 5 PM");
+            }
+        });
+    });
 });
