@@ -45,20 +45,41 @@ export const DEFAULT_CONTACT_FIELDS: FormField[] = [
         label: "Phone",
         placeholder: "Your 10 digit phone number",
         type: "TEXT",
-        mandatory: true,
+        mandatoryGroup: "contact_method",
+        mandatoryError: "Please provide either a phone number or email address",
     },
     {
-        format: "ADDRESS",
-        name: "address",
-        label: "Address",
+        format: "EMAIL",
+        name: "email",
+        label: "Email",
+        placeholder: "Your email address",
         type: "TEXT",
-        mandatory: false,
-        mapsBaseUrl: "https://places.xapp.ai",
-    } as FormFieldTextAddressInput,
+        mandatoryGroup: "contact_method",
+        mandatoryError: "Please provide either a phone number or email address",
+    },
+    {
+        name: "zip",
+        label: "Zip Code",
+        placeholder: "Your zip code",
+        type: "TEXT",
+        mandatory: true,
+    },
 ];
 
 export interface FieldSettings {
     required?: boolean;
+}
+
+/**
+ * Sanitizes a service ID to be safely used in conditionals.
+ * Removes potentially dangerous characters that could break JavaScript evaluation.
+ * @param id - The service ID to sanitize
+ * @returns Sanitized service ID safe for use in conditionals
+ */
+function sanitizeServiceId(id: string): string {
+    // Only allow alphanumeric characters, underscores, and hyphens
+    // This prevents injection of quotes, parentheses, or other special characters
+    return id.replace(/[^a-zA-Z0-9_-]/g, "");
 }
 
 export interface FormResponseProps {
@@ -91,6 +112,7 @@ export interface FormResponseProps {
      * Optional message description to help people leave meaningful messages
      */
     messageDescription?: string;
+
     /**
      * Is there a preselected service
      */
@@ -99,6 +121,21 @@ export interface FormResponseProps {
      * The fields to capture
      */
     fields?: DataDescriptorBase[];
+    /**
+     * When true, removes the 'preferred_date' field from the preferred time form,
+     * removes the mandatoryGroup from the dateTime field, and makes dateTime mandatory.
+     */
+    turnOffFirstAvailableDay?: boolean;
+    /**
+     * Custom options for the preferred time field. Replaces the default items
+     * (First Available Time, Morning, Afternoon) with user-defined options.
+     */
+    preferredTimeOptions?: SelectableItem[];
+    /**
+     * Custom confirmation text for the preferred date/time selection.
+     * If provided, replaces the default text shown in the preferred_time_confirmation_message field.
+     */
+    preferredDateConfirmationText?: string;
 }
 
 /**
@@ -107,21 +144,22 @@ export interface FormResponseProps {
  * @returns
  */
 export function getContactFormFallback(data: ContactCaptureData, props: FormResponseProps): MultistepForm {
-    if (typeof data.enablePreferredTime === "boolean") {
-        props.enablePreferredTime = data.enablePreferredTime;
-    }
+    // Create a merged configuration object without mutating the input props
+    const mergedProps: FormResponseProps = {
+        ...props,
+        ...(typeof data.enablePreferredTime === "boolean" && { enablePreferredTime: data.enablePreferredTime }),
+        ...(typeof data.turnOffFirstAvailableDay === "boolean" && {
+            turnOffFirstAvailableDay: data.turnOffFirstAvailableDay,
+        }),
+        ...(existsAndNotEmpty(data.preferredTimeOptions) && { preferredTimeOptions: data.preferredTimeOptions }),
+        ...(data.preferredDateConfirmationText && { preferredDateConfirmationText: data.preferredDateConfirmationText }),
+        ...(existsAndNotEmpty(data.capture?.serviceOptions) && { serviceOptions: data.capture.serviceOptions }),
+        ...(data.capture?.messageDescription && { messageDescription: data.capture.messageDescription }),
+        ...(data.capture?.disclaimer && { disclaimer: data.capture.disclaimer }),
+    };
 
-    if (existsAndNotEmpty(data.capture?.serviceOptions)) {
-        props.serviceOptions = data.capture?.serviceOptions;
-    }
-
-    if (data.capture?.messageDescription) {
-        props.messageDescription = data.capture?.messageDescription;
-    }
-
-    if (data.capture?.disclaimer) {
-        props.disclaimer = data.capture?.disclaimer;
-    }
+    // Use mergedProps instead of props throughout the rest of the function
+    props = mergedProps;
 
     const PREFERRED_TIME_HEADER = [
         {
@@ -155,8 +193,11 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
     }
 
     if (props?.service) {
+        // Sanitize the service ID to ensure it only contains safe characters
+        const sanitizedServiceId = sanitizeServiceId(props.service);
+
         // see if it is already in the items, match by id
-        const found = chips.findIndex((item) => item.id === props.service);
+        const found = chips.findIndex((item) => item.id === sanitizedServiceId);
 
         if (found >= 0) {
             // if found, set it to selected
@@ -165,7 +206,7 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
             // add it to the items
             // we need to replace _ with space
             // and capitalize first letter of each word
-            const serviceRaw = props.service.replace("_", " ");
+            const serviceRaw = sanitizedServiceId.replace(/_/g, " ");
             // split by words and capitalize and recombine
             const service = serviceRaw
                 .split(" ")
@@ -173,7 +214,7 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
                 .join(" ");
 
             chips.unshift({
-                id: props.service,
+                id: sanitizedServiceId,
                 label: service,
                 selected: true,
             });
@@ -333,7 +374,9 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
         preferredTimeConditional = props.serviceOptions
             .filter((service) => service.requiresDate)
             .map((chip) => {
-                return `help_type.includes('${chip.id}')`;
+                // Sanitize the chip ID to prevent injection attacks in the conditional
+                const sanitizedId = sanitizeServiceId(chip.id);
+                return `help_type.includes('${sanitizedId}')`;
             })
             .join(" || ");
 
@@ -426,7 +469,7 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
             type: "CARD",
         },
         {
-            name: "confirmation_card_details",
+            name: "confirmation_card_request_details",
             variant: "body1",
             text: "Request Details",
             style: {
@@ -459,9 +502,9 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
             },
         },
         {
-            name: "confirmation_card2_message",
+            name: "preferred_time_confirmation_message",
             condition: "(!!dateTime || !!preferred_date) && preferred_time?.length > 0",
-            text: "Someone from our team will contact you soon to confirm the date & time as well as additional details",
+            text: props.preferredDateConfirmationText || "Someone from our team will contact you son to confirm the date & time as well as additional details",
             type: "CARD",
             align: "center",
             variant: "caption",
@@ -521,6 +564,105 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
         }
     }
 
+    // Build the preferred_time step fields based on configuration
+    const preferredTimeFields: FormField[] = [];
+
+    // Add dateTime field
+    if (props.turnOffFirstAvailableDay) {
+        // When turnOffFirstAvailableDay is true, make dateTime mandatory without mandatoryGroup
+        preferredTimeFields.push({
+            name: "dateTime",
+            title: "Preferred date",
+            type: "DATE",
+            mandatory: true,
+            mandatoryError: "Please select a date",
+            // pass through busy day information
+            defaultBusyDays: data.availabilitySettings?.defaultBusyDays,
+        });
+    } else {
+        // Default behavior with mandatoryGroup
+        preferredTimeFields.push({
+            name: "dateTime",
+            title: "Preferred date",
+            type: "DATE",
+            mandatoryGroup: "date",
+            mandatoryError: "Please select either a date or first available date",
+            // pass through busy day information
+            defaultBusyDays: data.availabilitySettings?.defaultBusyDays,
+        });
+
+        // Only add preferred_date field if turnOffFirstAvailableDay is not set
+        preferredTimeFields.push({
+            name: "preferred_date",
+            type: "CHIPS",
+            label: "Preferred Date",
+            style: {
+                fontWeight: "bold",
+            },
+            items: [
+                {
+                    id: "first_available",
+                    label: "First Available Date",
+                },
+            ],
+            mandatoryGroup: "date",
+            mandatoryError: "Please select either a date or first available date",
+        });
+    }
+
+    // Add time preference card
+    preferredTimeFields.push({
+        name: "card_time_preference",
+        variant: "body1",
+        style: {
+            marginTop: "10px",
+            fontWeight: "bold",
+        },
+        text: "Preferred Time",
+        type: "CARD",
+    });
+
+    // Add preferred_time field with custom or default items
+    const preferredTimeItems = existsAndNotEmpty(props.preferredTimeOptions)
+        ? props.preferredTimeOptions
+        : [
+              {
+                  id: "first_available",
+                  label: "First Available Time",
+              },
+              {
+                  id: "morning",
+                  label: "Morning",
+              },
+              {
+                  id: "afternoon",
+                  label: "Afternoon",
+              },
+          ];
+
+    preferredTimeFields.push({
+        name: "preferred_time",
+        type: "CHIPS",
+        label: "Preferred Time",
+        style: {
+            fontWeight: "bold",
+        },
+        items: preferredTimeItems,
+        mandatory: true,
+        radio: true,
+    });
+
+    // Add note card
+    preferredTimeFields.push({
+        name: "time_request_note_card",
+        text: "These are only date and time preferences. Someone will confirm the date & time with you.",
+        style: {
+            fontStyle: "italic",
+        },
+        title: "Card",
+        type: "CARD",
+    });
+
     const PREFERRED_TIME_STEPS: FormStep[] = [
         {
             name: "service_request",
@@ -554,77 +696,7 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
             name: "preferred_time",
             nextAction: "submit",
             condition: preferredTimeConditional,
-            fields: [
-                {
-                    name: "dateTime",
-                    title: "Preferred date",
-                    type: "DATE",
-                    mandatoryGroup: "date",
-                    mandatoryError: "Please select either a date or first available date",
-                    // pass through busy day information
-                    defaultBusyDays: data.availabilitySettings?.defaultBusyDays,
-                },
-                {
-                    name: "preferred_date",
-                    type: "CHIPS",
-                    label: "Preferred Date",
-                    style: {
-                        fontWeight: "bold",
-                    },
-                    items: [
-                        {
-                            id: "first_available",
-                            label: "First Available Date",
-                        },
-                    ],
-                    mandatoryGroup: "date",
-                    mandatoryError: "Please select either a date or first available date",
-                },
-                {
-                    name: "card_time_preference",
-                    variant: "body1",
-                    style: {
-                        marginTop: "10px",
-                        fontWeight: "bold",
-                    },
-                    text: "Preferred Time",
-                    type: "CARD",
-                },
-
-                {
-                    name: "preferred_time",
-                    type: "CHIPS",
-                    label: "Preferred Time",
-                    style: {
-                        fontWeight: "bold",
-                    },
-                    items: [
-                        {
-                            id: "first_available",
-                            label: "First Available Time",
-                        },
-                        {
-                            id: "morning",
-                            label: "Morning",
-                        },
-                        {
-                            id: "afternoon",
-                            label: "Afternoon",
-                        },
-                    ],
-                    mandatory: true,
-                    radio: true,
-                },
-                {
-                    name: "time_request_note_card",
-                    text: "These are only date and time preferences. Someone will confirm the date & time with you.",
-                    style: {
-                        fontStyle: "italic",
-                    },
-                    title: "Card",
-                    type: "CARD",
-                },
-            ],
+            fields: preferredTimeFields,
         },
         {
             final: true,
@@ -702,24 +774,29 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
         });
     }
 
-    const indexForPhoneOrEmail = emailFieldIndex >= 0 ? emailFieldIndex : phoneFieldIndex;
-
     // Build contact-only form fields
     const contactOnlyFields: FormField[] = [
         // name
         { ...CONTACT_FIELDS[nameFieldIndex] },
-        // phone (or email)
-        { ...CONTACT_FIELDS[indexForPhoneOrEmail] },
-        // message
-        {
-            name: "message",
-            label: props.messageDescription || "Let us know what we can help you with.",
-            rows: 3,
-            type: "TEXT",
-            multiline: true,
-            mandatory: true,
-        },
     ];
+
+    // Add both phone and email if they exist (they should have mandatoryGroup set)
+    if (phoneFieldIndex >= 0) {
+        contactOnlyFields.push({ ...CONTACT_FIELDS[phoneFieldIndex] });
+    }
+    if (emailFieldIndex >= 0) {
+        contactOnlyFields.push({ ...CONTACT_FIELDS[emailFieldIndex] });
+    }
+
+    // message
+    contactOnlyFields.push({
+        name: "message",
+        label: props.messageDescription || "Let us know what we can help you with.",
+        rows: 3,
+        type: "TEXT",
+        multiline: true,
+        mandatory: true,
+    });
 
     // Add disclaimer fields to contact-only form if provided
     if (props.disclaimer) {

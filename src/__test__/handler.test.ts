@@ -18,14 +18,26 @@ import {
     KnowledgeBaseResult,
 } from "stentor-models";
 import { IntentRequestBuilder } from "stentor-request";
-import { ResponseBuilder, } from "stentor-response";
+import { ResponseBuilder } from "stentor-response";
 import { ContextBuilder } from "stentor-context";
 
 import { ContactCaptureHandler } from "../handler";
-import { CONTACT_CAPTURE_CURRENT_DATA, CONTACT_CAPTURE_LIST, CONTACT_CAPTURE_SENT, CONTACT_CAPTURE_SLOTS } from "../constants";
+import {
+    CONTACT_CAPTURE_CURRENT_DATA,
+    CONTACT_CAPTURE_LIST,
+    CONTACT_CAPTURE_SENT,
+    CONTACT_CAPTURE_SLOTS,
+} from "../constants";
 import { DetailParams, Place, PlacesService, SearchParams } from "../services";
 
-import { props, propsWithAnyInputQuestion, propsWithCustomForm, propsWithNoCapture, propsWithNoCaptureAndContent, propsWithStandardData } from "./assets";
+import {
+    props,
+    propsWithAnyInputQuestion,
+    propsWithCustomForm,
+    propsWithNoCapture,
+    propsWithNoCaptureAndContent,
+    propsWithStandardData,
+} from "./assets";
 
 class MockCRM implements CrmService {
     public update?(): Promise<CrmResponse> {
@@ -44,7 +56,7 @@ class MockCRM implements CrmService {
     }
     public async send(): Promise<CrmResponse> {
         return {
-            status: "Success"
+            status: "Success",
         };
     }
 }
@@ -58,7 +70,7 @@ class MockPlacesService implements PlacesService {
     public async getDetails(params: DetailParams): Promise<Place> {
         // eslint-disable-next-line no-console
         console.log(`MockPlacesService.getDetails(${JSON.stringify(params)})`);
-        return { place_id: "place_id", formatted_phone_number: "111-123-3333" }
+        return { place_id: "place_id", formatted_phone_number: "111-123-3333" };
     }
 }
 
@@ -86,18 +98,16 @@ describe(`${ContactCaptureHandler.name}`, () => {
                 .withSlots({})
                 .withIntentId(props.intentId)
                 .updateDevice({
-                    canSpeak: false
-                }).build();
-
-            context = new ContextBuilder()
-                .withResponse(response)
-                .withSessionData({ id: "foo", data: {} })
+                    canSpeak: false,
+                })
                 .build();
+
+            context = new ContextBuilder().withResponse(response).withSessionData({ id: "foo", data: {} }).build();
         });
         it("returns as expected", () => {
             const handler = new ContactCaptureHandler(propsWithNoCapture);
             const handled = handler.canHandleRequest(request, context);
-            expect(handled).to.be.true
+            expect(handled).to.be.true;
         });
         describe("for a knowledge base request", () => {
             it("returns as expected", () => {
@@ -105,18 +115,19 @@ describe(`${ContactCaptureHandler.name}`, () => {
                     .withSlots({})
                     .withIntentId("KnowledgeAnswer")
                     .updateDevice({
-                        canSpeak: false
-                    }).build();
+                        canSpeak: false,
+                    })
+                    .build();
                 const handler = new ContactCaptureHandler(propsWithNoCapture);
                 const handled = handler.canHandleRequest(request, context);
-                expect(handled).to.be.false
+                expect(handled).to.be.false;
             });
         });
         describe("with captureLeads set to true", () => {
             it("returns as expected", () => {
                 const handler = new ContactCaptureHandler(props);
                 const handled = handler.canHandleRequest(request, context);
-                expect(handled).to.be.true
+                expect(handled).to.be.true;
             });
             describe("for a knowledge base request", () => {
                 it("returns as expected", () => {
@@ -124,11 +135,12 @@ describe(`${ContactCaptureHandler.name}`, () => {
                         .withSlots({})
                         .withIntentId("KnowledgeAnswer")
                         .updateDevice({
-                            canSpeak: false
-                        }).build();
+                            canSpeak: false,
+                        })
+                        .build();
                     const handler = new ContactCaptureHandler(props);
                     const handled = handler.canHandleRequest(request, context);
-                    expect(handled).to.be.true
+                    expect(handled).to.be.true;
                 });
             });
         });
@@ -141,41 +153,37 @@ describe(`${ContactCaptureHandler.name}`, () => {
         });
         describe("for a request with tracking", () => {
             it("adds it to the extras", () => {
-
-                const request = new IntentRequestBuilder().withAttributes({
-                    rwg_token: "123",
-                    merchant_id: "456"
-                }).build();
+                const request = new IntentRequestBuilder()
+                    .withAttributes({
+                        rwg_token: "123",
+                        merchant_id: "456",
+                    })
+                    .build();
 
                 const crmService = new MockCRM();
                 sandbox.spy(crmService, "send");
 
-                ContactCaptureHandler.sendLead(
-                    {},
-                    {},
-                    { data: [] },
-                    [],
-                    crmService,
-                    request,
-                    new MockErrorService()
-                );
+                ContactCaptureHandler.sendLead({}, {}, { data: [] }, [], crmService, request, new MockErrorService());
 
                 expect(crmService.send).to.have.been.calledOnce;
-                expect(crmService.send).to.have.been.calledWith({
-                    fields: [],
-                    transcript: [],
-                    refId: undefined,
-                    jobTypeId: undefined,
-                    availabilityClassId: undefined,
-                    userId: "userId",
-                    sessionId: "sessionId",
-                    source: "stentor"
-                }, {
-                    rwg_token: "123",
-                    merchant_id: "456",
-                });
+                expect(crmService.send).to.have.been.calledWith(
+                    {
+                        fields: [],
+                        transcript: [],
+                        refId: undefined,
+                        jobTypeId: undefined,
+                        availabilityClassId: undefined,
+                        userId: "userId",
+                        sessionId: "sessionId",
+                        source: "stentor",
+                    },
+                    {
+                        rwg_token: "123",
+                        merchant_id: "456",
+                    },
+                );
             });
-        })
+        });
     });
     describe(`#${ContactCaptureHandler.prototype.handleRequest.name}()`, () => {
         describe("with captureLead set to true", () => {
@@ -193,8 +201,8 @@ describe(`${ContactCaptureHandler.name}`, () => {
                             canTransferCall: false,
                             hasScreen: true,
                             hasWebBrowser: true,
-                            videoSupported: false
-                        }
+                            videoSupported: false,
+                        },
                     });
                     sandbox.spy(response, "respond");
 
@@ -202,8 +210,9 @@ describe(`${ContactCaptureHandler.name}`, () => {
                         .withSlots({})
                         .withIntentId(props.intentId)
                         .updateDevice({
-                            canSpeak: false
-                        }).build();
+                            canSpeak: false,
+                        })
+                        .build();
 
                     context = new ContextBuilder()
                         .withResponse(response)
@@ -229,9 +238,9 @@ describe(`${ContactCaptureHandler.name}`, () => {
                             displayText: "Why hello!\n\nWhat is your name?",
                         },
                         reprompt: {
-                            ssml: '<speak>May I have your name?</speak>',
-                            displayText: 'May I have your name?'
-                        }
+                            ssml: "<speak>May I have your name?</speak>",
+                            displayText: "May I have your name?",
+                        },
                     });
 
                     // verity necessary context is created
@@ -262,22 +271,23 @@ describe(`${ContactCaptureHandler.name}`, () => {
                             canTransferCall: false,
                             hasScreen: true,
                             hasWebBrowser: true,
-                            videoSupported: false
-                        }
+                            videoSupported: false,
+                        },
                     });
                     sandbox.spy(response, "respond");
 
                     request = new IntentRequestBuilder()
                         .withSlots({
-                            "first_name": {
+                            first_name: {
                                 value: "Michael",
-                                name: "first_name"
-                            }
+                                name: "first_name",
+                            },
                         })
                         .withIntentId(props.intentId)
                         .updateDevice({
-                            canSpeak: false
-                        }).build();
+                            canSpeak: false,
+                        })
+                        .build();
 
                     context = new ContextBuilder()
                         .withResponse(response)
@@ -287,20 +297,22 @@ describe(`${ContactCaptureHandler.name}`, () => {
                                 ContactCaptureCurrentData: "FIRST_NAME",
                                 ContactCaptureSlots: {},
                                 ContactCaptureList: {
-                                    data: [{
-                                        type: 'FIRST_NAME',
-                                        enums: undefined,
-                                        questionContentKey: 'FirstNameQuestionContent',
-                                        slotName: 'first_name'
-                                    },
-                                    {
-                                        type: 'LAST_NAME',
-                                        enums: undefined,
-                                        questionContentKey: 'LastNameQuestionContent',
-                                        slotName: 'last_name'
-                                    },]
-                                }
-                            }
+                                    data: [
+                                        {
+                                            type: "FIRST_NAME",
+                                            enums: undefined,
+                                            questionContentKey: "FirstNameQuestionContent",
+                                            slotName: "first_name",
+                                        },
+                                        {
+                                            type: "LAST_NAME",
+                                            enums: undefined,
+                                            questionContentKey: "LastNameQuestionContent",
+                                            slotName: "last_name",
+                                        },
+                                    ],
+                                },
+                            },
                         })
                         .build();
                 });
@@ -321,12 +333,12 @@ describe(`${ContactCaptureHandler.name}`, () => {
                     expect(responseArgs).to.exist;
                     expect(responseArgs).to.deep.equal({
                         outputSpeech: {
-                            ssml: '<speak>What is your last name?</speak>',
-                            displayText: 'What is your last name?'
+                            ssml: "<speak>What is your last name?</speak>",
+                            displayText: "What is your last name?",
                         },
                         reprompt: {
-                            ssml: '<speak>May I have your last name?</speak>',
-                            displayText: 'May I have your last name?'
+                            ssml: "<speak>May I have your last name?</speak>",
+                            displayText: "May I have your last name?",
                         },
                         context: {
                             active: [
@@ -335,26 +347,26 @@ describe(`${ContactCaptureHandler.name}`, () => {
                                     parameters: null,
                                     timeToLive: {
                                         timeToLiveInSeconds: 2000,
-                                        turnsToLive: 1
-                                    }
-                                }
-                            ]
+                                        turnsToLive: 1,
+                                    },
+                                },
+                            ],
                         },
-                        name: 'Last Name',
-                        tag: 'LastNameQuestionContent'
+                        name: "Last Name",
+                        tag: "LastNameQuestionContent",
                     });
 
                     const sessionStore = context.storage.sessionStore?.data;
                     const slots = sessionStore ? sessionStore[CONTACT_CAPTURE_SLOTS] : undefined;
                     expect(slots).to.deep.equal({
-                        "first_name": {
+                        first_name: {
                             name: "first_name",
-                            value: "Michael"
+                            value: "Michael",
                         },
-                        "full_name": {
+                        full_name: {
                             name: "full_name",
-                            value: "Michael"
-                        }
+                            value: "Michael",
+                        },
                     });
                     const leadSent = sessionStore ? sessionStore[CONTACT_CAPTURE_SENT] : undefined;
                     expect(leadSent).to.be.undefined;
@@ -375,22 +387,23 @@ describe(`${ContactCaptureHandler.name}`, () => {
                                 canTransferCall: false,
                                 hasScreen: true,
                                 hasWebBrowser: true,
-                                videoSupported: false
-                            }
+                                videoSupported: false,
+                            },
                         });
                         sandbox.spy(response, "respond");
 
                         request = new IntentRequestBuilder()
                             .withSlots({
-                                "first_name": {
+                                first_name: {
                                     value: "Michael",
-                                    name: "first_name"
-                                }
+                                    name: "first_name",
+                                },
                             })
                             .withIntentId(props.intentId)
                             .updateDevice({
-                                canSpeak: false
-                            }).build();
+                                canSpeak: false,
+                            })
+                            .build();
 
                         context = new ContextBuilder()
                             .withResponse(response)
@@ -400,20 +413,22 @@ describe(`${ContactCaptureHandler.name}`, () => {
                                     ContactCaptureCurrentData: "FIRST_NAME",
                                     ContactCaptureSlots: {},
                                     ContactCaptureList: {
-                                        data: [{
-                                            type: 'FIRST_NAME',
-                                            enums: undefined,
-                                            questionContentKey: 'FirstNameQuestionContent',
-                                            slotName: 'first_name'
-                                        },
-                                        {
-                                            type: 'LAST_NAME',
-                                            enums: undefined,
-                                            questionContentKey: 'LastNameQuestionContent',
-                                            slotName: 'last_name'
-                                        },]
-                                    }
-                                }
+                                        data: [
+                                            {
+                                                type: "FIRST_NAME",
+                                                enums: undefined,
+                                                questionContentKey: "FirstNameQuestionContent",
+                                                slotName: "first_name",
+                                            },
+                                            {
+                                                type: "LAST_NAME",
+                                                enums: undefined,
+                                                questionContentKey: "LastNameQuestionContent",
+                                                slotName: "last_name",
+                                            },
+                                        ],
+                                    },
+                                },
                             })
                             .build();
 
@@ -431,23 +446,24 @@ describe(`${ContactCaptureHandler.name}`, () => {
                         expect(response.respond).to.have.been.calledOnce;
                         expect(response.respond).to.have.been.calledWith({
                             outputSpeech: {
-                                displayText: 'ERROR: I am not configured correctly. Missing content for tag LastNameQuestionContent',
-                                ssml: '<speak>ERROR: I am not configured correctly. Missing content for tag LastNameQuestionContent</speak>'
+                                displayText:
+                                    "ERROR: I am not configured correctly. Missing content for tag LastNameQuestionContent",
+                                ssml: "<speak>ERROR: I am not configured correctly. Missing content for tag LastNameQuestionContent</speak>",
                             },
-                            tag: 'ERROR'
+                            tag: "ERROR",
                         });
 
                         const sessionStore = context.storage.sessionStore?.data;
                         const slots = sessionStore ? sessionStore[CONTACT_CAPTURE_SLOTS] : undefined;
                         expect(slots).to.deep.equal({
-                            "first_name": {
+                            first_name: {
                                 name: "first_name",
-                                value: "Michael"
+                                value: "Michael",
                             },
-                            "full_name": {
+                            full_name: {
                                 name: "full_name",
-                                value: "Michael"
-                            }
+                                value: "Michael",
+                            },
                         });
                         const leadSent = sessionStore ? sessionStore[CONTACT_CAPTURE_SENT] : undefined;
                         expect(leadSent).to.be.undefined;
@@ -471,22 +487,23 @@ describe(`${ContactCaptureHandler.name}`, () => {
                                 canTransferCall: false,
                                 hasScreen: true,
                                 hasWebBrowser: true,
-                                videoSupported: false
-                            }
+                                videoSupported: false,
+                            },
                         });
                         sandbox.spy(response, "respond");
 
                         request = new IntentRequestBuilder()
                             .withSlots({
-                                "organization": {
+                                organization: {
                                     name: "organization",
-                                    value: "XAPP AI"
-                                }
+                                    value: "XAPP AI",
+                                },
                             })
                             .withIntentId(propsWithAnyInputQuestion.intentId)
                             .updateDevice({
-                                canSpeak: false
-                            }).build();
+                                canSpeak: false,
+                            })
+                            .build();
 
                         context = new ContextBuilder()
                             .withResponse(response)
@@ -498,20 +515,20 @@ describe(`${ContactCaptureHandler.name}`, () => {
                                     ContactCaptureList: {
                                         data: [
                                             {
-                                                type: 'FIRST_NAME',
+                                                type: "FIRST_NAME",
                                                 enums: undefined,
-                                                questionContentKey: 'FirstNameQuestionContent',
-                                                slotName: 'first_name'
+                                                questionContentKey: "FirstNameQuestionContent",
+                                                slotName: "first_name",
                                             },
                                             {
-                                                type: 'ORGANIZATION',
+                                                type: "ORGANIZATION",
                                                 enums: undefined,
-                                                questionContentKey: 'OrganizationQuestionContent',
-                                                slotName: 'organization'
-                                            }
-                                        ]
-                                    }
-                                }
+                                                questionContentKey: "OrganizationQuestionContent",
+                                                slotName: "organization",
+                                            },
+                                        ],
+                                    },
+                                },
                             })
                             .build();
                     });
@@ -519,7 +536,6 @@ describe(`${ContactCaptureHandler.name}`, () => {
                         sandbox.restore();
                     });
                     it("sets the slot as the value", async () => {
-
                         cc = new ContactCaptureHandler(propsWithAnyInputQuestion);
 
                         await cc.handleRequest(request, context);
@@ -528,10 +544,10 @@ describe(`${ContactCaptureHandler.name}`, () => {
                         const sessionStore = context.storage.sessionStore?.data;
                         const slots = sessionStore ? sessionStore[CONTACT_CAPTURE_SLOTS] : undefined;
                         expect(slots).to.deep.equal({
-                            "organization": {
+                            organization: {
                                 name: "organization",
-                                value: "XAPP AI"
-                            }
+                                value: "XAPP AI",
+                            },
                         });
                         const leadSent = sessionStore ? sessionStore[CONTACT_CAPTURE_SENT] : undefined;
                         expect(leadSent).to.be.undefined;
@@ -559,8 +575,8 @@ describe(`${ContactCaptureHandler.name}`, () => {
                                 canTransferCall: false,
                                 hasScreen: true,
                                 hasWebBrowser: true,
-                                videoSupported: false
-                            }
+                                videoSupported: false,
+                            },
                         });
                         sandbox.spy(response, "respond");
 
@@ -578,29 +594,30 @@ describe(`${ContactCaptureHandler.name}`, () => {
                                     ContactCaptureCurrentData: "ORGANIZATION",
                                     ContactCaptureSlots: {},
                                     ContactCaptureList: {
-                                        data: [{
-                                            type: 'FIRST_NAME',
-                                            enums: undefined,
-                                            questionContentKey: 'FirstNameQuestionContent',
-                                            slotName: 'first_name'
-                                        },
-                                        {
-                                            type: 'ORGANIZATION',
-                                            enums: undefined,
-                                            questionContentKey: 'OrganizationQuestionContent',
-                                            slotName: 'organization',
-                                            acceptAnyInput: true,
-                                        },
-                                        {
-                                            type: "MESSAGE",
-                                            enums: undefined,
-                                            questionContentKey: 'MessageQuestionContent',
-                                            slotName: 'message',
-                                            acceptAnyInput: true,
-                                        }
-                                        ]
-                                    }
-                                }
+                                        data: [
+                                            {
+                                                type: "FIRST_NAME",
+                                                enums: undefined,
+                                                questionContentKey: "FirstNameQuestionContent",
+                                                slotName: "first_name",
+                                            },
+                                            {
+                                                type: "ORGANIZATION",
+                                                enums: undefined,
+                                                questionContentKey: "OrganizationQuestionContent",
+                                                slotName: "organization",
+                                                acceptAnyInput: true,
+                                            },
+                                            {
+                                                type: "MESSAGE",
+                                                enums: undefined,
+                                                questionContentKey: "MessageQuestionContent",
+                                                slotName: "message",
+                                                acceptAnyInput: true,
+                                            },
+                                        ],
+                                    },
+                                },
                             })
                             .build();
                     });
@@ -608,7 +625,6 @@ describe(`${ContactCaptureHandler.name}`, () => {
                         sandbox.restore();
                     });
                     it("sets the slot as the value", async () => {
-
                         cc = new ContactCaptureHandler(propsWithAnyInputQuestion);
 
                         await cc.handleRequest(request, context);
@@ -647,8 +663,8 @@ describe(`${ContactCaptureHandler.name}`, () => {
                             canTransferCall: false,
                             hasScreen: true,
                             hasWebBrowser: true,
-                            videoSupported: false
-                        }
+                            videoSupported: false,
+                        },
                     });
                     sandbox.spy(response, "respond");
 
@@ -656,9 +672,9 @@ describe(`${ContactCaptureHandler.name}`, () => {
                         faqs: [
                             {
                                 question: "What is your favorite color?",
-                                document: "Blue!"
-                            }
-                        ]
+                                document: "Blue!",
+                            },
+                        ],
                     };
 
                     request = new IntentRequestBuilder()
@@ -673,28 +689,27 @@ describe(`${ContactCaptureHandler.name}`, () => {
                         .withSessionData({
                             id: "foo",
                             data: {
-                                ['knowledge_base_result']: kbResult,
+                                ["knowledge_base_result"]: kbResult,
                                 ContactCaptureCurrentData: "ORGANIZATION",
                                 ContactCaptureSlots: {},
                                 ContactCaptureList: {
                                     data: [
                                         {
-                                            type: 'FIRST_NAME',
+                                            type: "FIRST_NAME",
                                             enums: undefined,
-                                            questionContentKey: 'FirstNameQuestionContent',
-                                            slotName: 'first_name'
+                                            questionContentKey: "FirstNameQuestionContent",
+                                            slotName: "first_name",
                                         },
                                         {
-                                            type: 'ORGANIZATION',
+                                            type: "ORGANIZATION",
                                             enums: undefined,
-                                            questionContentKey: 'OrganizationQuestionContent',
-                                            slotName: 'organization',
-                                            collectedValue: "XAPP AI"
-                                        }
-                                    ]
-                                }
+                                            questionContentKey: "OrganizationQuestionContent",
+                                            slotName: "organization",
+                                            collectedValue: "XAPP AI",
+                                        },
+                                    ],
+                                },
                             },
-
                         })
                         .build();
                 });
@@ -702,41 +717,36 @@ describe(`${ContactCaptureHandler.name}`, () => {
                     sandbox.restore();
                 });
                 it("returns the initial response with the aside", async () => {
-
                     cc = new ContactCaptureHandler(props);
 
                     await cc.handleRequest(request, context);
 
                     expect(response.respond).to.have.been.calledTwice;
                     // first call is getting the FAQ response
-                    expect(response.respond).to.have.been.calledWith(
-                        {
-                            name: 'FAQ',
-                            tag: 'KB_TOP_FAQ',
-                            outputSpeech: {
-                                ssml: '<speak>Blue!</speak>',
-                                displayText: 'Blue!'
-                            },
-                            conditions: "!!session('TOP_FAQ')"
-                        }
-                    );
+                    expect(response.respond).to.have.been.calledWith({
+                        name: "FAQ",
+                        tag: "KB_TOP_FAQ",
+                        outputSpeech: {
+                            ssml: "<speak>Blue!</speak>",
+                            displayText: "Blue!",
+                        },
+                        conditions: "!!session('TOP_FAQ')",
+                    });
                     // second call is when we concatenate it
-                    expect(response.respond).to.have.been.calledWith(
-                        {
-                            name: "First Name",
-                            tag: "FirstNameQuestionContent",
-                            outputSpeech: {
-                                // It concatenates the FAQ and the first name question
-                                ssml: '<speak>Blue!\n\nMay I have your name?</speak>',
-                                displayText: 'Blue!\n\nMay I have your name?',
-                            },
-                            reprompt: {
-                                ssml: '<speak>May I have your name?</speak>',
-                                displayText: 'May I have your name?'
-                            },
-                            displays: undefined
-                        }
-                    );
+                    expect(response.respond).to.have.been.calledWith({
+                        name: "First Name",
+                        tag: "FirstNameQuestionContent",
+                        outputSpeech: {
+                            // It concatenates the FAQ and the first name question
+                            ssml: "<speak>Blue!\n\nMay I have your name?</speak>",
+                            displayText: "Blue!\n\nMay I have your name?",
+                        },
+                        reprompt: {
+                            ssml: "<speak>May I have your name?</speak>",
+                            displayText: "May I have your name?",
+                        },
+                        displays: undefined,
+                    });
 
                     // verity necessary context is created
                     const sessionStore = context.storage.sessionStore?.data;
@@ -763,8 +773,8 @@ describe(`${ContactCaptureHandler.name}`, () => {
                                 canTransferCall: false,
                                 hasScreen: true,
                                 hasWebBrowser: true,
-                                videoSupported: false
-                            }
+                                videoSupported: false,
+                            },
                         });
                         sandbox.spy(response, "respond");
 
@@ -776,9 +786,9 @@ describe(`${ContactCaptureHandler.name}`, () => {
                                     generated: "This is the answer.  Anything else I can help with?",
                                     document: "This is the answer.  Anything else I can help with?",
                                     type: "retrieval-augmented-generation",
-                                    hasAnswer: true
-                                }
-                            ]
+                                    hasAnswer: true,
+                                },
+                            ],
                         };
 
                         request = new IntentRequestBuilder()
@@ -793,32 +803,31 @@ describe(`${ContactCaptureHandler.name}`, () => {
                             .withSessionData({
                                 id: "foo",
                                 data: {
-                                    ['knowledge_base_result']: kbResult,
+                                    ["knowledge_base_result"]: kbResult,
                                     ContactCaptureCurrentData: "ORGANIZATION",
                                     ContactCaptureSlots: {},
                                     ContactCaptureList: {
                                         data: [
                                             {
-                                                type: 'FIRST_NAME',
+                                                type: "FIRST_NAME",
                                                 enums: undefined,
-                                                questionContentKey: 'FirstNameQuestionContent',
-                                                slotName: 'first_name'
+                                                questionContentKey: "FirstNameQuestionContent",
+                                                slotName: "first_name",
                                             },
                                             {
-                                                type: 'ORGANIZATION',
+                                                type: "ORGANIZATION",
                                                 enums: undefined,
-                                                questionContentKey: 'OrganizationQuestionContent',
-                                                slotName: 'organization',
-                                                collectedValue: "XAPP AI"
-                                            }
-                                        ]
-                                    }
+                                                questionContentKey: "OrganizationQuestionContent",
+                                                slotName: "organization",
+                                                collectedValue: "XAPP AI",
+                                            },
+                                        ],
+                                    },
                                 },
                             })
                             .build();
                     });
                     it("returns the initial response with the aside", async () => {
-
                         cc = new ContactCaptureHandler(props);
 
                         await cc.handleRequest(request, context);
@@ -826,36 +835,32 @@ describe(`${ContactCaptureHandler.name}`, () => {
                         expect(response.respond).to.have.been.calledTwice;
                         // first call is getting the FAQ response
                         // it is later cleaned up and is concatenated with the contact info request
-                        expect(response.respond).to.have.been.calledWith(
-                            {
-                                outputSpeech: {
-                                    displayText: 'This is the answer.',
-                                    ssml: '<speak>This is the answer.</speak>',
-                                    suggestions: []
-                                },
-                                reprompt: { displayText: '', ssml: '<speak></speak>' },
-                                displays: [],
-                                tag: 'KB_RAG',
-                            }
-                        );
+                        expect(response.respond).to.have.been.calledWith({
+                            outputSpeech: {
+                                displayText: "This is the answer.",
+                                ssml: "<speak>This is the answer.</speak>",
+                                suggestions: [],
+                            },
+                            reprompt: { displayText: "", ssml: "<speak></speak>" },
+                            displays: [],
+                            tag: "KB_RAG",
+                        });
                         // second call is when we concatenate it
-                        expect(response.respond).to.have.been.calledWith(
-                            {
-                                name: "First Name",
-                                tag: "FirstNameQuestionContent",
-                                outputSpeech: {
-                                    // It concatenates the FAQ and the first name question
-                                    ssml: '<speak>This is the answer.\n\nMay I have your name?</speak>',
-                                    displayText: 'This is the answer.\n\nMay I have your name?',
-                                    suggestions: []
-                                },
-                                reprompt: {
-                                    ssml: '<speak>May I have your name?</speak>',
-                                    displayText: 'May I have your name?'
-                                },
-                                displays: []
-                            }
-                        );
+                        expect(response.respond).to.have.been.calledWith({
+                            name: "First Name",
+                            tag: "FirstNameQuestionContent",
+                            outputSpeech: {
+                                // It concatenates the FAQ and the first name question
+                                ssml: "<speak>This is the answer.\n\nMay I have your name?</speak>",
+                                displayText: "This is the answer.\n\nMay I have your name?",
+                                suggestions: [],
+                            },
+                            reprompt: {
+                                ssml: "<speak>May I have your name?</speak>",
+                                displayText: "May I have your name?",
+                            },
+                            displays: [],
+                        });
 
                         // verity necessary context is created
                         const sessionStore = context.storage.sessionStore?.data;
@@ -869,7 +874,7 @@ describe(`${ContactCaptureHandler.name}`, () => {
                         // the length is the number of TRUE fields we are trying to capture
                         expect(list.data).to.have.length(2);
                     });
-                })
+                });
             });
             describe("when request completes the data required", () => {
                 const sandbox = sinon.createSandbox();
@@ -886,30 +891,31 @@ describe(`${ContactCaptureHandler.name}`, () => {
                             canTransferCall: false,
                             hasScreen: true,
                             hasWebBrowser: true,
-                            videoSupported: false
-                        }
+                            videoSupported: false,
+                        },
                     });
                     sandbox.spy(response, "respond");
 
                     request = new IntentRequestBuilder()
                         .withSlots({
-                            "first_name": {
+                            first_name: {
                                 value: "Michael",
-                                name: "first_name"
+                                name: "first_name",
                             },
-                            "last_name": {
+                            last_name: {
                                 value: "Myers",
-                                name: "last_name"
+                                name: "last_name",
                             },
-                            "phone_number": {
+                            phone_number: {
                                 name: "phone_number",
-                                value: "123-456-7777"
-                            }
+                                value: "123-456-7777",
+                            },
                         })
                         .withIntentId(props.intentId)
                         .updateDevice({
-                            canSpeak: false
-                        }).build();
+                            canSpeak: false,
+                        })
+                        .build();
 
                     context = new ContextBuilder()
                         .withResponse(response)
@@ -919,27 +925,28 @@ describe(`${ContactCaptureHandler.name}`, () => {
                                 ContactCaptureCurrentData: "FIRST_NAME",
                                 ContactCaptureSlots: {},
                                 ContactCaptureList: {
-                                    data: [{
-                                        type: 'FIRST_NAME',
-                                        enums: undefined,
-                                        questionContentKey: 'FirstNameQuestionContent',
-                                        slotName: 'first_name'
-                                    },
-                                    {
-                                        type: 'LAST_NAME',
-                                        enums: undefined,
-                                        questionContentKey: 'LastNameQuestionContent',
-                                        slotName: 'last_name'
-                                    },
-                                    {
-                                        type: "PHONE",
-                                        enums: undefined,
-                                        questionContentKey: 'PhoneQuestionContent',
-                                        slotName: "phone_number"
-                                    }
-                                    ]
-                                }
-                            }
+                                    data: [
+                                        {
+                                            type: "FIRST_NAME",
+                                            enums: undefined,
+                                            questionContentKey: "FirstNameQuestionContent",
+                                            slotName: "first_name",
+                                        },
+                                        {
+                                            type: "LAST_NAME",
+                                            enums: undefined,
+                                            questionContentKey: "LastNameQuestionContent",
+                                            slotName: "last_name",
+                                        },
+                                        {
+                                            type: "PHONE",
+                                            enums: undefined,
+                                            questionContentKey: "PhoneQuestionContent",
+                                            slotName: "phone_number",
+                                        },
+                                    ],
+                                },
+                            },
                         })
                         .build();
 
@@ -958,28 +965,31 @@ describe(`${ContactCaptureHandler.name}`, () => {
 
                     await cc.handleRequest(request, context);
                     expect(crmService.send).to.have.been.calledOnce;
-                    expect(crmService.send).to.have.been.calledWith({
-                        fields: [
-                            { name: 'FIRST_NAME', value: 'Michael' },
-                            { name: 'LAST_NAME', value: 'Myers' },
-                            { name: 'PHONE', value: '123-456-7777' },
-                            { name: 'PHONE_NUMBER', value: '123-456-7777' },
-                            { name: 'FULL_NAME', value: 'Michael Myers' }
-                        ],
-                        transcript: [],
-                        refId: undefined,
-                        jobTypeId: undefined,
-                        availabilityClassId: undefined,
-                        userId: "userId",
-                        sessionId: "sessionId",
-                        source: "stentor"
-                    }, {
-                        source: 'unknown',
-                        currentUrl: undefined,
-                        externalId: 'sessionId',
-                        crmFlags: { foo: 3 },
-                        isAbandoned: false
-                    });
+                    expect(crmService.send).to.have.been.calledWith(
+                        {
+                            fields: [
+                                { name: "FIRST_NAME", value: "Michael" },
+                                { name: "LAST_NAME", value: "Myers" },
+                                { name: "PHONE", value: "123-456-7777" },
+                                { name: "PHONE_NUMBER", value: "123-456-7777" },
+                                { name: "FULL_NAME", value: "Michael Myers" },
+                            ],
+                            transcript: [],
+                            refId: undefined,
+                            jobTypeId: undefined,
+                            availabilityClassId: undefined,
+                            userId: "userId",
+                            sessionId: "sessionId",
+                            source: "stentor",
+                        },
+                        {
+                            source: "unknown",
+                            currentUrl: undefined,
+                            externalId: "sessionId",
+                            crmFlags: { foo: 3 },
+                            isAbandoned: false,
+                        },
+                    );
 
                     const sessionStore = context.storage.sessionStore?.data;
                     const leadSent = sessionStore ? sessionStore[CONTACT_CAPTURE_SENT] : undefined;
@@ -1001,32 +1011,31 @@ describe(`${ContactCaptureHandler.name}`, () => {
                             canTransferCall: false,
                             hasScreen: true,
                             hasWebBrowser: true,
-                            videoSupported: false
-                        }
+                            videoSupported: false,
+                        },
                     });
                     sandbox.spy(response, "respond");
 
                     request = new IntentRequestBuilder()
                         .withSlots({
-                            "first_name": {
+                            first_name: {
                                 value: "Michael",
-                                name: "first_name"
+                                name: "first_name",
                             },
-                            "last_name": {
+                            last_name: {
                                 value: "Myers",
-                                name: "last_name"
+                                name: "last_name",
                             },
-                            "phone_number": {
+                            phone_number: {
                                 name: "phone_number",
-                                value: "123-456-7777"
-                            }
+                                value: "123-456-7777",
+                            },
                         })
-                        .withIntentId(
-                            "Thanks"
-                        )
+                        .withIntentId("Thanks")
                         .updateDevice({
-                            canSpeak: false
-                        }).build();
+                            canSpeak: false,
+                        })
+                        .build();
 
                     context = new ContextBuilder()
                         .withResponse(response)
@@ -1037,27 +1046,28 @@ describe(`${ContactCaptureHandler.name}`, () => {
                                 ContactCaptureLeadSent: true,
                                 ContactCaptureSlots: {},
                                 ContactCaptureList: {
-                                    data: [{
-                                        type: 'FIRST_NAME',
-                                        enums: undefined,
-                                        questionContentKey: 'FirstNameQuestionContent',
-                                        slotName: 'first_name'
-                                    },
-                                    {
-                                        type: 'LAST_NAME',
-                                        enums: undefined,
-                                        questionContentKey: 'LastNameQuestionContent',
-                                        slotName: 'last_name'
-                                    },
-                                    {
-                                        type: "PHONE",
-                                        enums: undefined,
-                                        questionContentKey: 'PhoneQuestionContent',
-                                        slotName: "phone_number"
-                                    }
-                                    ]
-                                }
-                            }
+                                    data: [
+                                        {
+                                            type: "FIRST_NAME",
+                                            enums: undefined,
+                                            questionContentKey: "FirstNameQuestionContent",
+                                            slotName: "first_name",
+                                        },
+                                        {
+                                            type: "LAST_NAME",
+                                            enums: undefined,
+                                            questionContentKey: "LastNameQuestionContent",
+                                            slotName: "last_name",
+                                        },
+                                        {
+                                            type: "PHONE",
+                                            enums: undefined,
+                                            questionContentKey: "PhoneQuestionContent",
+                                            slotName: "phone_number",
+                                        },
+                                    ],
+                                },
+                            },
                         })
                         .build();
 
@@ -1077,8 +1087,8 @@ describe(`${ContactCaptureHandler.name}`, () => {
 
                     expect(response.respond).to.have.been.calledOnce;
                     expect(response.respond).to.have.been.calledWith({
-                        outputSpeech: { ssml: '<speak>No Problem</speak>', displayText: 'No problem' },
-                        name: 'No Problem'
+                        outputSpeech: { ssml: "<speak>No Problem</speak>", displayText: "No problem" },
+                        name: "No Problem",
                     });
                 });
             });
@@ -1097,8 +1107,8 @@ describe(`${ContactCaptureHandler.name}`, () => {
                         canTransferCall: false,
                         hasScreen: true,
                         hasWebBrowser: true,
-                        videoSupported: false
-                    }
+                        videoSupported: false,
+                    },
                 });
                 sandbox.spy(response, "respond");
 
@@ -1106,13 +1116,11 @@ describe(`${ContactCaptureHandler.name}`, () => {
                     .withSlots({})
                     .withIntentId(props.intentId)
                     .updateDevice({
-                        canSpeak: false
-                    }).build();
-
-                context = new ContextBuilder()
-                    .withResponse(response)
-                    .withSessionData({ id: "foo", data: {} })
+                        canSpeak: false,
+                    })
                     .build();
+
+                context = new ContextBuilder().withResponse(response).withSessionData({ id: "foo", data: {} }).build();
 
                 placesService = new MockPlacesService();
                 sandbox.spy(placesService, "getDetails");
@@ -1123,22 +1131,20 @@ describe(`${ContactCaptureHandler.name}`, () => {
             describe("with content available", () => {
                 /** User has set content with appropriate tag */
                 it("returns as expected", async () => {
-
                     const handler = new ContactCaptureHandler(propsWithNoCaptureAndContent);
 
                     await handler.handleRequest(request, context);
 
                     expect(response.respond).to.have.been.calledOnce;
                     expect(response.respond).to.have.been.calledWith({
-                        outputSpeech: { displayText: 'Please call us ASAP!', ssml: '<speak></speak>' },
-                        name: 'No Capture',
-                        tag: "ContactCaptureNoCaptureStart"
+                        outputSpeech: { displayText: "Please call us ASAP!", ssml: "<speak></speak>" },
+                        name: "No Capture",
+                        tag: "ContactCaptureNoCaptureStart",
                     });
                 });
             });
             describe("with places and placesservice", () => {
                 it("returns as expected", async () => {
-
                     const props = { ...propsWithNoCapture };
 
                     if (props.data) {
@@ -1155,11 +1161,12 @@ describe(`${ContactCaptureHandler.name}`, () => {
                     expect(response.respond).to.have.been.calledOnce;
                     expect(response.respond).to.have.been.calledWith({
                         outputSpeech: {
-                            displayText: 'We can help with that, it is best to give us a call at 111-123-3333 to continue the conversation.',
-                            ssml: '<speak></speak>'
+                            displayText:
+                                "We can help with that, it is best to give us a call at 111-123-3333 to continue the conversation.",
+                            ssml: "<speak></speak>",
                         },
-                        name: 'No Capture with Number',
-                        tag: "ContactCaptureNoCaptureStart"
+                        name: "No Capture with Number",
+                        tag: "ContactCaptureNoCaptureStart",
                     });
                 });
             });
@@ -1180,28 +1187,27 @@ describe(`${ContactCaptureHandler.name}`, () => {
 
                     expect(response.respond).to.have.been.calledOnce;
                     expect(response.respond).to.have.been.calledWith({
-                        name: 'No Capture',
-                        tag: 'ContactCaptureNoCaptureStart',
+                        name: "No Capture",
+                        tag: "ContactCaptureNoCaptureStart",
                         outputSpeech: {
-                            displayText: 'We can help with that, please contact us to continue the conversation.',
-                            ssml: '<speak></speak>'
+                            displayText: "We can help with that, please contact us to continue the conversation.",
+                            ssml: "<speak></speak>",
                         },
-                        displays: []
+                        displays: [],
                     });
                 });
             });
             describe("with a Knowledgebase request", () => {
                 it("returns as expected", async () => {
-
                     const handler = new ContactCaptureHandler(propsWithNoCaptureAndContent);
 
                     const kbResult: KnowledgeBaseResult = {
                         faqs: [
                             {
                                 question: "What is your favorite color?",
-                                document: "Blue!"
-                            }
-                        ]
+                                document: "Blue!",
+                            },
+                        ],
                     };
 
                     request = new IntentRequestBuilder()
@@ -1216,28 +1222,27 @@ describe(`${ContactCaptureHandler.name}`, () => {
                         .withSessionData({
                             id: "foo",
                             data: {
-                                ['knowledge_base_result']: kbResult,
+                                ["knowledge_base_result"]: kbResult,
                                 ContactCaptureCurrentData: "ORGANIZATION",
                                 ContactCaptureSlots: {},
                                 ContactCaptureList: {
                                     data: [
                                         {
-                                            type: 'FIRST_NAME',
+                                            type: "FIRST_NAME",
                                             enums: undefined,
-                                            questionContentKey: 'FirstNameQuestionContent',
-                                            slotName: 'first_name'
+                                            questionContentKey: "FirstNameQuestionContent",
+                                            slotName: "first_name",
                                         },
                                         {
-                                            type: 'ORGANIZATION',
+                                            type: "ORGANIZATION",
                                             enums: undefined,
-                                            questionContentKey: 'OrganizationQuestionContent',
-                                            slotName: 'organization',
-                                            collectedValue: "XAPP AI"
-                                        }
-                                    ]
-                                }
+                                            questionContentKey: "OrganizationQuestionContent",
+                                            slotName: "organization",
+                                            collectedValue: "XAPP AI",
+                                        },
+                                    ],
+                                },
                             },
-
                         })
                         .build();
 
@@ -1245,14 +1250,14 @@ describe(`${ContactCaptureHandler.name}`, () => {
 
                     expect(response.respond).to.have.been.calledTwice;
                     expect(response.respond).to.have.been.calledWith({
-                        name: 'No Capture',
+                        name: "No Capture",
                         tag: "ContactCaptureNoCaptureStart",
                         outputSpeech: {
-                            ssml: '<speak>Blue!</speak>',
-                            displayText: 'Blue!\n\nPlease call us ASAP!'
+                            ssml: "<speak>Blue!</speak>",
+                            displayText: "Blue!\n\nPlease call us ASAP!",
                         },
                         reprompt: undefined,
-                        displays: undefined
+                        displays: undefined,
                     });
                 });
             });
@@ -1271,8 +1276,8 @@ describe(`${ContactCaptureHandler.name}`, () => {
                         canTransferCall: false,
                         hasScreen: true,
                         hasWebBrowser: true,
-                        videoSupported: false
-                    }
+                        videoSupported: false,
+                    },
                 });
                 sandbox.spy(response, "respond");
 
@@ -1280,15 +1285,13 @@ describe(`${ContactCaptureHandler.name}`, () => {
                     .withSlots({})
                     .withIntentId(props.intentId)
                     .updateDevice({
-                        canSpeak: false
-                    }).build();
+                        canSpeak: false,
+                    })
+                    .build();
 
                 request.channel = "form-widget";
 
-                context = new ContextBuilder()
-                    .withResponse(response)
-                    .withSessionData({ id: "foo", data: {} })
-                    .build();
+                context = new ContextBuilder().withResponse(response).withSessionData({ id: "foo", data: {} }).build();
 
                 const crmService = new MockCRM();
                 sandbox.spy(crmService, "send");
@@ -1329,9 +1332,9 @@ describe(`${ContactCaptureHandler.name}`, () => {
                             ...propsWithCustomForm.data,
                             enableFormScheduling: false,
                             capture: {
-                                data: []
-                            }
-                        }
+                                data: [],
+                            },
+                        },
                     });
 
                     await handler.handleRequest(request, context);
@@ -1351,16 +1354,22 @@ describe(`${ContactCaptureHandler.name}`, () => {
                     // first step is contact info
                     const fields = args.displays[0].steps[0].fields;
 
-                    expect(fields).to.have.length(3);
+                    expect(fields).to.have.length(4);
                     const name = fields[0];
                     expect(name.type).to.equal("TEXT");
                     expect(name.mandatory).to.be.true;
 
                     const phone = fields[1];
                     expect(phone.format).to.equal("PHONE");
-                    expect(phone.mandatory).to.be.true;
+                    expect(phone.mandatoryGroup).to.equal("contact_method");
+                    expect(phone.mandatoryError).to.equal("Please provide either a phone number or email address");
 
-                    const message = fields[2];
+                    const email = fields[2];
+                    expect(email.format).to.equal("EMAIL");
+                    expect(email.mandatoryGroup).to.equal("contact_method");
+                    expect(email.mandatoryError).to.equal("Please provide either a phone number or email address");
+
+                    const message = fields[3];
                     expect(message.type).to.equal("TEXT");
                     expect(message.multiline).to.be.true;
                 });
@@ -1374,15 +1383,15 @@ describe(`${ContactCaptureHandler.name}`, () => {
                                 capture: {
                                     data: [
                                         {
-                                            "slotName": "email",
-                                            "active": true,
-                                            "type": "EMAIL",
-                                            "required": true,
-                                            "questionContentKey": "EmailQuestionContent"
+                                            slotName: "email",
+                                            active: true,
+                                            type: "EMAIL",
+                                            required: true,
+                                            questionContentKey: "EmailQuestionContent",
                                         },
-                                    ]
-                                }
-                            }
+                                    ],
+                                },
+                            },
                         });
 
                         await handler.handleRequest(request, context);
@@ -1420,77 +1429,77 @@ describe(`${ContactCaptureHandler.name}`, () => {
                     it("returns the preferred time form", async () => {
                         // testing a real example here that happened
                         const requestActual: IntentRequest = {
-                            "platform": "stentor-platform",
-                            "type": "INTENT_REQUEST",
-                            "intentId": "LeadGeneration",
-                            "channel": "form-widget",
-                            "sessionId": "stentor-form-session-c7-a0dc-be059339ae99",
-                            "userId": "373ef93a-620d9ab0df56",
-                            "isNewSession": true,
-                            "attributes": {
-                                "environment": "production",
-                                "origin": "rwg",
-                                "rwg_token": "AJKvS9X5g9ljTvfooGv36kwEPIIH_mrNc_DrfYKsCWi90barrQLEZ5W3X6fECqYNiSqUDxyS2tI5A==",
+                            platform: "stentor-platform",
+                            type: "INTENT_REQUEST",
+                            intentId: "LeadGeneration",
+                            channel: "form-widget",
+                            sessionId: "stentor-form-session-c7-a0dc-be059339ae99",
+                            userId: "373ef93a-620d9ab0df56",
+                            isNewSession: true,
+                            attributes: {
+                                environment: "production",
+                                origin: "rwg",
+                                rwg_token:
+                                    "AJKvS9X5g9ljTvfooGv36kwEPIIH_mrNc_DrfYKsCWi90barrQLEZ5W3X6fECqYNiSqUDxyS2tI5A==",
                             },
-                            "slots": {}
-                        }
+                            slots: {},
+                        };
 
                         const contextActual: Context = new ContextBuilder()
                             .withResponse(response)
                             .withSessionData({
-                                "data": {
-                                    "ContactCaptureBusyDays": {
-                                        "range": {},
-                                        "unavailabilities": [
-                                        ]
+                                data: {
+                                    ContactCaptureBusyDays: {
+                                        range: {},
+                                        unavailabilities: [],
                                     },
-                                    "ContactCaptureList": {
-                                        "data": [
+                                    ContactCaptureList: {
+                                        data: [
                                             {
-                                                "questionContentKey": "FirstNameQuestionContent",
-                                                "slotName": "first_name",
-                                                "type": "FIRST_NAME"
+                                                questionContentKey: "FirstNameQuestionContent",
+                                                slotName: "first_name",
+                                                type: "FIRST_NAME",
                                             },
                                             {
-                                                "questionContentKey": "LastNameQuestionContent",
-                                                "slotName": "last_name",
-                                                "type": "LAST_NAME"
+                                                questionContentKey: "LastNameQuestionContent",
+                                                slotName: "last_name",
+                                                type: "LAST_NAME",
                                             },
                                             {
-                                                "questionContentKey": "PhoneQuestionContent",
-                                                "slotName": "phone",
-                                                "type": "PHONE"
+                                                questionContentKey: "PhoneQuestionContent",
+                                                slotName: "phone",
+                                                type: "PHONE",
                                             },
                                             {
-                                                "questionContentKey": "AddressQuestionContent",
-                                                "slotName": "address",
-                                                "type": "ADDRESS"
-                                            }
+                                                questionContentKey: "AddressQuestionContent",
+                                                slotName: "address",
+                                                type: "ADDRESS",
+                                            },
                                         ],
-                                        "lastModifiedMs": 1732097435181
+                                        lastModifiedMs: 1732097435181,
                                     },
-                                    "ContactCaptureSlots": {},
-                                    "current_handler": "LeadGeneration",
-                                    "new_user": true,
-                                    "previous_handler": "LeadGeneration",
-                                    "slots": {},
-                                    "unknownInputs": 0
+                                    ContactCaptureSlots: {},
+                                    current_handler: "LeadGeneration",
+                                    new_user: true,
+                                    previous_handler: "LeadGeneration",
+                                    slots: {},
+                                    unknownInputs: 0,
                                 },
-                                "id": "stentor-form-session-c7-a0dc-be059339ae99",
-                                "transcript": [
+                                id: "stentor-form-session-c7-a0dc-be059339ae99",
+                                transcript: [
                                     {
-                                        "createdTime": "2024-11-20T10:10:35.153Z",
-                                        "from": {
-                                            "id": "373ef93a-620d9ab0df56"
+                                        createdTime: "2024-11-20T10:10:35.153Z",
+                                        from: {
+                                            id: "373ef93a-620d9ab0df56",
                                         },
-                                        "message": "Request LeadGeneration",
-                                        "to": [
+                                        message: "Request LeadGeneration",
+                                        to: [
                                             {
-                                                "id": "bot"
-                                            }
-                                        ]
-                                    }
-                                ]
+                                                id: "bot",
+                                            },
+                                        ],
+                                    },
+                                ],
                             })
                             .build();
 
@@ -1502,9 +1511,9 @@ describe(`${ContactCaptureHandler.name}`, () => {
                                 enablePreferredTime: true,
                                 captureLead: true,
                                 capture: {
-                                    data: []
-                                }
-                            }
+                                    data: [],
+                                },
+                            },
                         });
 
                         await handler.handleRequest(requestActual, contextActual);
