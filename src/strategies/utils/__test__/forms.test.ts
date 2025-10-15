@@ -5,7 +5,7 @@ import * as sinonChai from "sinon-chai";
 import { FormCardInput, FormChipsInput, FormFieldTextAddressInput, SelectableItem } from "stentor-models";
 
 import { isFormDateInput, isMultistepForm } from "../../../guards";
-import { getFormResponse, getContactFormFallback } from "../forms";
+import { getFormResponse, getContactFormFallback, FormResponseProps } from "../forms";
 import {
     CUSTOM_FORM,
     SIMPLE_BLUEPRINT,
@@ -1030,6 +1030,147 @@ describe(`#${getContactFormFallback.name}()`, () => {
                 expect(chipsField.items[1].id).to.equal("12pm_5pm");
                 expect(chipsField.items[1].label).to.equal("12 PM - 5 PM");
             }
+        });
+    });
+    describe("edge cases", () => {
+        describe("preferredTimeOptions with empty array", () => {
+            it("handles empty array gracefully by using default options", () => {
+                const form = getContactFormFallback(
+                    {
+                        capture: SIMPLE_BLUEPRINT,
+                        preferredTimeOptions: [],
+                    },
+                    { enablePreferredTime: true },
+                );
+
+                expect(form).to.exist;
+
+                const preferredTimeStep = form.steps[2];
+                const preferredTimeField = preferredTimeStep.fields.find((field) => field.name === "preferred_time");
+                expect(preferredTimeField).to.exist;
+
+                if (preferredTimeField?.type === "CHIPS") {
+                    const chipsField = preferredTimeField as FormChipsInput;
+                    // Should use default options when empty array is provided
+                    expect(chipsField.items).to.have.length(3);
+                    expect(chipsField.items[0].id).to.equal("first_available");
+                }
+            });
+        });
+
+        describe("service ID with special characters", () => {
+            it("sanitizes service IDs with special characters", () => {
+                const form = getContactFormFallback(
+                    {
+                        capture: {
+                            data: SIMPLE_BLUEPRINT.data,
+                            serviceOptions: [
+                                {
+                                    id: "schedule'maintenance",
+                                    label: "Schedule Maintenance",
+                                    requiresDate: true,
+                                },
+                            ],
+                        },
+                    },
+                    { enablePreferredTime: true },
+                );
+
+                expect(form).to.exist;
+
+                const preferredTimeStep = form.steps[2];
+                expect(preferredTimeStep).to.exist;
+
+                // Check that the condition is properly sanitized
+                const condition = preferredTimeStep.condition;
+                expect(condition).to.exist;
+                // The single quote should be removed
+                expect(condition).to.equal("help_type.includes('schedulemaintenance')");
+            });
+
+            it("sanitizes preselected service with special characters", () => {
+                const form = getContactFormFallback(
+                    { capture: SIMPLE_BLUEPRINT },
+                    { enablePreferredTime: true, service: "schedule<script>alert('xss')</script>visit" },
+                );
+
+                expect(form).to.exist;
+
+                const step = form.steps[0];
+                const chipItem = step.fields[0];
+
+                if (chipItem.type === "CHIPS") {
+                    const items = (chipItem as FormChipsInput).items;
+                    // Should have sanitized the service ID
+                    const serviceItem = items.find((item) => (item as SelectableItem).selected);
+                    expect(serviceItem).to.exist;
+                    // Special characters should be removed, leaving only alphanumeric, underscores, and hyphens
+                    expect(serviceItem?.id).to.equal("schedulescriptalertxssscriptvisit");
+                }
+            });
+        });
+
+        describe("turnOffFirstAvailableDay without enablePreferredTime", () => {
+            it("does not affect contact-only form", () => {
+                const form = getContactFormFallback(
+                    {
+                        capture: SIMPLE_BLUEPRINT,
+                        turnOffFirstAvailableDay: true,
+                    },
+                    { enablePreferredTime: false },
+                );
+
+                expect(form).to.exist;
+                expect(form.name).to.equal("contact_us_only");
+                expect(form.steps).to.have.length(2);
+            });
+        });
+
+        describe("preferredTimeOptions with single option", () => {
+            it("handles single time option correctly", () => {
+                const customTimeOptions: SelectableItem[] = [{ id: "anytime", label: "Any Time" }];
+
+                const form = getContactFormFallback(
+                    {
+                        capture: SIMPLE_BLUEPRINT,
+                        preferredTimeOptions: customTimeOptions,
+                    },
+                    { enablePreferredTime: true },
+                );
+
+                expect(form).to.exist;
+
+                const preferredTimeStep = form.steps[2];
+                const preferredTimeField = preferredTimeStep.fields.find((field) => field.name === "preferred_time");
+                expect(preferredTimeField).to.exist;
+
+                if (preferredTimeField?.type === "CHIPS") {
+                    const chipsField = preferredTimeField as FormChipsInput;
+                    expect(chipsField.items).to.have.length(1);
+                    expect(chipsField.items[0].id).to.equal("anytime");
+                    expect(chipsField.items[0].label).to.equal("Any Time");
+                }
+            });
+        });
+
+        describe("props immutability", () => {
+            it("does not mutate input props object", () => {
+                const originalProps: FormResponseProps = { enablePreferredTime: false };
+                const propsCopy = { ...originalProps };
+
+                getContactFormFallback(
+                    {
+                        capture: SIMPLE_BLUEPRINT,
+                        enablePreferredTime: true,
+                        turnOffFirstAvailableDay: true,
+                    },
+                    originalProps,
+                );
+
+                // Original props should not be mutated
+                expect(originalProps.enablePreferredTime).to.equal(propsCopy.enablePreferredTime);
+                expect(originalProps.turnOffFirstAvailableDay).to.be.undefined;
+            });
         });
     });
 });

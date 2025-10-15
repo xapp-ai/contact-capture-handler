@@ -70,6 +70,18 @@ export interface FieldSettings {
     required?: boolean;
 }
 
+/**
+ * Sanitizes a service ID to be safely used in conditionals.
+ * Removes potentially dangerous characters that could break JavaScript evaluation.
+ * @param id - The service ID to sanitize
+ * @returns Sanitized service ID safe for use in conditionals
+ */
+function sanitizeServiceId(id: string): string {
+    // Only allow alphanumeric characters, underscores, and hyphens
+    // This prevents injection of quotes, parentheses, or other special characters
+    return id.replace(/[^a-zA-Z0-9_-]/g, "");
+}
+
 export interface FormResponseProps {
     /**
      * Enables preferred time form
@@ -126,29 +138,21 @@ export interface FormResponseProps {
  * @returns
  */
 export function getContactFormFallback(data: ContactCaptureData, props: FormResponseProps): MultistepForm {
-    if (typeof data.enablePreferredTime === "boolean") {
-        props.enablePreferredTime = data.enablePreferredTime;
-    }
+    // Create a merged configuration object without mutating the input props
+    const mergedProps: FormResponseProps = {
+        ...props,
+        ...(typeof data.enablePreferredTime === "boolean" && { enablePreferredTime: data.enablePreferredTime }),
+        ...(typeof data.turnOffFirstAvailableDay === "boolean" && {
+            turnOffFirstAvailableDay: data.turnOffFirstAvailableDay,
+        }),
+        ...(existsAndNotEmpty(data.preferredTimeOptions) && { preferredTimeOptions: data.preferredTimeOptions }),
+        ...(existsAndNotEmpty(data.capture?.serviceOptions) && { serviceOptions: data.capture.serviceOptions }),
+        ...(data.capture?.messageDescription && { messageDescription: data.capture.messageDescription }),
+        ...(data.capture?.disclaimer && { disclaimer: data.capture.disclaimer }),
+    };
 
-    if (typeof data.turnOffFirstAvailableDay === "boolean") {
-        props.turnOffFirstAvailableDay = data.turnOffFirstAvailableDay;
-    }
-
-    if (existsAndNotEmpty(data.preferredTimeOptions)) {
-        props.preferredTimeOptions = data.preferredTimeOptions;
-    }
-
-    if (existsAndNotEmpty(data.capture?.serviceOptions)) {
-        props.serviceOptions = data.capture?.serviceOptions;
-    }
-
-    if (data.capture?.messageDescription) {
-        props.messageDescription = data.capture?.messageDescription;
-    }
-
-    if (data.capture?.disclaimer) {
-        props.disclaimer = data.capture?.disclaimer;
-    }
+    // Use mergedProps instead of props throughout the rest of the function
+    props = mergedProps;
 
     const PREFERRED_TIME_HEADER = [
         {
@@ -182,8 +186,11 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
     }
 
     if (props?.service) {
+        // Sanitize the service ID to ensure it only contains safe characters
+        const sanitizedServiceId = sanitizeServiceId(props.service);
+
         // see if it is already in the items, match by id
-        const found = chips.findIndex((item) => item.id === props.service);
+        const found = chips.findIndex((item) => item.id === sanitizedServiceId);
 
         if (found >= 0) {
             // if found, set it to selected
@@ -192,7 +199,7 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
             // add it to the items
             // we need to replace _ with space
             // and capitalize first letter of each word
-            const serviceRaw = props.service.replace("_", " ");
+            const serviceRaw = sanitizedServiceId.replace(/_/g, " ");
             // split by words and capitalize and recombine
             const service = serviceRaw
                 .split(" ")
@@ -200,7 +207,7 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
                 .join(" ");
 
             chips.unshift({
-                id: props.service,
+                id: sanitizedServiceId,
                 label: service,
                 selected: true,
             });
@@ -360,7 +367,9 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
         preferredTimeConditional = props.serviceOptions
             .filter((service) => service.requiresDate)
             .map((chip) => {
-                return `help_type.includes('${chip.id}')`;
+                // Sanitize the chip ID to prevent injection attacks in the conditional
+                const sanitizedId = sanitizeServiceId(chip.id);
+                return `help_type.includes('${sanitizedId}')`;
             })
             .join(" || ");
 
@@ -453,7 +462,7 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
             type: "CARD",
         },
         {
-            name: "confirmation_card_details",
+            name: "confirmation_card_request_details",
             variant: "body1",
             text: "Request Details",
             style: {
