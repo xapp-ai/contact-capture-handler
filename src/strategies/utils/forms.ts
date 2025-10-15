@@ -112,6 +112,7 @@ export interface FormResponseProps {
      * Optional message description to help people leave meaningful messages
      */
     messageDescription?: string;
+
     /**
      * Is there a preselected service
      */
@@ -130,6 +131,11 @@ export interface FormResponseProps {
      * (First Available Time, Morning, Afternoon) with user-defined options.
      */
     preferredTimeOptions?: SelectableItem[];
+    /**
+     * Custom confirmation text for the preferred date/time selection.
+     * If provided, replaces the default text shown in the preferred_time_confirmation_message field.
+     */
+    preferredDateConfirmationText?: string;
 }
 
 /**
@@ -146,6 +152,7 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
             turnOffFirstAvailableDay: data.turnOffFirstAvailableDay,
         }),
         ...(existsAndNotEmpty(data.preferredTimeOptions) && { preferredTimeOptions: data.preferredTimeOptions }),
+        ...(data.preferredDateConfirmationText && { preferredDateConfirmationText: data.preferredDateConfirmationText }),
         ...(existsAndNotEmpty(data.capture?.serviceOptions) && { serviceOptions: data.capture.serviceOptions }),
         ...(data.capture?.messageDescription && { messageDescription: data.capture.messageDescription }),
         ...(data.capture?.disclaimer && { disclaimer: data.capture.disclaimer }),
@@ -495,9 +502,9 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
             },
         },
         {
-            name: "confirmation_card2_message",
+            name: "preferred_time_confirmation_message",
             condition: "(!!dateTime || !!preferred_date) && preferred_time?.length > 0",
-            text: "Someone from our team will contact you soon to confirm the date & time as well as additional details",
+            text: props.preferredDateConfirmationText || "Someone from our team will contact you son to confirm the date & time as well as additional details",
             type: "CARD",
             align: "center",
             variant: "caption",
@@ -616,20 +623,22 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
     });
 
     // Add preferred_time field with custom or default items
-    const preferredTimeItems = props.preferredTimeOptions || [
-        {
-            id: "first_available",
-            label: "First Available Time",
-        },
-        {
-            id: "morning",
-            label: "Morning",
-        },
-        {
-            id: "afternoon",
-            label: "Afternoon",
-        },
-    ];
+    const preferredTimeItems = existsAndNotEmpty(props.preferredTimeOptions)
+        ? props.preferredTimeOptions
+        : [
+              {
+                  id: "first_available",
+                  label: "First Available Time",
+              },
+              {
+                  id: "morning",
+                  label: "Morning",
+              },
+              {
+                  id: "afternoon",
+                  label: "Afternoon",
+              },
+          ];
 
     preferredTimeFields.push({
         name: "preferred_time",

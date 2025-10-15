@@ -1032,6 +1032,83 @@ describe(`#${getContactFormFallback.name}()`, () => {
             }
         });
     });
+    describe("when passed preferredDateConfirmationText", () => {
+        it("uses custom confirmation text instead of default", () => {
+            const customText = "Our team will reach out to you within 24 hours to confirm your appointment.";
+
+            const form = getContactFormFallback(
+                {
+                    capture: SIMPLE_BLUEPRINT,
+                    preferredDateConfirmationText: customText,
+                },
+                { enablePreferredTime: true },
+            );
+
+            expect(form).to.exist;
+
+            const confirmationStep = form.steps[3]; // confirmation step
+            expect(confirmationStep).to.exist;
+            expect(confirmationStep.name).to.equal("confirmation");
+
+            // Find the preferred_time_confirmation_message field
+            const confirmationMessageField = confirmationStep.fields.find(
+                (field) => field.name === "preferred_time_confirmation_message",
+            );
+            expect(confirmationMessageField).to.exist;
+            expect(confirmationMessageField?.type).to.equal("CARD");
+
+            if (confirmationMessageField?.type === "CARD") {
+                const cardField = confirmationMessageField as FormCardInput;
+                expect(cardField.text).to.equal(customText);
+            }
+        });
+
+        it("uses default text when preferredDateConfirmationText is not provided", () => {
+            const form = getContactFormFallback({ capture: SIMPLE_BLUEPRINT }, { enablePreferredTime: true });
+
+            expect(form).to.exist;
+
+            const confirmationStep = form.steps[3]; // confirmation step
+            const confirmationMessageField = confirmationStep.fields.find(
+                (field) => field.name === "preferred_time_confirmation_message",
+            );
+            expect(confirmationMessageField).to.exist;
+
+            if (confirmationMessageField?.type === "CARD") {
+                const cardField = confirmationMessageField as FormCardInput;
+                // Check for the default text (note: there's a typo "son" instead of "soon" in the original)
+                expect(cardField.text).to.equal(
+                    "Someone from our team will contact you son to confirm the date & time as well as additional details",
+                );
+            }
+        });
+
+        it("merges preferredDateConfirmationText from ContactCaptureData", () => {
+            const customText = "We will confirm your preferred date and time shortly.";
+
+            const form = getContactFormFallback(
+                {
+                    capture: SIMPLE_BLUEPRINT,
+                    preferredDateConfirmationText: customText,
+                    enablePreferredTime: true,
+                },
+                {},
+            );
+
+            expect(form).to.exist;
+
+            const confirmationStep = form.steps[3];
+            const confirmationMessageField = confirmationStep.fields.find(
+                (field) => field.name === "preferred_time_confirmation_message",
+            );
+            expect(confirmationMessageField).to.exist;
+
+            if (confirmationMessageField?.type === "CARD") {
+                const cardField = confirmationMessageField as FormCardInput;
+                expect(cardField.text).to.equal(customText);
+            }
+        });
+    });
     describe("edge cases", () => {
         describe("preferredTimeOptions with empty array", () => {
             it("handles empty array gracefully by using default options", () => {
