@@ -1,3 +1,10 @@
+## [1.14.1](https://github.com/xapp-ai/contact-capture-handler/compare/v1.14.0...v1.14.1) (2025-10-15)
+
+
+### Bug Fixes
+
+* Default Updates & Form Settings ([#580](https://github.com/xapp-ai/contact-capture-handler/issues/580)) ([9a047cd](https://github.com/xapp-ai/contact-capture-handler/commit/9a047cd99b22157abbe29637977f25a9519bec03))
+
 # [1.14.0](https://github.com/xapp-ai/contact-capture-handler/compare/v1.13.5...v1.14.0) (2025-09-09)
 
 
