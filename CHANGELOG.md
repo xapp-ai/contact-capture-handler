@@ -1,3 +1,10 @@
+# [1.15.0](https://github.com/xapp-ai/contact-capture-handler/compare/v1.14.1...v1.15.0) (2025-10-22)
+
+
+### Features
+
+* Modify First Page of Form ([#584](https://github.com/xapp-ai/contact-capture-handler/issues/584)) ([8781ee7](https://github.com/xapp-ai/contact-capture-handler/commit/8781ee7647d89f753cbc1f69ceeeb5705566bf6e))
+
 ## [1.14.1](https://github.com/xapp-ai/contact-capture-handler/compare/v1.14.0...v1.14.1) (2025-10-15)
 
 
