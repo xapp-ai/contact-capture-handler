@@ -1646,4 +1646,160 @@ describe(`#${getContactFormFallback.name}()`, () => {
             }
         });
     });
+    describe("when passed serviceSelectionTitle configuration", () => {
+        describe("with custom serviceSelectionTitle", () => {
+            it("uses custom title for CHIPS field", () => {
+                const form = getContactFormFallback(
+                    {
+                        capture: SIMPLE_BLUEPRINT,
+                        serviceSelectionTitle: "How can we assist you today?",
+                    },
+                    { enablePreferredTime: true },
+                );
+
+                expect(form).to.exist;
+
+                const serviceRequestStep = form.steps[0];
+                const helpTypeField = serviceRequestStep.fields[0];
+
+                expect(helpTypeField.name).to.equal("help_type");
+                expect(helpTypeField.type).to.equal("CHIPS");
+                expect(helpTypeField.title).to.equal("How can we assist you today?");
+            });
+
+            it("uses custom title for DROPDOWN field", () => {
+                const form = getContactFormFallback(
+                    {
+                        capture: SIMPLE_BLUEPRINT,
+                        firstPageInputType: "dropdown",
+                        serviceSelectionTitle: "What type of service do you need?",
+                    },
+                    { enablePreferredTime: true },
+                );
+
+                expect(form).to.exist;
+
+                const serviceRequestStep = form.steps[0];
+                const helpTypeField = serviceRequestStep.fields[0];
+
+                expect(helpTypeField.name).to.equal("help_type");
+                expect(helpTypeField.type).to.equal("DROPDOWN");
+                expect(helpTypeField.title).to.equal("What type of service do you need?");
+            });
+
+            it("applies custom title across different configurations", () => {
+                const form = getContactFormFallback(
+                    {
+                        capture: SIMPLE_BLUEPRINT,
+                        firstPageInputType: "dropdown",
+                        showFirstPageMessage: false,
+                        serviceSelectionTitle: "Select your service:",
+                    },
+                    { enablePreferredTime: true },
+                );
+
+                expect(form).to.exist;
+
+                const serviceRequestStep = form.steps[0];
+                expect(serviceRequestStep.fields).to.have.length(1);
+
+                const helpTypeField = serviceRequestStep.fields[0];
+                expect(helpTypeField.title).to.equal("Select your service:");
+            });
+        });
+
+        describe("with default serviceSelectionTitle", () => {
+            it("uses default title when not specified", () => {
+                const form = getContactFormFallback(
+                    {
+                        capture: SIMPLE_BLUEPRINT,
+                    },
+                    { enablePreferredTime: true },
+                );
+
+                expect(form).to.exist;
+
+                const serviceRequestStep = form.steps[0];
+                const helpTypeField = serviceRequestStep.fields[0];
+
+                expect(helpTypeField.title).to.equal("What can we help you with?");
+            });
+
+            it("uses default title for dropdown when not specified", () => {
+                const form = getContactFormFallback(
+                    {
+                        capture: SIMPLE_BLUEPRINT,
+                        firstPageInputType: "dropdown",
+                    },
+                    { enablePreferredTime: true },
+                );
+
+                expect(form).to.exist;
+
+                const serviceRequestStep = form.steps[0];
+                const helpTypeField = serviceRequestStep.fields[0];
+
+                expect(helpTypeField.type).to.equal("DROPDOWN");
+                expect(helpTypeField.title).to.equal("What can we help you with?");
+            });
+        });
+
+        describe("when passed through ContactCaptureData", () => {
+            it("merges serviceSelectionTitle from data into props", () => {
+                const response = getFormResponse(
+                    {
+                        capture: SIMPLE_BLUEPRINT,
+                        enablePreferredTime: true,
+                        serviceSelectionTitle: "Choose your service:",
+                    },
+                    {},
+                );
+
+                expect(response).to.exist;
+
+                const form =
+                    response && Array.isArray(response.displays) && response?.displays?.length > 0
+                        ? response.displays[0]
+                        : undefined;
+                expect(form).to.exist;
+
+                expect(isMultistepForm(form)).to.be.true;
+
+                if (isMultistepForm(form)) {
+                    const serviceRequestStep = form.steps[0];
+                    const helpTypeField = serviceRequestStep.fields[0];
+                    expect(helpTypeField.title).to.equal("Choose your service:");
+                }
+            });
+
+            it("props override data when both are provided", () => {
+                const response = getFormResponse(
+                    {
+                        capture: SIMPLE_BLUEPRINT,
+                        enablePreferredTime: true,
+                        serviceSelectionTitle: "From data",
+                    },
+                    {
+                        serviceSelectionTitle: "From props",
+                    },
+                );
+
+                expect(response).to.exist;
+
+                const form =
+                    response && Array.isArray(response.displays) && response?.displays?.length > 0
+                        ? response.displays[0]
+                        : undefined;
+
+                expect(isMultistepForm(form)).to.be.true;
+
+                if (isMultistepForm(form)) {
+                    const serviceRequestStep = form.steps[0];
+                    const helpTypeField = serviceRequestStep.fields[0];
+                    // Props should win
+                    expect(helpTypeField.title).to.equal("From props");
+                }
+            });
+        });
+    });
 });

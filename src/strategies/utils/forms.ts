@@ -167,6 +167,23 @@ export interface FormResponseProps {
      * { showFirstPageMessage: false }
      */
     showFirstPageMessage?: boolean;
+    /**
+     * Custom title/question text for the service selection field on the first page.
+     *
+     * This text appears as the title/prompt above the chips or dropdown selection field
+     * where users select which service they need help with.
+     *
+     * This only affects the first step (service_request) of forms with enablePreferredTime=true.
+     *
+     * @default "What can we help you with?"
+     * @example
+     * // Customize the service selection prompt
+     * { serviceSelectionTitle: "How can we assist you today?" }
+     * @example
+     * // Use a more specific prompt
+     * { serviceSelectionTitle: "What type of service do you need?" }
+     */
+    serviceSelectionTitle?: string;
 }
 
 /**
@@ -186,6 +203,7 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
         ...(data.preferredDateConfirmationText && { preferredDateConfirmationText: data.preferredDateConfirmationText }),
         ...(data.firstPageInputType && { firstPageInputType: data.firstPageInputType }),
         ...(typeof data.showFirstPageMessage === "boolean" && { showFirstPageMessage: data.showFirstPageMessage }),
+        ...(data.serviceSelectionTitle && { serviceSelectionTitle: data.serviceSelectionTitle }),
         ...(existsAndNotEmpty(data.capture?.serviceOptions) && { serviceOptions: data.capture.serviceOptions }),
         ...(data.capture?.messageDescription && { messageDescription: data.capture.messageDescription }),
         ...(data.capture?.disclaimer && { disclaimer: data.capture.disclaimer }),
@@ -698,18 +716,19 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
     });
 
     // Build the service selection field based on firstPageInputType
+    const serviceSelectionTitle = props.serviceSelectionTitle || "What can we help you with?";
     const serviceSelectionField: FormChipsInput | FormDropdownInput =
         props.firstPageInputType === "dropdown"
             ? {
                   name: "help_type",
-                  title: "What can we help you with?",
+                  title: serviceSelectionTitle,
                   type: "DROPDOWN",
                   items: chips,
                   mandatory: true,
               }
             : {
                   name: "help_type",
-                  title: "What can we help you with?",
+                  title: serviceSelectionTitle,
                   type: "CHIPS",
                   items: chips,
                   mandatory: true,
