@@ -2,6 +2,7 @@
 import { log } from "stentor-logger";
 import type {
     FormChipsInput,
+    FormDropdownInput,
     FormField,
     FormFieldTextAddressInput,
     FormStep,
@@ -136,6 +137,36 @@ export interface FormResponseProps {
      * If provided, replaces the default text shown in the preferred_time_confirmation_message field.
      */
     preferredDateConfirmationText?: string;
+    /**
+     * Controls the input type for the service selection on the first page of the fallback form.
+     *
+     * - `"chips"` (default): Displays service options as interactive chip buttons
+     * - `"dropdown"`: Displays service options as a dropdown/select field
+     *
+     * This only affects the first step (service_request) of forms with enablePreferredTime=true.
+     *
+     * @default "chips"
+     * @example
+     * // Use dropdown instead of chips for service selection
+     * { firstPageInputType: "dropdown" }
+     */
+    firstPageInputType?: "chips" | "dropdown";
+    /**
+     * Controls whether the message textarea field is displayed on the first page of the fallback form.
+     *
+     * When set to `false`, the message field will be hidden from the first page (service_request step).
+     * This is useful when you want a simpler first page with just service selection.
+     *
+     * Note: This only affects the first step of forms with enablePreferredTime=true.
+     * For contact-only forms (enablePreferredTime=false), the message field is always displayed
+     * as it's a core part of the single-step contact form.
+     *
+     * @default true
+     * @example
+     * // Hide message field on first page
+     * { showFirstPageMessage: false }
+     */
+    showFirstPageMessage?: boolean;
 }
 
 /**
@@ -145,17 +176,20 @@ export interface FormResponseProps {
  */
 export function getContactFormFallback(data: ContactCaptureData, props: FormResponseProps): MultistepForm {
     // Create a merged configuration object without mutating the input props
+    // Props take precedence over data - only apply data values if props don't have them
     const mergedProps: FormResponseProps = {
-        ...props,
         ...(typeof data.enablePreferredTime === "boolean" && { enablePreferredTime: data.enablePreferredTime }),
         ...(typeof data.turnOffFirstAvailableDay === "boolean" && {
             turnOffFirstAvailableDay: data.turnOffFirstAvailableDay,
         }),
         ...(existsAndNotEmpty(data.preferredTimeOptions) && { preferredTimeOptions: data.preferredTimeOptions }),
         ...(data.preferredDateConfirmationText && { preferredDateConfirmationText: data.preferredDateConfirmationText }),
+        ...(data.firstPageInputType && { firstPageInputType: data.firstPageInputType }),
+        ...(typeof data.showFirstPageMessage === "boolean" && { showFirstPageMessage: data.showFirstPageMessage }),
         ...(existsAndNotEmpty(data.capture?.serviceOptions) && { serviceOptions: data.capture.serviceOptions }),
         ...(data.capture?.messageDescription && { messageDescription: data.capture.messageDescription }),
         ...(data.capture?.disclaimer && { disclaimer: data.capture.disclaimer }),
+        ...props, // Props override data
     };
 
     // Use mergedProps instead of props throughout the rest of the function
@@ -663,28 +697,45 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
         type: "CARD",
     });
 
+    // Build the service selection field based on firstPageInputType
+    const serviceSelectionField: FormChipsInput | FormDropdownInput =
+        props.firstPageInputType === "dropdown"
+            ? {
+                  name: "help_type",
+                  title: "What can we help you with?",
+                  type: "DROPDOWN",
+                  items: chips,
+                  mandatory: true,
+              }
+            : {
+                  name: "help_type",
+                  title: "What can we help you with?",
+                  type: "CHIPS",
+                  items: chips,
+                  mandatory: true,
+                  radio: true,
+              };
+
+    // Build the first step fields array
+    const firstStepFields: FormField[] = [serviceSelectionField];
+
+    // Conditionally add message field based on showFirstPageMessage (defaults to true)
+    if (props.showFirstPageMessage !== false) {
+        firstStepFields.push({
+            name: "message",
+            label: props.messageDescription || "Please provide us with more details about your request",
+            rows: 6,
+            type: "TEXT",
+            multiline: true,
+            mandatory: requiredMessage,
+        });
+    }
+
     const PREFERRED_TIME_STEPS: FormStep[] = [
         {
             name: "service_request",
             nextAction: "next",
-            fields: [
-                {
-                    name: "help_type",
-                    title: "What can we help you with?",
-                    type: "CHIPS",
-                    items: chips,
-                    mandatory: true,
-                    radio: true,
-                },
-                {
-                    name: "message",
-                    label: props.messageDescription || "Please provide us with more details about your request",
-                    rows: 6,
-                    type: "TEXT",
-                    multiline: true,
-                    mandatory: requiredMessage,
-                },
-            ],
+            fields: firstStepFields,
         },
         {
             name: "contact_info",
