@@ -1,3 +1,10 @@
+## [1.15.1](https://github.com/xapp-ai/contact-capture-handler/compare/v1.15.0...v1.15.1) (2025-10-23)
+
+
+### Bug Fixes
+
+* Updating passthrough to extras from attributes ([#585](https://github.com/xapp-ai/contact-capture-handler/issues/585)) ([7171063](https://github.com/xapp-ai/contact-capture-handler/commit/7171063133a4e3d825311a9788e93f28414e7fed))
+
 # [1.15.0](https://github.com/xapp-ai/contact-capture-handler/compare/v1.14.1...v1.15.0) (2025-10-22)
 
 
