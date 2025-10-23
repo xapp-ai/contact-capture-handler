@@ -54,7 +54,8 @@ class MockCRM implements CrmService {
     public getJobType(): Promise<any> {
         throw new Error("Method not implemented.");
     }
-    public async send(): Promise<CrmResponse> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
+    public async send(_lead?: any, _extras?: any): Promise<CrmResponse> {
         return {
             status: "Success",
         };
@@ -182,6 +183,196 @@ describe(`${ContactCaptureHandler.name}`, () => {
                         merchant_id: "456",
                     },
                 );
+            });
+
+            it("adds UTM parameters to the extras", () => {
+                const request = new IntentRequestBuilder()
+                    .withAttributes({
+                        utm_source: "google",
+                        utm_medium: "cpc",
+                        utm_campaign: "spring_sale",
+                        utm_term: "running shoes",
+                        utm_content: "ad_variant_a",
+                    })
+                    .build();
+
+                const crmService = new MockCRM();
+                sandbox.spy(crmService, "send");
+
+                ContactCaptureHandler.sendLead({}, {}, { data: [] }, [], crmService, request, new MockErrorService());
+
+                expect(crmService.send).to.have.been.calledOnce;
+                expect(crmService.send).to.have.been.calledWith(
+                    {
+                        fields: [],
+                        transcript: [],
+                        refId: undefined,
+                        jobTypeId: undefined,
+                        availabilityClassId: undefined,
+                        userId: "userId",
+                        sessionId: "sessionId",
+                        source: "stentor",
+                    },
+                    {
+                        utm_source: "google",
+                        utm_medium: "cpc",
+                        utm_campaign: "spring_sale",
+                        utm_term: "running shoes",
+                        utm_content: "ad_variant_a",
+                    },
+                );
+            });
+
+            it("adds platform-specific click IDs to the extras", () => {
+                const request = new IntentRequestBuilder()
+                    .withAttributes({
+                        gclid: "google_click_123",
+                        fbclid: "facebook_click_456",
+                        msclkid: "microsoft_click_789",
+                    })
+                    .build();
+
+                const crmService = new MockCRM();
+                sandbox.spy(crmService, "send");
+
+                ContactCaptureHandler.sendLead({}, {}, { data: [] }, [], crmService, request, new MockErrorService());
+
+                expect(crmService.send).to.have.been.calledOnce;
+                expect(crmService.send).to.have.been.calledWith(
+                    {
+                        fields: [],
+                        transcript: [],
+                        refId: undefined,
+                        jobTypeId: undefined,
+                        availabilityClassId: undefined,
+                        userId: "userId",
+                        sessionId: "sessionId",
+                        source: "stentor",
+                    },
+                    {
+                        gclid: "google_click_123",
+                        fbclid: "facebook_click_456",
+                        msclkid: "microsoft_click_789",
+                    },
+                );
+            });
+
+            it("adds custom tracking parameters (track_*) to the extras", () => {
+                const request = new IntentRequestBuilder()
+                    .withAttributes({
+                        track_landing_page: "homepage",
+                        track_referrer: "blog_post",
+                        track_campaign_id: "12345",
+                    })
+                    .build();
+
+                const crmService = new MockCRM();
+                sandbox.spy(crmService, "send");
+
+                ContactCaptureHandler.sendLead({}, {}, { data: [] }, [], crmService, request, new MockErrorService());
+
+                expect(crmService.send).to.have.been.calledOnce;
+                expect(crmService.send).to.have.been.calledWith(
+                    {
+                        fields: [],
+                        transcript: [],
+                        refId: undefined,
+                        jobTypeId: undefined,
+                        availabilityClassId: undefined,
+                        userId: "userId",
+                        sessionId: "sessionId",
+                        source: "stentor",
+                    },
+                    {
+                        track_landing_page: "homepage",
+                        track_referrer: "blog_post",
+                        track_campaign_id: "12345",
+                    },
+                );
+            });
+
+            it("adds all tracking parameters together to the extras", () => {
+                const request = new IntentRequestBuilder()
+                    .withAttributes({
+                        rwg_token: "123",
+                        merchant_id: "456",
+                        environment: "production",
+                        utm_source: "facebook",
+                        utm_medium: "social",
+                        utm_campaign: "summer_sale",
+                        utm_term: "discount",
+                        utm_content: "carousel_ad",
+                        gclid: "google_123",
+                        fbclid: "facebook_456",
+                        msclkid: "microsoft_789",
+                        track_landing_page: "pricing",
+                        track_variant: "b",
+                    })
+                    .build();
+
+                const crmService = new MockCRM();
+                sandbox.spy(crmService, "send");
+
+                ContactCaptureHandler.sendLead({}, {}, { data: [] }, [], crmService, request, new MockErrorService());
+
+                expect(crmService.send).to.have.been.calledOnce;
+                expect(crmService.send).to.have.been.calledWith(
+                    {
+                        fields: [],
+                        transcript: [],
+                        refId: undefined,
+                        jobTypeId: undefined,
+                        availabilityClassId: undefined,
+                        userId: "userId",
+                        sessionId: "sessionId",
+                        source: "stentor",
+                    },
+                    {
+                        rwg_token: "123",
+                        merchant_id: "456",
+                        environment: "production",
+                        utm_source: "facebook",
+                        utm_medium: "social",
+                        utm_campaign: "summer_sale",
+                        utm_term: "discount",
+                        utm_content: "carousel_ad",
+                        gclid: "google_123",
+                        fbclid: "facebook_456",
+                        msclkid: "microsoft_789",
+                        track_landing_page: "pricing",
+                        track_variant: "b",
+                    },
+                );
+            });
+
+            it("only adds tracking parameters that exist in attributes", () => {
+                const request = new IntentRequestBuilder()
+                    .withAttributes({
+                        utm_source: "google",
+                        gclid: "google_click_123",
+                    })
+                    .build();
+
+                const crmService = new MockCRM();
+                const sendSpy = sandbox.spy(crmService, "send");
+
+                ContactCaptureHandler.sendLead({}, {}, { data: [] }, [], crmService, request, new MockErrorService());
+
+                expect(sendSpy).to.have.been.calledOnce;
+                const extras = sendSpy.getCall(0).args[1];
+
+                expect(extras).to.deep.equal({
+                    utm_source: "google",
+                    gclid: "google_click_123",
+                });
+
+                // Verify other UTM parameters are not included
+                expect(extras).to.not.have.property("utm_medium");
+                expect(extras).to.not.have.property("utm_campaign");
+                expect(extras).to.not.have.property("utm_term");
+                expect(extras).to.not.have.property("utm_content");
+                expect(extras).to.not.have.property("fbclid");
+                expect(extras).to.not.have.property("msclkid");
             });
         });
     });

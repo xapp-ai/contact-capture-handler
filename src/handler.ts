@@ -142,6 +142,7 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
             }
 
             if (request.attributes && Object.keys(request.attributes).length > 0) {
+                // Pass through existing attributes
                 if (request.attributes.rwg_token) {
                     extras.rwg_token = request.attributes.rwg_token;
                 }
@@ -153,6 +154,51 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
                 if (request.attributes.environment) {
                     extras.environment = request.attributes.environment;
                 }
+
+                // Standard UTM Parameters
+                if (request.attributes.utm_source) {
+                    extras.utm_source = request.attributes.utm_source;
+                }
+
+                if (request.attributes.utm_medium) {
+                    extras.utm_medium = request.attributes.utm_medium;
+                }
+
+                if (request.attributes.utm_campaign) {
+                    extras.utm_campaign = request.attributes.utm_campaign;
+                }
+
+                if (request.attributes.utm_term) {
+                    extras.utm_term = request.attributes.utm_term;
+                }
+
+                if (request.attributes.utm_content) {
+                    extras.utm_content = request.attributes.utm_content;
+                }
+
+                // Platform-Specific Click IDs
+                if (request.attributes.gclid) {
+                    extras.gclid = request.attributes.gclid;
+                }
+
+                if (request.attributes.fbclid) {
+                    extras.fbclid = request.attributes.fbclid;
+                }
+
+                if (request.attributes.msclkid) {
+                    extras.msclkid = request.attributes.msclkid;
+                }
+
+                if (request.attributes.currentUrl) {
+                    extras.currentUrl = request.attributes.currentUrl;
+                }
+
+                // Custom Tracking Parameters (track_*)
+                Object.keys(request.attributes).forEach((key) => {
+                    if (key.startsWith("track_")) {
+                        extras[key] = request.attributes[key];
+                    }
+                });
             }
         }
 
