@@ -1,3 +1,10 @@
+## [1.15.2](https://github.com/xapp-ai/contact-capture-handler/compare/v1.15.1...v1.15.2) (2025-10-27)
+
+
+### Bug Fixes
+
+* Typo([#589](https://github.com/xapp-ai/contact-capture-handler/issues/589)) ([ec3b2f3](https://github.com/xapp-ai/contact-capture-handler/commit/ec3b2f3a24df93ad84d73a78fabf63a40dd1523d))
+
 ## [1.15.1](https://github.com/xapp-ai/contact-capture-handler/compare/v1.15.0...v1.15.1) (2025-10-23)
 
 
