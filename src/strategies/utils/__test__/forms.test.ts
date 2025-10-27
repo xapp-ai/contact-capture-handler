@@ -1663,7 +1663,7 @@ describe(`#${getContactFormFallback.name}()`, () => {
         });
     });
     describe("when checking confirmation card help_type display", () => {
-        it("displays formatted help_type in confirmation step", () => {
+        it("displays help_type using template variable in confirmation step", () => {
             const form = getContactFormFallback(
                 {
                     capture: SIMPLE_BLUEPRINT,
@@ -1678,63 +1678,13 @@ describe(`#${getContactFormFallback.name}()`, () => {
             expect(confirmationStep).to.exist;
             expect(confirmationStep.name).to.equal("confirmation");
 
-            // Check that we have conditional cards for formatted help_type
-            const helpTypeCards = confirmationStep.fields.filter((field) =>
-                field.name.startsWith("confirmation_card0_help_type_"),
+            // Check that we have the simple confirmation_card0 with template variable
+            const helpTypeCard = confirmationStep.fields.find((field) =>
+                field.name === "confirmation_card0",
             );
-            expect(helpTypeCards.length).to.be.greaterThan(0);
-
-            // Verify each card has a condition checking help_type and displays formatted text
-            helpTypeCards.forEach((card) => {
-                expect(card.type).to.equal("CARD");
-                expect(card.condition).to.exist;
-                expect((card as FormCardInput).text).to.exist;
-                // Text should end with " Request"
-                expect((card as FormCardInput).text).to.match(/ Request$/);
-            });
-
-            // Check for specific formatted labels
-            const scheduleVisitCard = helpTypeCards.find((card) =>
-                (card as FormCardInput).text.includes("Schedule Visit"),
-            );
-            expect(scheduleVisitCard).to.exist;
-            if (scheduleVisitCard) {
-                expect((scheduleVisitCard as FormCardInput).text).to.equal("Schedule Visit Request");
-                expect(scheduleVisitCard.condition).to.include("help_type.includes('schedule_visit')");
-            }
-        });
-
-        it("uses chip labels for formatted display when available", () => {
-            const form = getContactFormFallback(
-                {
-                    capture: {
-                        ...SIMPLE_BLUEPRINT,
-                        serviceOptions: [
-                            {
-                                id: "custom_service_id",
-                                label: "Custom Service Label",
-                            },
-                        ],
-                    },
-                },
-                { enablePreferredTime: true },
-            );
-
-            expect(form).to.exist;
-
-            const confirmationStep = form.steps[3];
-            const helpTypeCards = confirmationStep.fields.filter((field) =>
-                field.name.startsWith("confirmation_card0_help_type_"),
-            );
-
-            // Find the custom service card
-            const customServiceCard = helpTypeCards.find((card) =>
-                (card as FormCardInput).text.includes("Custom Service Label"),
-            );
-            expect(customServiceCard).to.exist;
-            if (customServiceCard) {
-                expect((customServiceCard as FormCardInput).text).to.equal("Custom Service Label Request");
-            }
+            expect(helpTypeCard).to.exist;
+            expect(helpTypeCard.type).to.equal("CARD");
+            expect((helpTypeCard as FormCardInput).text).to.equal("#{help_type} Request");
         });
     });
     describe("when passed serviceSelectionTitle configuration", () => {
