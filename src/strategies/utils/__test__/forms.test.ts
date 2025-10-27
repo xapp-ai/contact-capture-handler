@@ -2,7 +2,13 @@
 import * as chai from "chai";
 import * as sinonChai from "sinon-chai";
 
-import { FormCardInput, FormChipsInput, FormDropdownInput, FormFieldTextAddressInput, SelectableItem } from "stentor-models";
+import {
+    FormCardInput,
+    FormChipsInput,
+    FormDropdownInput,
+    FormFieldTextAddressInput,
+    SelectableItem,
+} from "stentor-models";
 
 import { isFormDateInput, isMultistepForm } from "../../../guards";
 import { getFormResponse, getContactFormFallback, FormResponseProps } from "../forms";
@@ -1078,7 +1084,7 @@ describe(`#${getContactFormFallback.name}()`, () => {
                 const cardField = confirmationMessageField as FormCardInput;
                 // Check for the default text (note: there's a typo "son" instead of "soon" in the original)
                 expect(cardField.text).to.equal(
-                    "Someone from our team will contact you son to confirm the date & time as well as additional details",
+                    "Someone from our team will contact you soon to confirm the date & time as well as additional details",
                 );
             }
         });
@@ -1268,14 +1274,18 @@ describe(`#${getContactFormFallback.name}()`, () => {
                 expect(serviceRequestStep).to.exist;
                 expect(serviceRequestStep.name).to.equal("service_request");
 
+                // Step title should be set
+                expect(serviceRequestStep.title).to.equal("What can we help you with?");
+
                 // Should have 2 fields: help_type (dropdown) and message
                 expect(serviceRequestStep.fields).to.have.length(2);
 
+                // First field should be the dropdown
                 const helpTypeField = serviceRequestStep.fields[0];
                 expect(helpTypeField.name).to.equal("help_type");
                 expect(helpTypeField.type).to.equal("DROPDOWN");
                 expect(helpTypeField.mandatory).to.be.true;
-                expect(helpTypeField.title).to.equal("What can we help you with?");
+                expect(helpTypeField.title).to.be.undefined; // No title on the field itself
 
                 // Verify it has items
                 if (helpTypeField.type === "DROPDOWN") {
@@ -1338,7 +1348,7 @@ describe(`#${getContactFormFallback.name}()`, () => {
             });
         });
 
-        describe('with default firstPageInputType (chips)', () => {
+        describe("with default firstPageInputType (chips)", () => {
             it("renders service selection as CHIPS by default", () => {
                 const form = getContactFormFallback(
                     {
@@ -1476,7 +1486,10 @@ describe(`#${getContactFormFallback.name}()`, () => {
             const serviceRequestStep = form.steps[0];
             expect(serviceRequestStep).to.exist;
 
-            // Should only have 1 field: help_type (dropdown)
+            // Step title should be set
+            expect(serviceRequestStep.title).to.equal("What can we help you with?");
+
+            // Should have 1 field: help_type (dropdown) only
             expect(serviceRequestStep.fields).to.have.length(1);
 
             const helpTypeField = serviceRequestStep.fields[0];
@@ -1504,9 +1517,11 @@ describe(`#${getContactFormFallback.name}()`, () => {
             const serviceRequestStep = form.steps[0];
             expect(serviceRequestStep.fields).to.have.length(2);
 
+            // First field is the dropdown
             const helpTypeField = serviceRequestStep.fields[0];
             expect(helpTypeField.type).to.equal("DROPDOWN");
 
+            // Second field is the message
             const messageField = serviceRequestStep.fields[1];
             expect(messageField.name).to.equal("message");
             expect(messageField.type).to.equal("TEXT");
@@ -1641,8 +1656,84 @@ describe(`#${getContactFormFallback.name}()`, () => {
 
             if (isMultistepForm(form)) {
                 const serviceRequestStep = form.steps[0];
+                // Should have 1 field: dropdown only (no message)
                 expect(serviceRequestStep.fields).to.have.length(1);
                 expect(serviceRequestStep.fields[0].type).to.equal("DROPDOWN");
+            }
+        });
+    });
+    describe("when checking confirmation card help_type display", () => {
+        it("displays formatted help_type in confirmation step", () => {
+            const form = getContactFormFallback(
+                {
+                    capture: SIMPLE_BLUEPRINT,
+                },
+                { enablePreferredTime: true },
+            );
+
+            expect(form).to.exist;
+            expect(form.steps).to.have.length(5);
+
+            const confirmationStep = form.steps[3]; // confirmation step
+            expect(confirmationStep).to.exist;
+            expect(confirmationStep.name).to.equal("confirmation");
+
+            // Check that we have conditional cards for formatted help_type
+            const helpTypeCards = confirmationStep.fields.filter((field) =>
+                field.name.startsWith("confirmation_card0_help_type_"),
+            );
+            expect(helpTypeCards.length).to.be.greaterThan(0);
+
+            // Verify each card has a condition checking help_type and displays formatted text
+            helpTypeCards.forEach((card) => {
+                expect(card.type).to.equal("CARD");
+                expect(card.condition).to.exist;
+                expect((card as FormCardInput).text).to.exist;
+                // Text should end with " Request"
+                expect((card as FormCardInput).text).to.match(/ Request$/);
+            });
+
+            // Check for specific formatted labels
+            const scheduleVisitCard = helpTypeCards.find((card) =>
+                (card as FormCardInput).text.includes("Schedule Visit"),
+            );
+            expect(scheduleVisitCard).to.exist;
+            if (scheduleVisitCard) {
+                expect((scheduleVisitCard as FormCardInput).text).to.equal("Schedule Visit Request");
+                expect(scheduleVisitCard.condition).to.include("help_type.includes('schedule_visit')");
+            }
+        });
+
+        it("uses chip labels for formatted display when available", () => {
+            const form = getContactFormFallback(
+                {
+                    capture: {
+                        ...SIMPLE_BLUEPRINT,
+                        serviceOptions: [
+                            {
+                                id: "custom_service_id",
+                                label: "Custom Service Label",
+                            },
+                        ],
+                    },
+                },
+                { enablePreferredTime: true },
+            );
+
+            expect(form).to.exist;
+
+            const confirmationStep = form.steps[3];
+            const helpTypeCards = confirmationStep.fields.filter((field) =>
+                field.name.startsWith("confirmation_card0_help_type_"),
+            );
+
+            // Find the custom service card
+            const customServiceCard = helpTypeCards.find((card) =>
+                (card as FormCardInput).text.includes("Custom Service Label"),
+            );
+            expect(customServiceCard).to.exist;
+            if (customServiceCard) {
+                expect((customServiceCard as FormCardInput).text).to.equal("Custom Service Label Request");
             }
         });
     });
@@ -1680,11 +1771,14 @@ describe(`#${getContactFormFallback.name}()`, () => {
                 expect(form).to.exist;
 
                 const serviceRequestStep = form.steps[0];
-                const helpTypeField = serviceRequestStep.fields[0];
 
+                // For dropdown, title should be on the step itself
+                expect(serviceRequestStep.title).to.equal("What type of service do you need?");
+
+                const helpTypeField = serviceRequestStep.fields[0];
                 expect(helpTypeField.name).to.equal("help_type");
                 expect(helpTypeField.type).to.equal("DROPDOWN");
-                expect(helpTypeField.title).to.equal("What type of service do you need?");
+                expect(helpTypeField.title).to.be.undefined; // No title on dropdown field itself
             });
 
             it("applies custom title across different configurations", () => {
@@ -1701,10 +1795,10 @@ describe(`#${getContactFormFallback.name}()`, () => {
                 expect(form).to.exist;
 
                 const serviceRequestStep = form.steps[0];
-                expect(serviceRequestStep.fields).to.have.length(1);
+                expect(serviceRequestStep.fields).to.have.length(1); // Just dropdown
 
-                const helpTypeField = serviceRequestStep.fields[0];
-                expect(helpTypeField.title).to.equal("Select your service:");
+                // Title should be on the step itself
+                expect(serviceRequestStep.title).to.equal("Select your service:");
             });
         });
 
@@ -1737,10 +1831,13 @@ describe(`#${getContactFormFallback.name}()`, () => {
                 expect(form).to.exist;
 
                 const serviceRequestStep = form.steps[0];
-                const helpTypeField = serviceRequestStep.fields[0];
 
+                // For dropdown, title should be on the step itself
+                expect(serviceRequestStep.title).to.equal("What can we help you with?");
+
+                const helpTypeField = serviceRequestStep.fields[0];
                 expect(helpTypeField.type).to.equal("DROPDOWN");
-                expect(helpTypeField.title).to.equal("What can we help you with?");
+                expect(helpTypeField.title).to.be.undefined;
             });
         });
 

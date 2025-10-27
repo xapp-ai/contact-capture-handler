@@ -200,7 +200,9 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
             turnOffFirstAvailableDay: data.turnOffFirstAvailableDay,
         }),
         ...(existsAndNotEmpty(data.preferredTimeOptions) && { preferredTimeOptions: data.preferredTimeOptions }),
-        ...(data.preferredDateConfirmationText && { preferredDateConfirmationText: data.preferredDateConfirmationText }),
+        ...(data.preferredDateConfirmationText && {
+            preferredDateConfirmationText: data.preferredDateConfirmationText,
+        }),
         ...(data.firstPageInputType && { firstPageInputType: data.firstPageInputType }),
         ...(typeof data.showFirstPageMessage === "boolean" && { showFirstPageMessage: data.showFirstPageMessage }),
         ...(data.serviceSelectionTitle && { serviceSelectionTitle: data.serviceSelectionTitle }),
@@ -438,17 +440,36 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
         }
     }
 
+    // Helper to create a formatted version of help_type for display
+    // This will be shown in the confirmation card with proper capitalization
+    const helpTypeFormatted = chips.map((chip) => {
+        // For each chip, create a conditional that formats its id for display
+        const formattedLabel =
+            chip.label ||
+            chip.id
+                .replace(/_/g, " ")
+                .split(" ")
+                .map((word) => capitalize(word))
+                .join(" ");
+        return {
+            condition: `help_type.includes('${sanitizeServiceId(chip.id)}')`,
+            text: formattedLabel,
+        };
+    });
+
     const confirmationFields: FormField[] = [
-        {
-            name: "confirmation_card0",
-            variant: "h6",
+        // Add conditional cards for each service type to display formatted help_type
+        ...helpTypeFormatted.map((formatted, index) => ({
+            name: `confirmation_card0_help_type_${index}`,
+            variant: "h6" as const,
             style: {
                 fontStyle: "normal",
                 fontWeight: "bold",
             },
-            text: "#{help_type} Request",
-            type: "CARD",
-        },
+            text: `${formatted.text} Request`,
+            type: "CARD" as const,
+            condition: formatted.condition,
+        })),
         {
             name: "confirmation_card_data_and_time_preference",
             variant: "body1",
@@ -556,7 +577,9 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
         {
             name: "preferred_time_confirmation_message",
             condition: "(!!dateTime || !!preferred_date) && preferred_time?.length > 0",
-            text: props.preferredDateConfirmationText || "Someone from our team will contact you son to confirm the date & time as well as additional details",
+            text:
+                props.preferredDateConfirmationText ||
+                "Someone from our team will contact you soon to confirm the date & time as well as additional details",
             type: "CARD",
             align: "center",
             variant: "caption",
@@ -721,7 +744,6 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
         props.firstPageInputType === "dropdown"
             ? {
                   name: "help_type",
-                  title: serviceSelectionTitle,
                   type: "DROPDOWN",
                   items: chips,
                   mandatory: true,
@@ -754,6 +776,7 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
         {
             name: "service_request",
             nextAction: "next",
+            title: props.firstPageInputType?.toLowerCase() === "dropdown" ? serviceSelectionTitle : undefined,
             fields: firstStepFields,
         },
         {
