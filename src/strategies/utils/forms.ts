@@ -440,36 +440,17 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
         }
     }
 
-    // Helper to create a formatted version of help_type for display
-    // This will be shown in the confirmation card with proper capitalization
-    const helpTypeFormatted = chips.map((chip) => {
-        // For each chip, create a conditional that formats its id for display
-        const formattedLabel =
-            chip.label ||
-            chip.id
-                .replace(/_/g, " ")
-                .split(" ")
-                .map((word) => capitalize(word))
-                .join(" ");
-        return {
-            condition: `help_type.includes('${sanitizeServiceId(chip.id)}')`,
-            text: formattedLabel,
-        };
-    });
-
     const confirmationFields: FormField[] = [
-        // Add conditional cards for each service type to display formatted help_type
-        ...helpTypeFormatted.map((formatted, index) => ({
-            name: `confirmation_card0_help_type_${index}`,
-            variant: "h6" as const,
+        {
+            name: "confirmation_card0",
+            variant: "h6",
             style: {
                 fontStyle: "normal",
                 fontWeight: "bold",
             },
-            text: `${formatted.text} Request`,
-            type: "CARD" as const,
-            condition: formatted.condition,
-        })),
+            text: "#{help_type} Request",
+            type: "CARD",
+        },
         {
             name: "confirmation_card_data_and_time_preference",
             variant: "body1",
