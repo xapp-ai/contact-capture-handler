@@ -1,3 +1,10 @@
+## [1.15.3](https://github.com/xapp-ai/contact-capture-handler/compare/v1.15.2...v1.15.3) (2025-10-27)
+
+
+### Bug Fixes
+
+* Reverting Formatting on help_type from previous version ([#592](https://github.com/xapp-ai/contact-capture-handler/issues/592)) ([6417a03](https://github.com/xapp-ai/contact-capture-handler/commit/6417a0344a3be5d9b7b623d8b43590a9e225dcc3))
+
 ## [1.15.2](https://github.com/xapp-ai/contact-capture-handler/compare/v1.15.1...v1.15.2) (2025-10-27)
 
 
