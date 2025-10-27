@@ -1099,12 +1099,12 @@ __metadata:
   linkType: hard
 
 "@types/sparkpost@npm:^2.1.8":
-  version: 2.1.8
-  resolution: "@types/sparkpost@npm:2.1.8"
+  version: 2.1.9
+  resolution: "@types/sparkpost@npm:2.1.9"
   dependencies:
     "@types/node": "*"
     "@types/request": "*"
-  checksum: 35f9374ebb624cadcd7286f238f3e3fed874f3ab33f23aab46e26923fb376e320b6d7fd58b408c55616b99aba30909ec808da10bea9769c8c57cadb89f365de9
+  checksum: 7222551d153a082c9b3605736614189f0299bd10638e05ea0fb5df60e18a8bf262ac43e04595686e4951d226a3f67c6abafb4efb8b0496edfd4b473f26fae6a8
   languageName: node
   linkType: hard
 
