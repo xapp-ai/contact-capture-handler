@@ -1290,12 +1290,12 @@ __metadata:
     sinon: 19.0.2
     sinon-chai: 3.7.0
     stentor-constants: 1.66.12
-    stentor-context: 1.66.14
-    stentor-handler: 1.66.14
+    stentor-context: 1.66.16
+    stentor-handler: 1.66.16
     stentor-logger: 1.66.14
     stentor-models: 1.66.12
     stentor-request: 1.66.14
-    stentor-response: 1.66.14
+    stentor-response: 1.66.16
     stentor-service-fetch: 1.66.14
     stentor-utils: 1.66.14
     ts-node: 10.9.2
@@ -1380,7 +1380,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"acorn-walk@npm:^8.1.1, acorn-walk@npm:^8.2.0":
+"acorn-walk@npm:^8.1.1, acorn-walk@npm:^8.3.4":
   version: 8.3.4
   resolution: "acorn-walk@npm:8.3.4"
   dependencies:
@@ -1389,12 +1389,21 @@ __metadata:
   languageName: node
   linkType: hard
 
-"acorn@npm:^8.11.0, acorn@npm:^8.4.1, acorn@npm:^8.7.0, acorn@npm:^8.9.0":
+"acorn@npm:^8.11.0, acorn@npm:^8.4.1, acorn@npm:^8.9.0":
   version: 8.12.1
   resolution: "acorn@npm:8.12.1"
   bin:
     acorn: bin/acorn
   checksum: 677880034aee5bdf7434cc2d25b641d7bedb0b5ef47868a78dadabedccf58e1c5457526d9d8249cd253f2df087e081c3fe7d903b448d8e19e5131a3065b83c07
+  languageName: node
+  linkType: hard
+
+"acorn@npm:^8.14.1":
+  version: 8.15.0
+  resolution: "acorn@npm:8.15.0"
+  bin:
+    acorn: bin/acorn
+  checksum: 309c6b49aedf1a2e34aaf266de06de04aab6eb097c02375c66fdeb0f64556a6a823540409914fb364d9a11bc30d79d485a2eba29af47992d3490e9886c4391c3
   languageName: node
   linkType: hard
 
@@ -5870,18 +5879,18 @@ __metadata:
   languageName: node
   linkType: hard
 
-"stentor-conditional@npm:1.66.14":
-  version: 1.66.14
-  resolution: "stentor-conditional@npm:1.66.14"
+"stentor-conditional@npm:1.66.16":
+  version: 1.66.16
+  resolution: "stentor-conditional@npm:1.66.16"
   dependencies:
     stentor-logger: 1.66.14
-    vm2: 3.9.19
+    vm2: 3.10.0
   peerDependencies:
     stentor-models: 1.x
   dependenciesMeta:
     vm2:
       optional: true
-  checksum: eef87c04f5bf1cfa881ce86df3c5d57ffcbfdbe93d2dd909a590278757b9cff7e16924673071f0fa0876b8da7234d6df3953ed6307615f74f70c7cb1655b339a
+  checksum: 8fe3df245a299fd581ec2d8f268595181f201faa7564a0a6d2f8624fbeca8db4113846ea268bde850ae34955a2adcfea2aab8c2f66c664513a6164c2ce8792a7
   languageName: node
   linkType: hard
 
@@ -5894,26 +5903,26 @@ __metadata:
   languageName: node
   linkType: hard
 
-"stentor-context@npm:1.66.14":
-  version: 1.66.14
-  resolution: "stentor-context@npm:1.66.14"
+"stentor-context@npm:1.66.16":
+  version: 1.66.16
+  resolution: "stentor-context@npm:1.66.16"
   dependencies:
     "@xapp/patterns": 2.0.2
     stentor-constants: 1.66.12
-    stentor-response: 1.66.14
+    stentor-response: 1.66.16
     stentor-storage: 1.66.14
   peerDependencies:
     stentor-models: 1.x
-  checksum: 4a68de62c7de9ceafadd73234a5766cc72cc04940f2c9d3ea4f9cb3d79f58e8ed73a27cd959ab78c6bbe1455484db284416fd7f25f3bbf7a61ccbb21ff00a2cb
+  checksum: 0cbe34ce11a293d1619394d6ce0e54d3348abe94c18d8b09eaa78fa68b26551c7a69133d26ce9cd322d8cf668a56e4e2f343c45fc40136df602c9f0b91ad2b6d
   languageName: node
   linkType: hard
 
-"stentor-determiner@npm:1.66.14":
-  version: 1.66.14
-  resolution: "stentor-determiner@npm:1.66.14"
+"stentor-determiner@npm:1.66.16":
+  version: 1.66.16
+  resolution: "stentor-determiner@npm:1.66.16"
   dependencies:
     jsonpath-plus: 10.3.0
-    stentor-conditional: 1.66.14
+    stentor-conditional: 1.66.16
     stentor-constants: 1.66.12
     stentor-guards: 1.66.14
     stentor-interaction-model: 1.66.14
@@ -5924,7 +5933,7 @@ __metadata:
     stentor-utils: 1.66.14
   peerDependencies:
     stentor-models: 1.x
-  checksum: 179d6b949a875bf78f539b70fdf1483ffd6fa518b944c8f6bc3636170f33d23af70075b900d012845de00a1643bc99435a1a2de6383c7ba427bb1c7e039f6621
+  checksum: 49fb53d23db9fd2740a2982c444a5f5985fed2900a1559a9d5a206036c63d2df9a03e3f4a674d72e4324ed185ff5c5a0dab01367a060ccd9d7aeddc76b53be5f
   languageName: node
   linkType: hard
 
@@ -5939,25 +5948,25 @@ __metadata:
   languageName: node
   linkType: hard
 
-"stentor-handler@npm:1.66.14":
-  version: 1.66.14
-  resolution: "stentor-handler@npm:1.66.14"
+"stentor-handler@npm:1.66.16":
+  version: 1.66.16
+  resolution: "stentor-handler@npm:1.66.16"
   dependencies:
     "@xapp/patterns": 2.0.2
-    stentor-conditional: 1.66.14
+    stentor-conditional: 1.66.16
     stentor-constants: 1.66.12
-    stentor-context: 1.66.14
+    stentor-context: 1.66.16
     stentor-guards: 1.66.14
     stentor-history: 1.66.14
     stentor-interaction-model: 1.66.14
     stentor-locales: 1.66.14
     stentor-logger: 1.66.14
-    stentor-response: 1.66.14
+    stentor-response: 1.66.16
     stentor-storage: 1.66.14
     stentor-utils: 1.66.14
   peerDependencies:
     stentor-models: 1.x
-  checksum: 57d58dcb694e7ac505379da74f384f26739fed7d98442875208c1bb3c2ad9049acc13ec3eeace45095338825719938a7b68b7ef1148249683740e5281bd3eefb
+  checksum: d5f2509fca185529bf52578b7aac23aeaff73d9b6ea38d5e5445aea915a300f1924a23c7ba421bb6fc3b9a0fad41e9445cf4e80059dae45613b6bd30f5b84cd2
   languageName: node
   linkType: hard
 
@@ -6049,18 +6058,18 @@ __metadata:
   languageName: node
   linkType: hard
 
-"stentor-response@npm:1.66.14":
-  version: 1.66.14
-  resolution: "stentor-response@npm:1.66.14"
+"stentor-response@npm:1.66.16":
+  version: 1.66.16
+  resolution: "stentor-response@npm:1.66.16"
   dependencies:
     "@xapp/patterns": 2.0.2
-    stentor-determiner: 1.66.14
+    stentor-determiner: 1.66.16
     stentor-locales: 1.66.14
     stentor-media: 1.66.14
     stentor-utils: 1.66.14
   peerDependencies:
     stentor-models: 1.x
-  checksum: c39deca2d1e78baa707369c881af757e184f03fd29b29c584bfffbc837028a7be9bc64df910be3c7b4da21c3d1bfc0a6e365af12744ca21423d091725019512d
+  checksum: 1ac21990cb968f739dc2ba709c33ac2d7b91beb66c91eb39b1b992f9d9160e54275389f59fe475061b3901ab7cbfbd611c8eb18ce5048e888f2554e646fb8d57
   languageName: node
   linkType: hard
 
@@ -6756,15 +6765,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"vm2@npm:3.9.19":
-  version: 3.9.19
-  resolution: "vm2@npm:3.9.19"
+"vm2@npm:3.10.0":
+  version: 3.10.0
+  resolution: "vm2@npm:3.10.0"
   dependencies:
-    acorn: ^8.7.0
-    acorn-walk: ^8.2.0
+    acorn: ^8.14.1
+    acorn-walk: ^8.3.4
   bin:
     vm2: bin/vm2
-  checksum: fc6cf553134145cd7bb5246985bf242b056e3fb5ea71e2eef6710b2a5d6c6119cc6bc960435ff62480ee82efb43369be8f4db07b6690916ae7d3b2e714f395d8
+  checksum: 7c9a65baeae84718e2888538d5c68bc6cb53a919492f0113fe656aa11da977f8da6b0e4f7044ee459859b01d7738146d0c12a6f0de65a1c9f26fcac3e53134b9
   languageName: node
   linkType: hard
 
