@@ -1,3 +1,10 @@
+## [1.15.4](https://github.com/xapp-ai/contact-capture-handler/compare/v1.15.3...v1.15.4) (2025-11-07)
+
+
+### Bug Fixes
+
+* Update for ZIP CODE Validation ([#597](https://github.com/xapp-ai/contact-capture-handler/issues/597)) ([a352bed](https://github.com/xapp-ai/contact-capture-handler/commit/a352bed6a18cf1e4cbdc614eefe04800f2cd2127))
+
 ## [1.15.3](https://github.com/xapp-ai/contact-capture-handler/compare/v1.15.2...v1.15.3) (2025-10-27)
 
 
