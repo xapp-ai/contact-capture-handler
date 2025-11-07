@@ -7,6 +7,7 @@ import {
     FormChipsInput,
     FormDropdownInput,
     FormFieldTextAddressInput,
+    FormTextInput,
     SelectableItem,
 } from "stentor-models";
 
@@ -114,6 +115,9 @@ describe(`#${getFormResponse.name}()`, () => {
 
                 const zipField = step2.fields[3];
                 expect(zipField.name).to.equal("zip");
+                if (zipField.type === "TEXT") {
+                    expect((zipField as FormTextInput).format).to.equal("ZIP_CODE");
+                }
             }
         });
         describe("when passes serviceOptions", () => {
@@ -661,6 +665,26 @@ describe(`#${getContactFormFallback.name}()`, () => {
             // check the condition
             expect(step.condition).to.equal("!isInServiceArea(zip, ['22***', '20***'])");
         });
+        it("adds ZIP_CODE format to zip field when present in blueprint data", () => {
+            const form = getContactFormFallback(
+                { capture: BLUEPRINT_WITH_SERVICE_AREA_ZIP_CODES, enablePreferredTime: true },
+                {},
+            );
+            expect(form).to.exist;
+
+            // Get the contact_info step (step 1)
+            const contactInfoStep = form.steps[1];
+            expect(contactInfoStep).to.exist;
+            expect(contactInfoStep.name).to.equal("contact_info");
+
+            // Find the zip field
+            const zipField = contactInfoStep.fields.find((field) => field.name === "zip");
+            expect(zipField).to.exist;
+            expect(zipField?.name).to.equal("zip");
+            if (zipField?.type === "TEXT") {
+                expect((zipField as FormTextInput).format).to.equal("ZIP_CODE");
+            }
+        });
     });
     describe("when passed props with selection dataField", () => {
         it("creates a chips field with enum options", () => {
@@ -774,6 +798,33 @@ describe(`#${getContactFormFallback.name}()`, () => {
                 expect(chipsField.radio).to.be.false; // default radio value
                 expect(chipsField.items).to.have.length(3);
             }
+        });
+    });
+    describe("when checking confirmation fields", () => {
+        it("includes zip confirmation card when zip field is present", () => {
+            const form = getContactFormFallback(
+                { capture: SIMPLE_BLUEPRINT },
+                { enablePreferredTime: true },
+            );
+
+            expect(form).to.exist;
+            expect(form.steps).to.have.length(5);
+
+            const confirmationStep = form.steps[3]; // confirmation step
+            expect(confirmationStep).to.exist;
+            expect(confirmationStep.name).to.equal("confirmation");
+
+            // Find the contact information condition card
+            const contactInfoCard = confirmationStep.fields.find((field) => field.name === "confirmation_card_details");
+            expect(contactInfoCard).to.exist;
+            expect(contactInfoCard?.condition).to.include("!!zip");
+
+            // Find the zip confirmation card
+            const zipCard = confirmationStep.fields.find((field) => field.name === "confirmation_card_zip");
+            expect(zipCard).to.exist;
+            expect(zipCard?.type).to.equal("CARD");
+            expect((zipCard as FormCardInput)?.text).to.equal("#{zip}");
+            expect(zipCard?.condition).to.equal("!!zip");
         });
     });
     describe("when passed props with disclaimer", () => {
