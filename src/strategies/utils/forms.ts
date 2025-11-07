@@ -59,6 +59,7 @@ export const DEFAULT_CONTACT_FIELDS: FormField[] = [
         mandatoryError: "Please provide either a phone number or email address",
     },
     {
+        format: "ZIP_CODE",
         name: "zip",
         label: "Zip Code",
         placeholder: "Your zip code",
@@ -332,6 +333,7 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
             } else if (dataField.slotName === "zip") {
                 const zipField: FormTextInput = {
                     ...field,
+                    format: "ZIP_CODE",
                     placeholder: "Your zip code",
                 };
                 CONTACT_FIELDS.push(zipField);
@@ -491,7 +493,7 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
                 fontStyle: "normal",
                 fontWeight: "bold",
             },
-            condition: "!!message || !!address || !!phone || !!email",
+            condition: "!!message || !!address || !!phone || !!email || !!zip",
             type: "CARD",
         },
         {
@@ -520,6 +522,13 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
             variant: "body1",
             text: "#{email}",
             condition: "!!email",
+            type: "CARD",
+        },
+        {
+            name: "confirmation_card_zip",
+            variant: "body1",
+            text: "#{zip}",
+            condition: "!!zip",
             type: "CARD",
         },
         {
@@ -779,6 +788,7 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
             crmSubmit: true,
             nextAction: "submit",
             fields: confirmationFields,
+            warnBeforeUnload: true
         },
         {
             name: "thank_you",
