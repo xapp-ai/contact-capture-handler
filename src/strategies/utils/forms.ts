@@ -185,6 +185,23 @@ export interface FormResponseProps {
      * { serviceSelectionTitle: "What type of service do you need?" }
      */
     serviceSelectionTitle?: string;
+    /**
+     * Optional notification message to display at the top of the preferred time selection page.
+     *
+     * This notification appears as a highlighted card with special styling to draw attention.
+     * Useful for communicating important information like emergency contact numbers,
+     * special instructions, or time-sensitive notices.
+     *
+     * Only appears on the preferred_time step when enablePreferredTime=true.
+     *
+     * @example
+     * // Add emergency contact notification
+     * { preferredTimeNotification: "For emergency service, please call 1-800-555-0100" }
+     * @example
+     * // Add general notice
+     * { preferredTimeNotification: "Note: Appointments are subject to technician availability" }
+     */
+    preferredTimeNotification?: string;
 }
 
 /**
@@ -207,6 +224,7 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
         ...(data.firstPageInputType && { firstPageInputType: data.firstPageInputType }),
         ...(typeof data.showFirstPageMessage === "boolean" && { showFirstPageMessage: data.showFirstPageMessage }),
         ...(data.serviceSelectionTitle && { serviceSelectionTitle: data.serviceSelectionTitle }),
+        ...(data.preferredTimeNotification && { preferredTimeNotification: data.preferredTimeNotification }),
         ...(existsAndNotEmpty(data.capture?.serviceOptions) && { serviceOptions: data.capture.serviceOptions }),
         ...(data.capture?.messageDescription && { messageDescription: data.capture.messageDescription }),
         ...(data.capture?.disclaimer && { disclaimer: data.capture.disclaimer }),
@@ -343,7 +361,10 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
                     format: "ADDRESS",
                     mapsBaseUrl: "https://places.xapp.ai",
                 };
-                if (data.capture.addressAutocompleteParams) {
+                // Check for mapsUrlQueryParams on the dataField first, then fall back to capture-level config
+                if (dataField.mapsUrlQueryParams) {
+                    addressField.mapsUrlQueryParams = dataField.mapsUrlQueryParams;
+                } else if (data.capture.addressAutocompleteParams) {
                     addressField.mapsUrlQueryParams = data.capture.addressAutocompleteParams;
                 }
                 CONTACT_FIELDS.push(addressField);
@@ -412,11 +433,14 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
     // if we have the autocomplete suggestions and the params, append them
     if (data.capture.addressAutocompleteParams) {
         // loop through the fields and find the ADDRESS field
-        // and append them
+        // and append them only if not already set
         CONTACT_FIELDS.forEach((field) => {
             if (field.name === "address") {
                 const addressField = field as FormFieldTextAddressInput;
-                addressField.mapsUrlQueryParams = data.capture.addressAutocompleteParams;
+                // Only set if not already set at field level
+                if (!addressField.mapsUrlQueryParams) {
+                    addressField.mapsUrlQueryParams = data.capture.addressAutocompleteParams;
+                }
             }
         });
     }
@@ -631,6 +655,25 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
 
     // Build the preferred_time step fields based on configuration
     const preferredTimeFields: FormField[] = [];
+
+    // Add optional notification card if provided
+    if (props.preferredTimeNotification) {
+        preferredTimeFields.push({
+            name: "preferred_time_notification",
+            type: "CARD",
+            text: props.preferredTimeNotification,
+            variant: "body1",
+            style: {
+                backgroundColor: "#FFF3CD",
+                border: "1px solid #FFE69C",
+                borderRadius: "4px",
+                padding: "12px 16px",
+                marginBottom: "16px",
+                fontWeight: "500",
+                color: "#664D03",
+            },
+        });
+    }
 
     // Add dateTime field
     if (props.turnOffFirstAvailableDay) {

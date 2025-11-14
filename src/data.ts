@@ -42,7 +42,7 @@ export interface ContactCaptureService {
     requiresDate?: boolean;
 }
 
-export interface ContactCaptureData extends QuestionAnsweringData, Pick<FormResponseProps, "enablePreferredTime" | "turnOffFirstAvailableDay" | "preferredTimeOptions" | "preferredDateConfirmationText" | "firstPageInputType" | "showFirstPageMessage" | "serviceSelectionTitle"> {
+export interface ContactCaptureData extends QuestionAnsweringData, Pick<FormResponseProps, "enablePreferredTime" | "turnOffFirstAvailableDay" | "preferredTimeOptions" | "preferredDateConfirmationText" | "firstPageInputType" | "showFirstPageMessage" | "serviceSelectionTitle" | "preferredTimeNotification"> {
     /**
      * It will not capture the lead and instead provide contact information.
      *
@@ -173,6 +173,11 @@ export interface DataDescriptorBase {
      * If the data is only asked for a certain channels, by default it is "ALL"
      */
     channel?: "CHAT" | "FORM" | "ALL";
+    /**
+     * Autocomplete parameters for address fields.
+     * This will override the capture-level addressAutocompleteParams for this specific field.
+     */
+    mapsUrlQueryParams?: AddressAutocompleteParameters;
 }
 
 export interface DataDescriptorRuntime extends DataDescriptorBase {
