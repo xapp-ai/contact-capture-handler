@@ -1,3 +1,10 @@
+## [1.15.5](https://github.com/xapp-ai/contact-capture-handler/compare/v1.15.4...v1.15.5) (2025-11-14)
+
+
+### Bug Fixes
+
+* preferred time notification ([#602](https://github.com/xapp-ai/contact-capture-handler/issues/602)) ([75e94e2](https://github.com/xapp-ai/contact-capture-handler/commit/75e94e2cd318ec172b3e183af496f75df856261f))
+
 ## [1.15.4](https://github.com/xapp-ai/contact-capture-handler/compare/v1.15.3...v1.15.4) (2025-11-07)
 
 
