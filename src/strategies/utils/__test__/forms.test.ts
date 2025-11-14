@@ -13,6 +13,8 @@ import {
 
 import { isFormDateInput, isMultistepForm } from "../../../guards";
 import { getFormResponse, getContactFormFallback, FormResponseProps } from "../forms";
+import { ContactCaptureBlueprint } from "../../../data";
+
 import {
     CUSTOM_FORM,
     SIMPLE_BLUEPRINT,
@@ -328,6 +330,158 @@ describe(`#${getFormResponse.name}()`, () => {
                     expect(condition).to.equal(
                         "help_type.includes('schedule_maintenance') || help_type.includes('service_repair')",
                     );
+                }
+            });
+        });
+        describe("when address field has mapsUrlQueryParams at field level", () => {
+            it("uses field-level mapsUrlQueryParams instead of capture-level", () => {
+                const captureData: ContactCaptureBlueprint = {
+                    ...SIMPLE_BLUEPRINT,
+                    data: [
+                        ...SIMPLE_BLUEPRINT.data.filter((d) => d.slotName !== "address"),
+                        {
+                            questionContentKey: "address",
+                            slotName: "address",
+                            type: "ADDRESS" as const,
+                            required: true,
+                            active: true,
+                            mapsUrlQueryParams: {
+                                components: "country:au",
+                            },
+                        },
+                    ],
+                    // This should be overridden by field-level setting
+                    addressAutocompleteParams: {
+                        components: "country:us",
+                    },
+                };
+
+                const response = getFormResponse(
+                    {
+                        enablePreferredTime: true,
+                        capture: captureData,
+                    },
+                    {},
+                );
+
+                expect(response).to.exist;
+                const form =
+                    response && Array.isArray(response.displays) && response?.displays?.length > 0
+                        ? response.displays[0]
+                        : undefined;
+                expect(form).to.exist;
+
+                expect(isMultistepForm(form)).to.be.true;
+
+                if (isMultistepForm(form)) {
+                    const contactInfoStep = form.steps[1];
+                    expect(contactInfoStep).to.exist;
+
+                    const addressField: FormFieldTextAddressInput = contactInfoStep.fields.find(
+                        (field) => field.name === "address",
+                    ) as FormFieldTextAddressInput;
+                    expect(addressField).to.exist;
+                    expect(addressField.name).to.equal("address");
+                    expect(addressField.mandatory).to.be.true;
+                    // Should use field-level params (country:au), not capture-level (country:us)
+                    expect(addressField.mapsUrlQueryParams).to.deep.equal({ components: "country:au" });
+                }
+            });
+
+            it("uses field-level mapsUrlQueryParams when no capture-level setting exists", () => {
+                const captureData: ContactCaptureBlueprint = {
+                    ...SIMPLE_BLUEPRINT,
+                    data: [
+                        ...SIMPLE_BLUEPRINT.data.filter((d) => d.slotName !== "address"),
+                        {
+                            questionContentKey: "address",
+                            slotName: "address",
+                            type: "ADDRESS" as const,
+                            required: true,
+                            active: true,
+                            mapsUrlQueryParams: {
+                                components: "country:ca",
+                            },
+                        },
+                    ],
+                    // No addressAutocompleteParams at capture level
+                };
+
+                const response = getFormResponse(
+                    {
+                        enablePreferredTime: true,
+                        capture: captureData,
+                    },
+                    {},
+                );
+
+                expect(response).to.exist;
+                const form =
+                    response && Array.isArray(response.displays) && response?.displays?.length > 0
+                        ? response.displays[0]
+                        : undefined;
+                expect(form).to.exist;
+
+                expect(isMultistepForm(form)).to.be.true;
+
+                if (isMultistepForm(form)) {
+                    const contactInfoStep = form.steps[1];
+                    expect(contactInfoStep).to.exist;
+
+                    const addressField: FormFieldTextAddressInput = contactInfoStep.fields.find(
+                        (field) => field.name === "address",
+                    ) as FormFieldTextAddressInput;
+                    expect(addressField).to.exist;
+                    expect(addressField.mapsUrlQueryParams).to.deep.equal({ components: "country:ca" });
+                }
+            });
+
+            it("falls back to capture-level when field-level mapsUrlQueryParams is not set", () => {
+                const captureData: ContactCaptureBlueprint = {
+                    ...SIMPLE_BLUEPRINT,
+                    data: [
+                        ...SIMPLE_BLUEPRINT.data.filter((d) => d.slotName !== "address"),
+                        {
+                            questionContentKey: "address",
+                            slotName: "address",
+                            type: "ADDRESS" as const,
+                            required: true,
+                            active: true,
+                            // No mapsUrlQueryParams at field level
+                        },
+                    ],
+                    addressAutocompleteParams: {
+                        components: "country:gb",
+                    },
+                };
+
+                const response = getFormResponse(
+                    {
+                        enablePreferredTime: true,
+                        capture: captureData,
+                    },
+                    {},
+                );
+
+                expect(response).to.exist;
+                const form =
+                    response && Array.isArray(response.displays) && response?.displays?.length > 0
+                        ? response.displays[0]
+                        : undefined;
+                expect(form).to.exist;
+
+                expect(isMultistepForm(form)).to.be.true;
+
+                if (isMultistepForm(form)) {
+                    const contactInfoStep = form.steps[1];
+                    expect(contactInfoStep).to.exist;
+
+                    const addressField: FormFieldTextAddressInput = contactInfoStep.fields.find(
+                        (field) => field.name === "address",
+                    ) as FormFieldTextAddressInput;
+                    expect(addressField).to.exist;
+                    // Should use capture-level params (country:gb)
+                    expect(addressField.mapsUrlQueryParams).to.deep.equal({ components: "country:gb" });
                 }
             });
         });
@@ -1871,6 +2025,133 @@ describe(`#${getContactFormFallback.name}()`, () => {
                     const helpTypeField = serviceRequestStep.fields[0];
                     // Props should win
                     expect(helpTypeField.title).to.equal("From props");
+                }
+            });
+        });
+
+        describe("preferredTimeNotification", () => {
+            it("adds notification card at top of preferred time step when provided", () => {
+                const notificationText = "For emergency service, please call 1-800-555-0100";
+                const form = getContactFormFallback(
+                    {
+                        capture: SIMPLE_BLUEPRINT,
+                        preferredTimeNotification: notificationText,
+                    },
+                    { enablePreferredTime: true },
+                );
+
+                expect(form).to.exist;
+
+                const preferredTimeStep = form.steps[2]; // preferred_time step
+                expect(preferredTimeStep).to.exist;
+                expect(preferredTimeStep.fields).to.exist;
+
+                // First field should be the notification card
+                const notificationField = preferredTimeStep.fields[0];
+                expect(notificationField).to.exist;
+                expect(notificationField.name).to.equal("preferred_time_notification");
+                expect(notificationField.type).to.equal("CARD");
+
+                if (notificationField.type === "CARD") {
+                    const cardField = notificationField as FormCardInput;
+                    expect(cardField.text).to.equal(notificationText);
+                    expect(cardField.variant).to.equal("body1");
+                    expect(cardField.style).to.exist;
+                    const style = cardField.style as any;
+                    expect(style?.backgroundColor).to.equal("#FFF3CD");
+                    expect(style?.border).to.equal("1px solid #FFE69C");
+                    expect(style?.fontWeight).to.equal("500");
+                    expect(style?.color).to.equal("#664D03");
+                }
+            });
+
+            it("does not add notification card when not provided", () => {
+                const form = getContactFormFallback(
+                    {
+                        capture: SIMPLE_BLUEPRINT,
+                    },
+                    { enablePreferredTime: true },
+                );
+
+                expect(form).to.exist;
+
+                const preferredTimeStep = form.steps[2]; // preferred_time step
+                expect(preferredTimeStep).to.exist;
+
+                // Verify notification field doesn't exist
+                const notificationField = preferredTimeStep.fields.find(
+                    (field) => field.name === "preferred_time_notification",
+                );
+                expect(notificationField).to.be.undefined;
+            });
+
+            it("passes preferredTimeNotification from data through mergedProps", () => {
+                const notificationText = "Appointments subject to technician availability";
+                const response = getFormResponse(
+                    {
+                        capture: SIMPLE_BLUEPRINT,
+                        enablePreferredTime: true,
+                        preferredTimeNotification: notificationText,
+                    },
+                    {},
+                );
+
+                expect(response).to.exist;
+
+                const form =
+                    response && Array.isArray(response.displays) && response?.displays?.length > 0
+                        ? response.displays[0]
+                        : undefined;
+
+                expect(isMultistepForm(form)).to.be.true;
+
+                if (isMultistepForm(form)) {
+                    const preferredTimeStep = form.steps[2];
+                    const notificationField = preferredTimeStep.fields.find(
+                        (field) => field.name === "preferred_time_notification",
+                    );
+                    expect(notificationField).to.exist;
+                    expect(notificationField?.type).to.equal("CARD");
+
+                    if (notificationField?.type === "CARD") {
+                        const cardField = notificationField as FormCardInput;
+                        expect(cardField.text).to.equal(notificationText);
+                    }
+                }
+            });
+
+            it("props override data when both are provided", () => {
+                const response = getFormResponse(
+                    {
+                        capture: SIMPLE_BLUEPRINT,
+                        enablePreferredTime: true,
+                        preferredTimeNotification: "From data",
+                    },
+                    {
+                        preferredTimeNotification: "From props",
+                    },
+                );
+
+                expect(response).to.exist;
+
+                const form =
+                    response && Array.isArray(response.displays) && response?.displays?.length > 0
+                        ? response.displays[0]
+                        : undefined;
+
+                expect(isMultistepForm(form)).to.be.true;
+
+                if (isMultistepForm(form)) {
+                    const preferredTimeStep = form.steps[2];
+                    const notificationField = preferredTimeStep.fields.find(
+                        (field) => field.name === "preferred_time_notification",
+                    );
+
+                    if (notificationField?.type === "CARD") {
+                        const cardField = notificationField as FormCardInput;
+                        // Props should win
+                        expect(cardField.text).to.equal("From props");
+                    }
                 }
             });
         });
