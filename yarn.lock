@@ -1101,12 +1101,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/sinon@npm:17.0.4":
-  version: 17.0.4
-  resolution: "@types/sinon@npm:17.0.4"
+"@types/sinon@npm:20.0.0":
+  version: 20.0.0
+  resolution: "@types/sinon@npm:20.0.0"
   dependencies:
     "@types/sinonjs__fake-timers": "*"
-  checksum: 487f43bda8d8b2ef32d1b3c08e5a68e17705d2c7470ea89c8fd62e3a086f9a35faf65d37a57bf189004c4e7adbc5f9562dfaa332c54e06a8d99fc7361f3ac004
+  checksum: ce3fd8ea6aa9529617fd2c800fcb8fed7e18b27e5fcd9fd97730ab435cdadaff1f6b762875b25514f2728487c95eecf23f54eeccb583d3cdf4ee47a81a78f702
   languageName: node
   linkType: hard
 
@@ -1291,7 +1291,7 @@ __metadata:
     "@types/chai": 5.2.3
     "@types/mocha": 10.0.10
     "@types/node": 24.10.1
-    "@types/sinon": 17.0.4
+    "@types/sinon": 20.0.0
     "@types/sinon-chai": 3.2.12
     "@types/sparkpost": ^2.1.8
     "@typescript-eslint/eslint-plugin": 7.18.0
