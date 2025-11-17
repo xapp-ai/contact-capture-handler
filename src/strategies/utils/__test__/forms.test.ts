@@ -242,6 +242,7 @@ describe(`#${getFormResponse.name}()`, () => {
                                     slotName: "address",
                                     type: "ADDRESS",
                                     required: true,
+                                    active: true,
                                 },
                             ],
                             addressAutocompleteParams: {
@@ -2026,6 +2027,122 @@ describe(`#${getContactFormFallback.name}()`, () => {
                     // Props should win
                     expect(helpTypeField.title).to.equal("From props");
                 }
+            });
+        });
+
+        describe("when fields have undefined active property", () => {
+            it("excludes fields without active property set (should not default to true)", () => {
+                // This test validates the fix for the bug where fields without the active property
+                // were incorrectly included in the form when using active !== false logic
+                const form = getContactFormFallback(
+                    {
+                        capture: {
+                            data: [
+                                {
+                                    slotName: "full_name",
+                                    questionContentKey: "name",
+                                    type: "FULL_NAME",
+                                    required: true,
+                                    active: true, // explicitly true - should be included
+                                },
+                                {
+                                    slotName: "phone",
+                                    questionContentKey: "phone",
+                                    type: "PHONE",
+                                    required: true,
+                                    active: true, // explicitly true - should be included
+                                },
+                                {
+                                    slotName: "email",
+                                    questionContentKey: "email",
+                                    type: "EMAIL",
+                                    required: false,
+                                    active: false, // explicitly false - should be excluded
+                                },
+                                {
+                                    slotName: "address",
+                                    questionContentKey: "address",
+                                    type: "ADDRESS",
+                                    required: true,
+                                    // active property not set (undefined) - should be excluded
+                                },
+                                {
+                                    slotName: "selection",
+                                    questionContentKey: "selection",
+                                    type: "SELECTION",
+                                    enums: ["Option 1", "Option 2"],
+                                    // active property not set (undefined) - should be excluded
+                                },
+                            ],
+                        },
+                    },
+                    { enablePreferredTime: true },
+                );
+
+                expect(form).to.exist;
+                expect(form.steps).to.have.length(5);
+
+                const contactInfoStep = form.steps[1]; // contact_info step in preferred time form
+                expect(contactInfoStep).to.exist;
+
+                // Should only have 2 fields: full_name and phone (both with active: true)
+                // email (active: false), address (active: undefined), and selection (active: undefined) should be excluded
+                expect(contactInfoStep.fields).to.have.length(2);
+
+                const fieldNames = contactInfoStep.fields.map((field) => field.name);
+                expect(fieldNames).to.include("full_name");
+                expect(fieldNames).to.include("phone");
+                expect(fieldNames).to.not.include("email");
+                expect(fieldNames).to.not.include("address");
+                expect(fieldNames).to.not.include("selection");
+            });
+
+            it("excludes fields without active property in contact-only form", () => {
+                const form = getContactFormFallback(
+                    {
+                        capture: {
+                            data: [
+                                {
+                                    slotName: "full_name",
+                                    questionContentKey: "name",
+                                    type: "FULL_NAME",
+                                    required: true,
+                                    active: true,
+                                },
+                                {
+                                    slotName: "phone",
+                                    questionContentKey: "phone",
+                                    type: "PHONE",
+                                    required: true,
+                                    active: true,
+                                },
+                                {
+                                    slotName: "zip",
+                                    questionContentKey: "zip",
+                                    type: "ZIP",
+                                    // active not set - should be excluded
+                                },
+                            ],
+                        },
+                    },
+                    { enablePreferredTime: false },
+                );
+
+                expect(form).to.exist;
+                expect(form.name).to.equal("contact_us_only");
+
+                const contactStep = form.steps[0];
+                expect(contactStep).to.exist;
+
+                // Should have: full_name, phone, message (4 fields)
+                // zip should be excluded because active is not set
+                expect(contactStep.fields).to.have.length(3);
+
+                const fieldNames = contactStep.fields.map((field) => field.name);
+                expect(fieldNames).to.include("full_name");
+                expect(fieldNames).to.include("phone");
+                expect(fieldNames).to.include("message");
+                expect(fieldNames).to.not.include("zip");
             });
         });
 

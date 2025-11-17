@@ -304,8 +304,13 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
     if (existsAndNotEmpty(data.capture.data)) {
         // first filter to make sure we only adding ones meant for form
         // and are active
+        // IMPORTANT: We must explicitly check for `active === true` because:
+        // - If active is true → included ✓
+        // - If active is false → excluded ✓
+        // - If active is undefined (not set) → excluded ✓
+        // Using `!== false` would incorrectly include fields where active is undefined
         const dataFields = data.capture.data.filter((dataItem) => {
-            return dataItem.channel !== "CHAT" && dataItem.active !== false;
+            return dataItem.channel !== "CHAT" && dataItem.active === true;
         });
 
         CONTACT_FIELDS = [];
