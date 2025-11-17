@@ -1,3 +1,10 @@
+## [1.15.6](https://github.com/xapp-ai/contact-capture-handler/compare/v1.15.5...v1.15.6) (2025-11-17)
+
+
+### Bug Fixes
+
+* Lack of Active key should be Not Active ([#604](https://github.com/xapp-ai/contact-capture-handler/issues/604)) ([fb26b22](https://github.com/xapp-ai/contact-capture-handler/commit/fb26b22d6183632ef274ece4f302d3503625ef90))
+
 ## [1.15.5](https://github.com/xapp-ai/contact-capture-handler/compare/v1.15.4...v1.15.5) (2025-11-14)
 
 
