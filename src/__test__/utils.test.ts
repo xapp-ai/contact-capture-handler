@@ -234,7 +234,7 @@ describe(`#${newLeadGenerationData.name}()`, () => {
                 { active: false, type: "PHONE", enums: [], questionContentKey: "phoneQuestion", slotName: "phone", acceptAnyInput: true, channel: "CHAT" },
                 // just form
                 { active: true, type: "FULL_NAME", enums: [], questionContentKey: "nameQuestion", slotName: "name", acceptAnyInput: true, channel: "FORM" },
-                // all 
+                // all
                 { active: true, type: "ZIP", enums: [], questionContentKey: "zipQuestion", slotName: "zip", acceptAnyInput: false, }
             ]
         }
@@ -264,5 +264,67 @@ describe(`#${newLeadGenerationData.name}()`, () => {
             { type: "ZIP", enums: [], questionContentKey: "zipQuestion", slotName: "zip", acceptAnyInput: false }
         ]);
         expect(result.lastModifiedMs).to.be.a("number");
+    });
+
+    describe("when capture.data is missing or invalid", () => {
+        it("returns an empty data array when capture.data is undefined", () => {
+            const invalidData = {
+                capture: {
+                    serviceOptions: [
+                        { id: "schedule_visit", label: "Schedule Visit", requiresDate: false }
+                    ]
+                }
+            } as unknown as ContactCaptureData;
+
+            const result = newLeadGenerationData(invalidData);
+            expect(result.data).to.deep.equal([]);
+            expect(result.lastModifiedMs).to.be.a("number");
+        });
+
+        it("returns an empty data array when capture is undefined", () => {
+            const invalidData = {} as unknown as ContactCaptureData;
+
+            const result = newLeadGenerationData(invalidData);
+            expect(result.data).to.deep.equal([]);
+            expect(result.lastModifiedMs).to.be.a("number");
+        });
+
+        it("returns an empty data array when data is null", () => {
+            const invalidData = null as unknown as ContactCaptureData;
+
+            const result = newLeadGenerationData(invalidData);
+            expect(result.data).to.deep.equal([]);
+            expect(result.lastModifiedMs).to.be.a("number");
+        });
+
+        it("returns an empty data array when data is undefined", () => {
+            const invalidData = undefined as unknown as ContactCaptureData;
+
+            const result = newLeadGenerationData(invalidData);
+            expect(result.data).to.deep.equal([]);
+            expect(result.lastModifiedMs).to.be.a("number");
+        });
+
+        it("works correctly with FORM channel when capture.data is missing", () => {
+            const invalidData = {
+                capture: {
+                    serviceOptions: []
+                }
+            } as unknown as ContactCaptureData;
+
+            const result = newLeadGenerationData(invalidData, "FORM");
+            expect(result.data).to.deep.equal([]);
+            expect(result.lastModifiedMs).to.be.a("number");
+        });
+
+        it("works correctly with CHAT channel when capture.data is missing", () => {
+            const invalidData = {
+                capture: {}
+            } as unknown as ContactCaptureData;
+
+            const result = newLeadGenerationData(invalidData, "CHAT");
+            expect(result.data).to.deep.equal([]);
+            expect(result.lastModifiedMs).to.be.a("number");
+        });
     });
 });

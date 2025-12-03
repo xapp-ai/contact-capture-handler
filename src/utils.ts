@@ -1,5 +1,6 @@
 /*! Copyright (c) 2022, XAPP AI */
 import { isChannelActionRequest, isIntentRequest, isSessionEndedRequest } from "stentor-guards";
+import { log } from "stentor-logger";
 import { Request, RequestSlotMap, Response } from "stentor-models";
 import { concatResponseOutput } from "stentor-response";
 import {
@@ -21,6 +22,15 @@ import { DEFAULT_RESPONSES } from "./constants";
  * If a channel is passed in, it will filter
  */
 export function newLeadGenerationData(data: ContactCaptureData, channel?: "CHAT" | "FORM"): CaptureRuntimeData {
+    // Guard clause for missing capture.data structure
+    if (!data?.capture?.data) {
+        log().warn("ContactCaptureData is missing capture.data structure. Returning empty data array.");
+        return {
+            data: [],
+            lastModifiedMs: new Date().getTime()
+        };
+    }
+
     const runtimeData: CaptureRuntimeData = {
         data: (data as ContactCaptureData).capture.data
             .filter((value) => {
