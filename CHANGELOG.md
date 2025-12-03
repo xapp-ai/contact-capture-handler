@@ -1,3 +1,10 @@
+## [1.15.7](https://github.com/xapp-ai/contact-capture-handler/compare/v1.15.6...v1.15.7) (2025-12-03)
+
+
+### Bug Fixes
+
+* Malformed Acceptance/ No Data Array ([#610](https://github.com/xapp-ai/contact-capture-handler/issues/610)) ([c8597f8](https://github.com/xapp-ai/contact-capture-handler/commit/c8597f80388ccf2f7d7ef65c2ed612378668c4fe))
+
 ## [1.15.6](https://github.com/xapp-ai/contact-capture-handler/compare/v1.15.5...v1.15.6) (2025-11-17)
 
 
