@@ -1,5 +1,11 @@
 name: Publish
 
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+  id-token: write
+
 on:
   push:
     branches: [main]
@@ -20,13 +26,13 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: 24.12.0
+          registry-url: 'https://registry.npmjs.org'
       - run: yarn --frozen-lockfile
       - run: yarn lint
       - run: yarn test
       - run: yarn build
       - name: Release
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
-          GH_TOKEN: ${{secrets.GH_TOKEN }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npx semantic-release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_CONFIG_PROVENANCE: true
