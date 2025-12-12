@@ -2146,6 +2146,273 @@ describe(`#${getContactFormFallback.name}()`, () => {
             });
         });
 
+        describe("maxLength validation", () => {
+            describe("when using default contact fields", () => {
+                it("sets maxLength on full_name field", () => {
+                    const form = getContactFormFallback({ capture: SIMPLE_BLUEPRINT }, {});
+                    expect(form).to.exist;
+
+                    const contactStep = form.steps[0];
+                    const nameField = contactStep.fields.find((field) => field.name === "full_name");
+                    expect(nameField).to.exist;
+                    if (nameField?.type === "TEXT") {
+                        expect((nameField as FormTextInput).maxLength).to.equal(100);
+                    }
+                });
+
+                it("sets maxLength on phone field", () => {
+                    const form = getContactFormFallback({ capture: SIMPLE_BLUEPRINT }, {});
+                    expect(form).to.exist;
+
+                    const contactStep = form.steps[0];
+                    const phoneField = contactStep.fields.find((field) => field.name === "phone");
+                    expect(phoneField).to.exist;
+                    if (phoneField?.type === "TEXT") {
+                        expect((phoneField as FormTextInput).maxLength).to.equal(15);
+                    }
+                });
+
+                it("sets maxLength on email field", () => {
+                    const form = getContactFormFallback({ capture: SIMPLE_BLUEPRINT }, {});
+                    expect(form).to.exist;
+
+                    const contactStep = form.steps[0];
+                    const emailField = contactStep.fields.find((field) => field.name === "email");
+                    expect(emailField).to.exist;
+                    if (emailField?.type === "TEXT") {
+                        expect((emailField as FormTextInput).maxLength).to.equal(254);
+                    }
+                });
+
+                it("sets maxLength on message field", () => {
+                    const form = getContactFormFallback({ capture: SIMPLE_BLUEPRINT }, {});
+                    expect(form).to.exist;
+
+                    const contactStep = form.steps[0];
+                    const messageField = contactStep.fields.find((field) => field.name === "message");
+                    expect(messageField).to.exist;
+                    if (messageField?.type === "TEXT") {
+                        expect((messageField as FormTextInput).maxLength).to.equal(2000);
+                    }
+                });
+            });
+
+            describe("when using preferred time form", () => {
+                it("sets maxLength on all contact fields in preferred time form", () => {
+                    const form = getContactFormFallback(
+                        {
+                            capture: SIMPLE_BLUEPRINT,
+                            enablePreferredTime: true,
+                        },
+                        {},
+                    );
+
+                    expect(form).to.exist;
+                    expect(form.steps).to.have.length(5);
+
+                    // Check message field on first page (service_request)
+                    const serviceRequestStep = form.steps[0];
+                    const messageField = serviceRequestStep.fields.find((field) => field.name === "message");
+                    expect(messageField).to.exist;
+                    if (messageField?.type === "TEXT") {
+                        expect((messageField as FormTextInput).maxLength).to.equal(2000);
+                    }
+
+                    // Check contact fields on second page (contact_info)
+                    const contactInfoStep = form.steps[1];
+
+                    const nameField = contactInfoStep.fields.find((field) => field.name === "full_name");
+                    expect(nameField).to.exist;
+                    if (nameField?.type === "TEXT") {
+                        expect((nameField as FormTextInput).maxLength).to.equal(100);
+                    }
+
+                    const phoneField = contactInfoStep.fields.find((field) => field.name === "phone");
+                    expect(phoneField).to.exist;
+                    if (phoneField?.type === "TEXT") {
+                        expect((phoneField as FormTextInput).maxLength).to.equal(15);
+                    }
+
+                    const emailField = contactInfoStep.fields.find((field) => field.name === "email");
+                    expect(emailField).to.exist;
+                    if (emailField?.type === "TEXT") {
+                        expect((emailField as FormTextInput).maxLength).to.equal(254);
+                    }
+                });
+
+                it("sets maxLength on zip field when included", () => {
+                    const form = getContactFormFallback(
+                        {
+                            capture: BLUEPRINT_WITH_SERVICE_AREA_ZIP_CODES,
+                            enablePreferredTime: true,
+                        },
+                        {},
+                    );
+
+                    expect(form).to.exist;
+
+                    const contactInfoStep = form.steps[1];
+                    const zipField = contactInfoStep.fields.find((field) => field.name === "zip");
+                    expect(zipField).to.exist;
+                    if (zipField?.type === "TEXT") {
+                        expect((zipField as FormTextInput).maxLength).to.equal(10);
+                    }
+                });
+
+                it("sets maxLength on address field when included", () => {
+                    const form = getContactFormFallback(
+                        {
+                            capture: {
+                                data: [
+                                    ...SIMPLE_BLUEPRINT.data,
+                                    {
+                                        questionContentKey: "address",
+                                        slotName: "address",
+                                        type: "ADDRESS",
+                                        required: true,
+                                        active: true,
+                                    },
+                                ],
+                            },
+                            enablePreferredTime: true,
+                        },
+                        {},
+                    );
+
+                    expect(form).to.exist;
+
+                    const contactInfoStep = form.steps[1];
+                    const addressField = contactInfoStep.fields.find((field) => field.name === "address");
+                    expect(addressField).to.exist;
+                    if (addressField?.type === "TEXT") {
+                        expect((addressField as FormTextInput).maxLength).to.equal(500);
+                    }
+                });
+            });
+
+            describe("when using custom blueprint data", () => {
+                it("sets maxLength from DEFAULT_CONTACT_FIELDS when fields are auto-added", () => {
+                    const form = getContactFormFallback(
+                        {
+                            capture: {
+                                data: [],
+                            },
+                            enablePreferredTime: true,
+                        },
+                        {},
+                    );
+
+                    expect(form).to.exist;
+
+                    const contactInfoStep = form.steps[1];
+
+                    // When no custom data is provided, default fields should be used with maxLength
+                    const nameField = contactInfoStep.fields.find((field) => field.name === "full_name");
+                    expect(nameField).to.exist;
+                    if (nameField?.type === "TEXT") {
+                        expect((nameField as FormTextInput).maxLength).to.equal(100);
+                    }
+
+                    const phoneField = contactInfoStep.fields.find((field) => field.name === "phone");
+                    expect(phoneField).to.exist;
+                    if (phoneField?.type === "TEXT") {
+                        expect((phoneField as FormTextInput).maxLength).to.equal(15);
+                    }
+                });
+            });
+
+            describe("when message field is on first page", () => {
+                it("sets maxLength on message field when showFirstPageMessage is true", () => {
+                    const form = getContactFormFallback(
+                        {
+                            capture: SIMPLE_BLUEPRINT,
+                            enablePreferredTime: true,
+                            showFirstPageMessage: true,
+                        },
+                        {},
+                    );
+
+                    expect(form).to.exist;
+
+                    const serviceRequestStep = form.steps[0];
+                    const messageField = serviceRequestStep.fields.find((field) => field.name === "message");
+                    expect(messageField).to.exist;
+                    if (messageField?.type === "TEXT") {
+                        expect((messageField as FormTextInput).maxLength).to.equal(2000);
+                    }
+                });
+
+                it("does not have message field when showFirstPageMessage is false", () => {
+                    const form = getContactFormFallback(
+                        {
+                            capture: SIMPLE_BLUEPRINT,
+                            enablePreferredTime: true,
+                            showFirstPageMessage: false,
+                        },
+                        {},
+                    );
+
+                    expect(form).to.exist;
+
+                    const serviceRequestStep = form.steps[0];
+                    const messageField = serviceRequestStep.fields.find((field) => field.name === "message");
+                    expect(messageField).to.be.undefined;
+                });
+            });
+
+            describe("when using DEFAULT_CONTACT_FIELDS directly", () => {
+                it("has maxLength defined on all default fields", () => {
+                    const response = getFormResponse(
+                        {
+                            enablePreferredTime: true,
+                            capture: { data: [] },
+                        },
+                        {},
+                    );
+
+                    expect(response).to.exist;
+
+                    const form =
+                        response && Array.isArray(response.displays) && response?.displays?.length > 0
+                            ? response.displays[0]
+                            : undefined;
+                    expect(form).to.exist;
+
+                    expect(isMultistepForm(form)).to.be.true;
+
+                    if (isMultistepForm(form)) {
+                        const contactInfoStep = form.steps[1];
+                        expect(contactInfoStep).to.exist;
+
+                        // Verify all default fields have maxLength
+                        const nameField = contactInfoStep.fields.find((field) => field.name === "full_name");
+                        expect(nameField).to.exist;
+                        if (nameField?.type === "TEXT") {
+                            expect((nameField as FormTextInput).maxLength).to.equal(100);
+                        }
+
+                        const phoneField = contactInfoStep.fields.find((field) => field.name === "phone");
+                        expect(phoneField).to.exist;
+                        if (phoneField?.type === "TEXT") {
+                            expect((phoneField as FormTextInput).maxLength).to.equal(15);
+                        }
+
+                        const emailField = contactInfoStep.fields.find((field) => field.name === "email");
+                        expect(emailField).to.exist;
+                        if (emailField?.type === "TEXT") {
+                            expect((emailField as FormTextInput).maxLength).to.equal(254);
+                        }
+
+                        const zipField = contactInfoStep.fields.find((field) => field.name === "zip");
+                        expect(zipField).to.exist;
+                        if (zipField?.type === "TEXT") {
+                            expect((zipField as FormTextInput).maxLength).to.equal(10);
+                        }
+                    }
+                });
+            });
+        });
+
         describe("preferredTimeNotification", () => {
             it("adds notification card at top of preferred time step when provided", () => {
                 const notificationText = "For emergency service, please call 1-800-555-0100";

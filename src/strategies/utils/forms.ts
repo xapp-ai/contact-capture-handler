@@ -39,6 +39,7 @@ export const DEFAULT_CONTACT_FIELDS: FormField[] = [
         type: "TEXT",
         placeholder: "Full Name",
         mandatory: true,
+        maxLength: 100,
     },
     {
         format: "PHONE",
@@ -48,6 +49,7 @@ export const DEFAULT_CONTACT_FIELDS: FormField[] = [
         type: "TEXT",
         mandatoryGroup: "contact_method",
         mandatoryError: "Please provide either a phone number or email address",
+        maxLength: 15,
     },
     {
         format: "EMAIL",
@@ -57,6 +59,7 @@ export const DEFAULT_CONTACT_FIELDS: FormField[] = [
         type: "TEXT",
         mandatoryGroup: "contact_method",
         mandatoryError: "Please provide either a phone number or email address",
+        maxLength: 254,
     },
     {
         format: "ZIP_CODE",
@@ -65,6 +68,7 @@ export const DEFAULT_CONTACT_FIELDS: FormField[] = [
         placeholder: "Your zip code",
         type: "TEXT",
         mandatory: true,
+        maxLength: 10,
     },
 ];
 
@@ -337,6 +341,7 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
                     placeholder: "Your full name",
                     // always mandatory
                     mandatory: true,
+                    maxLength: 100,
                 };
                 CONTACT_FIELDS.push(namefield);
             } else if (dataField.slotName === "email") {
@@ -344,6 +349,7 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
                     ...field,
                     format: "EMAIL",
                     placeholder: "Your email address",
+                    maxLength: 254,
                 };
                 CONTACT_FIELDS.push(emailField);
             } else if (dataField.slotName === "phone") {
@@ -351,6 +357,7 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
                     ...field,
                     format: "PHONE",
                     placeholder: "Your phone number we can best reach you on",
+                    maxLength: 15,
                 };
                 CONTACT_FIELDS.push(phoneField);
             } else if (dataField.slotName === "zip") {
@@ -358,6 +365,7 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
                     ...field,
                     format: "ZIP_CODE",
                     placeholder: "Your zip code",
+                    maxLength: 10,
                 };
                 CONTACT_FIELDS.push(zipField);
             } else if (dataField.slotName === "address") {
@@ -365,6 +373,7 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
                     ...field,
                     format: "ADDRESS",
                     mapsBaseUrl: "https://places.xapp.ai",
+                    maxLength: 500,
                 };
                 // Check for mapsUrlQueryParams on the dataField first, then fall back to capture-level config
                 if (dataField.mapsUrlQueryParams) {
@@ -411,6 +420,7 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
             type: "TEXT",
             placeholder: "Your full name",
             mandatory: true,
+            maxLength: 100,
         });
 
         nameFieldIndex = 0;
@@ -430,6 +440,7 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
             placeholder: "Your 10 digit phone number",
             type: "TEXT",
             mandatory: true,
+            maxLength: 15,
         });
 
         phoneFieldIndex = CONTACT_FIELDS.length - 1;
@@ -807,6 +818,7 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
             type: "TEXT",
             multiline: true,
             mandatory: requiredMessage,
+            maxLength: 2000,
         });
     }
 
@@ -928,6 +940,7 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
         type: "TEXT",
         multiline: true,
         mandatory: true,
+        maxLength: 2000,
     });
 
     // Add disclaimer fields to contact-only form if provided
