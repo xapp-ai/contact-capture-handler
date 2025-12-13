@@ -32,7 +32,7 @@ jobs:
         run: npx conventional-changelog -p angular -i CHANGELOG.md -s -r 0
 
       - name: Create PR
-        uses: peter-evans/create-pull-request@v7
+        uses: peter-evans/create-pull-request@v8
         with:
           branch: chore/release-${{ github.ref_name }}
           title: "chore(release): ${{ github.ref_name }}"
