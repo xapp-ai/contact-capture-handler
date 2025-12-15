@@ -1,6 +1,10 @@
 {
   "name": "@xapp/contact-capture-handler",
   "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/xapp-ai/contact-capture-handler"
+  },
   "publishConfig": {
     "access": "public"
   },
