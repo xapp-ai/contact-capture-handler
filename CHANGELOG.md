@@ -1,3 +1,10 @@
+# [1.17.0](https://github.com/xapp-ai/contact-capture-handler/compare/v1.16.1...v1.17.0) (2025-12-17)
+
+
+### Features
+
+* Add changelog and version commit after release ([#620](https://github.com/xapp-ai/contact-capture-handler/issues/620)) ([ac83e4c](https://github.com/xapp-ai/contact-capture-handler/commit/ac83e4c87c1ae13e02a42798226432ad87896479))
+
 ## [1.15.7](https://github.com/xapp-ai/contact-capture-handler/compare/v1.15.6...v1.15.7) (2025-12-03)
 
 
