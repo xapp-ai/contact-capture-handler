@@ -118,7 +118,6 @@ export interface FormResponseProps {
      * Optional message description to help people leave meaningful messages
      */
     messageDescription?: string;
-
     /**
      * Is there a preselected service
      */
@@ -796,6 +795,7 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
                   type: "DROPDOWN",
                   items: chips,
                   mandatory: true,
+                  maxLength: 2000,
               }
             : {
                   name: "help_type",

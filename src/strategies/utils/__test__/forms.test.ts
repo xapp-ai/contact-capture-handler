@@ -1552,6 +1552,22 @@ describe(`#${getContactFormFallback.name}()`, () => {
                 // DROPDOWN fields don't have radio property
                 expect((helpTypeField as any).radio).to.be.undefined;
             });
+
+            it("sets maxLength on DROPDOWN field for freeform input", () => {
+                const form = getContactFormFallback(
+                    {
+                        capture: SIMPLE_BLUEPRINT,
+                        firstPageInputType: "dropdown",
+                    },
+                    { enablePreferredTime: true },
+                );
+
+                const serviceRequestStep = form.steps[0];
+                const helpTypeField = serviceRequestStep.fields[0] as FormDropdownInput;
+
+                expect(helpTypeField.type).to.equal("DROPDOWN");
+                expect(helpTypeField.maxLength).to.equal(2000);
+            });
         });
 
         describe("with default firstPageInputType (chips)", () => {
