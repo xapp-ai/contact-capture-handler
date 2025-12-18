@@ -1,3 +1,10 @@
+## [1.17.1](https://github.com/xapp-ai/contact-capture-handler/compare/v1.17.0...v1.17.1) (2025-12-18)
+
+
+### Bug Fixes
+
+* Add maxLength to dropdown field for freeform input ([#622](https://github.com/xapp-ai/contact-capture-handler/issues/622)) ([c99aab6](https://github.com/xapp-ai/contact-capture-handler/commit/c99aab634745bb505de669d4abbacaba06a64ae2))
+
 # [1.17.0](https://github.com/xapp-ai/contact-capture-handler/compare/v1.16.1...v1.17.0) (2025-12-17)
 
 
