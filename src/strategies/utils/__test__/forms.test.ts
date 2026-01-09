@@ -953,6 +953,118 @@ describe(`#${getContactFormFallback.name}()`, () => {
             expect(lastName!.mandatory).to.be.true;
         });
 
+        it("enforces at least one name field is mandatory when all have required: false", () => {
+            const form = getContactFormFallback(
+                {
+                    capture: {
+                        data: [
+                            {
+                                slotName: "first_name",
+                                active: true,
+                                type: "FIRST_NAME",
+                                questionContentKey: "FirstNameQuestionContent",
+                                required: false,
+                            },
+                            {
+                                slotName: "last_name",
+                                active: true,
+                                type: "LAST_NAME",
+                                questionContentKey: "LastNameQuestionContent",
+                                required: false,
+                            },
+                            {
+                                slotName: "phone",
+                                active: true,
+                                type: "PHONE",
+                                questionContentKey: "PhoneQuestionContent",
+                            },
+                        ],
+                    },
+                },
+                { enablePreferredTime: true },
+            );
+
+            const step = form.steps[1];
+            const firstName = step.fields.find((f) => f.name === "first_name");
+            const lastName = step.fields.find((f) => f.name === "last_name");
+
+            // First name field should be enforced as mandatory since it's the first name field
+            expect(firstName!.mandatory).to.be.true;
+            // Last name can remain optional since first_name is now mandatory
+            expect(lastName!.mandatory).to.be.false;
+        });
+
+        it("enforces full_name as mandatory when it has required: false and is the only name field", () => {
+            const form = getContactFormFallback(
+                {
+                    capture: {
+                        data: [
+                            {
+                                slotName: "full_name",
+                                active: true,
+                                type: "FULL_NAME",
+                                questionContentKey: "FullNameQuestionContent",
+                                required: false,
+                            },
+                            {
+                                slotName: "phone",
+                                active: true,
+                                type: "PHONE",
+                                questionContentKey: "PhoneQuestionContent",
+                            },
+                        ],
+                    },
+                },
+                { enablePreferredTime: true },
+            );
+
+            const step = form.steps[1];
+            const fullName = step.fields.find((f) => f.name === "full_name");
+
+            // full_name should be enforced as mandatory even though required: false
+            expect(fullName!.mandatory).to.be.true;
+        });
+
+        it("allows full_name to be optional when first_name is mandatory", () => {
+            const form = getContactFormFallback(
+                {
+                    capture: {
+                        data: [
+                            {
+                                slotName: "full_name",
+                                active: true,
+                                type: "FULL_NAME",
+                                questionContentKey: "FullNameQuestionContent",
+                                required: false,
+                            },
+                            {
+                                slotName: "first_name",
+                                active: true,
+                                type: "FIRST_NAME",
+                                questionContentKey: "FirstNameQuestionContent",
+                                required: true,
+                            },
+                            {
+                                slotName: "phone",
+                                active: true,
+                                type: "PHONE",
+                                questionContentKey: "PhoneQuestionContent",
+                            },
+                        ],
+                    },
+                },
+                { enablePreferredTime: true },
+            );
+
+            const step = form.steps[1];
+            const fullName = step.fields.find((f) => f.name === "full_name");
+            const firstName = step.fields.find((f) => f.name === "first_name");
+
+            // full_name can be optional since first_name is mandatory
+            expect(fullName!.mandatory).to.be.false;
+            expect(firstName!.mandatory).to.be.true;
+        });
+
         it("uses first/last name for FORM channel while full_name is for CHAT channel", () => {
             const form = getContactFormFallback(
                 {

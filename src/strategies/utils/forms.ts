@@ -329,7 +329,7 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
                 mandatory: dataField.required,
             };
 
-            // look for first_name or last_name
+            // Handle name fields (full_name, first_name, last_name)
 
             if (dataField.slotName === "full_name" || dataField.slotName === "name") {
                 const namefield: FormTextInput = {
@@ -338,8 +338,7 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
                     multiline: false,
                     label: "Name",
                     placeholder: "Your full name",
-                    // always mandatory
-                    mandatory: true,
+                    mandatory: dataField.required !== false, // default to true unless explicitly false
                     maxLength: 100,
                 };
                 CONTACT_FIELDS.push(namefield);
@@ -449,6 +448,18 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
         });
 
         nameFieldIndex = 0;
+    }
+
+    // Ensure at least one name field is mandatory
+    // This handles cases where all name fields have required: false
+    const nameFields = CONTACT_FIELDS.filter(
+        (f) => f.name === "full_name" || f.name === "first_name" || f.name === "last_name",
+    );
+    const hasRequiredName = nameFields.some((f) => f.mandatory === true);
+
+    if (nameFields.length > 0 && !hasRequiredName) {
+        // Make the first name field mandatory
+        nameFields[0].mandatory = true;
     }
 
     let phoneFieldIndex = CONTACT_FIELDS.findIndex((field) => field.name === "phone");
