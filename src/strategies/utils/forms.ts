@@ -458,8 +458,12 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
     const hasRequiredName = nameFields.some((f) => f.mandatory === true);
 
     if (nameFields.length > 0 && !hasRequiredName) {
-        // Make the first name field mandatory
-        nameFields[0].mandatory = true;
+        // Make one name field mandatory with explicit priority: first_name > full_name > last_name
+        const priorityField =
+            nameFields.find((f) => f.name === "first_name") ||
+            nameFields.find((f) => f.name === "full_name") ||
+            nameFields[0];
+        priorityField.mandatory = true;
     }
 
     let phoneFieldIndex = CONTACT_FIELDS.findIndex((field) => field.name === "phone");
