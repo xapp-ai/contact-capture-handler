@@ -736,8 +736,8 @@ describe(`#${getContactFormFallback.name}()`, () => {
             });
         });
     });
-    describe("when passed existing props without full_name active", () => {
-        it("adds the name field", () => {
+    describe("when using first_name and last_name instead of full_name", () => {
+        it("uses first_name and last_name fields in preferred time form", () => {
             const form = getContactFormFallback(
                 { capture: BLUEPRINT_WITHOUT_FULL_NAME },
                 { enablePreferredTime: true, service: "schedule_maintenance" },
@@ -749,14 +749,531 @@ describe(`#${getContactFormFallback.name}()`, () => {
             const step = form.steps[1];
             expect(step).to.exist;
 
-            // name & phone
-            expect(step.fields).to.have.length(2);
+            // first_name, last_name & phone
+            expect(step.fields).to.have.length(3);
 
-            const name = step.fields[0];
-            expect(name.name).to.equal("full_name");
+            const firstName = step.fields[0];
+            expect(firstName.name).to.equal("first_name");
 
-            const phone = step.fields[1];
+            const lastName = step.fields[1];
+            expect(lastName.name).to.equal("last_name");
+
+            const phone = step.fields[2];
             expect(phone.name).to.equal("phone");
+        });
+
+        it("uses first_name and last_name fields in contact-only form", () => {
+            const form = getContactFormFallback(
+                { capture: BLUEPRINT_WITHOUT_FULL_NAME },
+                { enablePreferredTime: false },
+            );
+
+            expect(form).to.exist;
+            expect(form.name).to.equal("contact_us_only");
+
+            const step = form.steps[0];
+            expect(step).to.exist;
+
+            // first_name, last_name, phone & message
+            expect(step.fields).to.have.length(4);
+
+            expect(step.fields[0].name).to.equal("first_name");
+            expect(step.fields[1].name).to.equal("last_name");
+            expect(step.fields[2].name).to.equal("phone");
+            expect(step.fields[3].name).to.equal("message");
+        });
+
+        it("sets correct field properties on first_name and last_name", () => {
+            const form = getContactFormFallback(
+                { capture: BLUEPRINT_WITHOUT_FULL_NAME },
+                { enablePreferredTime: true },
+            );
+
+            const step = form.steps[1];
+            const firstName = step.fields[0];
+            const lastName = step.fields[1];
+
+            // Check first_name properties
+            expect(firstName.name).to.equal("first_name");
+            expect((firstName as any).label).to.equal("First Name");
+            expect((firstName as any).placeholder).to.equal("Your first name");
+            expect((firstName as any).maxLength).to.equal(50);
+            expect(firstName.mandatory).to.be.true;
+
+            // Check last_name properties
+            expect(lastName.name).to.equal("last_name");
+            expect((lastName as any).label).to.equal("Last Name");
+            expect((lastName as any).placeholder).to.equal("Your last name");
+            expect((lastName as any).maxLength).to.equal(50);
+            expect(lastName.mandatory).to.be.true;
+        });
+
+        it("includes first/last name confirmation card in confirmation step", () => {
+            const form = getContactFormFallback(
+                { capture: BLUEPRINT_WITHOUT_FULL_NAME },
+                { enablePreferredTime: true },
+            );
+
+            // Find confirmation step
+            const confirmationStep = form.steps.find((s) => s.name === "confirmation");
+            expect(confirmationStep).to.exist;
+
+            // Find the split name confirmation card
+            const nameCard = confirmationStep!.fields.find((f) => f.name === "confirmation_card_name_split");
+            expect(nameCard).to.exist;
+            expect((nameCard as any).text).to.equal("#{first_name} #{last_name}");
+            // Uses AND logic to only display when BOTH fields have values (avoids partial name display)
+            expect((nameCard as any).condition).to.equal("!!first_name && !!last_name");
+        });
+
+        it("confirmation card conditions prevent partial name display", () => {
+            const form = getContactFormFallback(
+                { capture: BLUEPRINT_WITHOUT_FULL_NAME },
+                { enablePreferredTime: true },
+            );
+
+            const confirmationStep = form.steps.find((s) => s.name === "confirmation");
+            expect(confirmationStep).to.exist;
+
+            // Find both name cards
+            const fullNameCard = confirmationStep!.fields.find((f) => f.name === "confirmation_card_name");
+            const splitNameCard = confirmationStep!.fields.find((f) => f.name === "confirmation_card_name_split");
+
+            expect(fullNameCard).to.exist;
+            expect(splitNameCard).to.exist;
+
+            // full_name card only shows when full_name exists AND first/last don't
+            expect((fullNameCard as any).condition).to.equal("!!full_name && !first_name && !last_name");
+
+            // split name card only shows when BOTH first AND last exist (prevents "John " or " Smith")
+            expect((splitNameCard as any).condition).to.equal("!!first_name && !!last_name");
+        });
+
+        it("falls back to full_name when only first_name is provided (no last_name)", () => {
+            const form = getContactFormFallback(
+                {
+                    capture: {
+                        data: [
+                            {
+                                slotName: "first_name",
+                                active: true,
+                                type: "FIRST_NAME",
+                                questionContentKey: "FirstNameQuestionContent",
+                            },
+                            {
+                                slotName: "phone",
+                                active: true,
+                                type: "PHONE",
+                                questionContentKey: "PhoneQuestionContent",
+                            },
+                        ],
+                    },
+                },
+                { enablePreferredTime: true },
+            );
+
+            const step = form.steps[1];
+
+            // Should have full_name (fallback), first_name, and phone
+            // Because we need BOTH first_name AND last_name to skip full_name fallback
+            const fieldNames = step.fields.map((f) => f.name);
+            expect(fieldNames).to.include("full_name");
+            expect(fieldNames).to.include("first_name");
+            expect(fieldNames).to.include("phone");
+        });
+
+        it("falls back to full_name when only last_name is provided (no first_name)", () => {
+            const form = getContactFormFallback(
+                {
+                    capture: {
+                        data: [
+                            {
+                                slotName: "last_name",
+                                active: true,
+                                type: "LAST_NAME",
+                                questionContentKey: "LastNameQuestionContent",
+                            },
+                            {
+                                slotName: "phone",
+                                active: true,
+                                type: "PHONE",
+                                questionContentKey: "PhoneQuestionContent",
+                            },
+                        ],
+                    },
+                },
+                { enablePreferredTime: true },
+            );
+
+            const step = form.steps[1];
+
+            // Should have full_name (fallback), last_name, and phone
+            const fieldNames = step.fields.map((f) => f.name);
+            expect(fieldNames).to.include("full_name");
+            expect(fieldNames).to.include("last_name");
+            expect(fieldNames).to.include("phone");
+        });
+
+        it("respects required: false on first_name field", () => {
+            const form = getContactFormFallback(
+                {
+                    capture: {
+                        data: [
+                            {
+                                slotName: "first_name",
+                                active: true,
+                                type: "FIRST_NAME",
+                                questionContentKey: "FirstNameQuestionContent",
+                                required: false,
+                            },
+                            {
+                                slotName: "last_name",
+                                active: true,
+                                type: "LAST_NAME",
+                                questionContentKey: "LastNameQuestionContent",
+                                required: true,
+                            },
+                            {
+                                slotName: "phone",
+                                active: true,
+                                type: "PHONE",
+                                questionContentKey: "PhoneQuestionContent",
+                            },
+                        ],
+                    },
+                },
+                { enablePreferredTime: true },
+            );
+
+            const step = form.steps[1];
+            const firstName = step.fields.find((f) => f.name === "first_name");
+            const lastName = step.fields.find((f) => f.name === "last_name");
+
+            expect(firstName!.mandatory).to.be.false;
+            expect(lastName!.mandatory).to.be.true;
+        });
+
+        it("enforces at least one name field is mandatory when all have required: false", () => {
+            const form = getContactFormFallback(
+                {
+                    capture: {
+                        data: [
+                            {
+                                slotName: "first_name",
+                                active: true,
+                                type: "FIRST_NAME",
+                                questionContentKey: "FirstNameQuestionContent",
+                                required: false,
+                            },
+                            {
+                                slotName: "last_name",
+                                active: true,
+                                type: "LAST_NAME",
+                                questionContentKey: "LastNameQuestionContent",
+                                required: false,
+                            },
+                            {
+                                slotName: "phone",
+                                active: true,
+                                type: "PHONE",
+                                questionContentKey: "PhoneQuestionContent",
+                            },
+                        ],
+                    },
+                },
+                { enablePreferredTime: true },
+            );
+
+            const step = form.steps[1];
+            const firstName = step.fields.find((f) => f.name === "first_name");
+            const lastName = step.fields.find((f) => f.name === "last_name");
+
+            // First name field should be enforced as mandatory since it's the first name field
+            expect(firstName!.mandatory).to.be.true;
+            // Last name can remain optional since first_name is now mandatory
+            expect(lastName!.mandatory).to.be.false;
+        });
+
+        it("enforces full_name as mandatory when it has required: false and is the only name field", () => {
+            const form = getContactFormFallback(
+                {
+                    capture: {
+                        data: [
+                            {
+                                slotName: "full_name",
+                                active: true,
+                                type: "FULL_NAME",
+                                questionContentKey: "FullNameQuestionContent",
+                                required: false,
+                            },
+                            {
+                                slotName: "phone",
+                                active: true,
+                                type: "PHONE",
+                                questionContentKey: "PhoneQuestionContent",
+                            },
+                        ],
+                    },
+                },
+                { enablePreferredTime: true },
+            );
+
+            const step = form.steps[1];
+            const fullName = step.fields.find((f) => f.name === "full_name");
+
+            // full_name should be enforced as mandatory even though required: false
+            expect(fullName!.mandatory).to.be.true;
+        });
+
+        it("allows full_name to be optional when first_name is mandatory", () => {
+            const form = getContactFormFallback(
+                {
+                    capture: {
+                        data: [
+                            {
+                                slotName: "full_name",
+                                active: true,
+                                type: "FULL_NAME",
+                                questionContentKey: "FullNameQuestionContent",
+                                required: false,
+                            },
+                            {
+                                slotName: "first_name",
+                                active: true,
+                                type: "FIRST_NAME",
+                                questionContentKey: "FirstNameQuestionContent",
+                                required: true,
+                            },
+                            {
+                                slotName: "phone",
+                                active: true,
+                                type: "PHONE",
+                                questionContentKey: "PhoneQuestionContent",
+                            },
+                        ],
+                    },
+                },
+                { enablePreferredTime: true },
+            );
+
+            const step = form.steps[1];
+            const fullName = step.fields.find((f) => f.name === "full_name");
+            const firstName = step.fields.find((f) => f.name === "first_name");
+
+            // full_name can be optional since first_name is mandatory
+            expect(fullName!.mandatory).to.be.false;
+            expect(firstName!.mandatory).to.be.true;
+        });
+
+        it("prioritizes first_name when enforcing mandatory on all optional name fields", () => {
+            const form = getContactFormFallback(
+                {
+                    capture: {
+                        data: [
+                            {
+                                slotName: "full_name",
+                                active: true,
+                                type: "FULL_NAME",
+                                questionContentKey: "FullNameQuestionContent",
+                                required: false,
+                            },
+                            {
+                                slotName: "first_name",
+                                active: true,
+                                type: "FIRST_NAME",
+                                questionContentKey: "FirstNameQuestionContent",
+                                required: false,
+                            },
+                            {
+                                slotName: "last_name",
+                                active: true,
+                                type: "LAST_NAME",
+                                questionContentKey: "LastNameQuestionContent",
+                                required: false,
+                            },
+                            {
+                                slotName: "phone",
+                                active: true,
+                                type: "PHONE",
+                                questionContentKey: "PhoneQuestionContent",
+                            },
+                        ],
+                    },
+                },
+                { enablePreferredTime: true },
+            );
+
+            const step = form.steps[1];
+            const fullName = step.fields.find((f) => f.name === "full_name");
+            const firstName = step.fields.find((f) => f.name === "first_name");
+            const lastName = step.fields.find((f) => f.name === "last_name");
+
+            // first_name gets priority when enforcing mandatory (first_name > full_name > last_name)
+            expect(firstName!.mandatory).to.be.true;
+            expect(fullName!.mandatory).to.be.false;
+            expect(lastName!.mandatory).to.be.false;
+        });
+
+        it("shows split name confirmation card when all three name fields are present", () => {
+            const form = getContactFormFallback(
+                {
+                    capture: {
+                        data: [
+                            {
+                                slotName: "full_name",
+                                active: true,
+                                type: "FULL_NAME",
+                                questionContentKey: "FullNameQuestionContent",
+                            },
+                            {
+                                slotName: "first_name",
+                                active: true,
+                                type: "FIRST_NAME",
+                                questionContentKey: "FirstNameQuestionContent",
+                            },
+                            {
+                                slotName: "last_name",
+                                active: true,
+                                type: "LAST_NAME",
+                                questionContentKey: "LastNameQuestionContent",
+                            },
+                            {
+                                slotName: "phone",
+                                active: true,
+                                type: "PHONE",
+                                questionContentKey: "PhoneQuestionContent",
+                            },
+                        ],
+                    },
+                },
+                { enablePreferredTime: true },
+            );
+
+            const confirmationStep = form.steps.find((s) => s.name === "confirmation");
+            expect(confirmationStep).to.exist;
+
+            const fullNameCard = confirmationStep!.fields.find((f) => f.name === "confirmation_card_name");
+            const splitNameCard = confirmationStep!.fields.find((f) => f.name === "confirmation_card_name_split");
+
+            // When all three fields exist, split name card shows (first_name && last_name condition)
+            // full_name card doesn't show (requires !first_name && !last_name)
+            expect((fullNameCard as any).condition).to.equal("!!full_name && !first_name && !last_name");
+            expect((splitNameCard as any).condition).to.equal("!!first_name && !!last_name");
+            // This means when all three are present, the split name card displays
+        });
+
+        it("uses first/last name for FORM channel while full_name is for CHAT channel", () => {
+            const form = getContactFormFallback(
+                {
+                    capture: {
+                        data: [
+                            {
+                                slotName: "first_name",
+                                active: true,
+                                type: "FIRST_NAME",
+                                questionContentKey: "FirstNameQuestionContent",
+                                channel: "FORM",
+                                required: true,
+                            },
+                            {
+                                slotName: "last_name",
+                                active: true,
+                                type: "LAST_NAME",
+                                questionContentKey: "LastNameQuestionContent",
+                                channel: "FORM",
+                                required: true,
+                            },
+                            {
+                                slotName: "full_name",
+                                active: true,
+                                type: "FULL_NAME",
+                                questionContentKey: "FullNameQuestionContent",
+                                channel: "CHAT",
+                            },
+                            {
+                                slotName: "phone",
+                                active: true,
+                                type: "PHONE",
+                                questionContentKey: "PhoneQuestionContent",
+                            },
+                            {
+                                slotName: "email",
+                                active: true,
+                                type: "EMAIL",
+                                questionContentKey: "EmailQuestionContent",
+                            },
+                        ],
+                    },
+                },
+                { enablePreferredTime: true },
+            );
+
+            const step = form.steps[1];
+            const fieldNames = step.fields.map((f) => f.name);
+
+            // Should have first_name and last_name but NOT full_name (since full_name is CHAT only)
+            expect(fieldNames).to.include("first_name");
+            expect(fieldNames).to.include("last_name");
+            expect(fieldNames).to.not.include("full_name");
+            expect(fieldNames).to.include("phone");
+            expect(fieldNames).to.include("email");
+
+            // Verify order: first_name, last_name, phone, email
+            expect(step.fields[0].name).to.equal("first_name");
+            expect(step.fields[1].name).to.equal("last_name");
+        });
+
+        it("uses first/last name for FORM channel in contact-only form", () => {
+            const form = getContactFormFallback(
+                {
+                    capture: {
+                        data: [
+                            {
+                                slotName: "first_name",
+                                active: true,
+                                type: "FIRST_NAME",
+                                questionContentKey: "FirstNameQuestionContent",
+                                channel: "FORM",
+                                required: true,
+                            },
+                            {
+                                slotName: "last_name",
+                                active: true,
+                                type: "LAST_NAME",
+                                questionContentKey: "LastNameQuestionContent",
+                                channel: "FORM",
+                                required: true,
+                            },
+                            {
+                                slotName: "full_name",
+                                active: true,
+                                type: "FULL_NAME",
+                                questionContentKey: "FullNameQuestionContent",
+                                channel: "CHAT",
+                            },
+                            {
+                                slotName: "phone",
+                                active: true,
+                                type: "PHONE",
+                                questionContentKey: "PhoneQuestionContent",
+                            },
+                        ],
+                    },
+                },
+                { enablePreferredTime: false },
+            );
+
+            const step = form.steps[0];
+            const fieldNames = step.fields.map((f) => f.name);
+
+            // Should have first_name and last_name but NOT full_name
+            expect(fieldNames).to.include("first_name");
+            expect(fieldNames).to.include("last_name");
+            expect(fieldNames).to.not.include("full_name");
+
+            // Verify first two fields are the name fields
+            expect(step.fields[0].name).to.equal("first_name");
+            expect(step.fields[1].name).to.equal("last_name");
         });
     });
     describe("when passed props with serviceOptions without any that need a date", () => {
