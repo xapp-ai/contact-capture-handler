@@ -343,6 +343,28 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
                     maxLength: 100,
                 };
                 CONTACT_FIELDS.push(namefield);
+            } else if (dataField.slotName === "first_name") {
+                const firstNameField: FormTextInput = {
+                    ...field,
+                    name: "first_name",
+                    multiline: false,
+                    label: "First Name",
+                    placeholder: "Your first name",
+                    mandatory: dataField.required !== false, // default to true unless explicitly false
+                    maxLength: 50,
+                };
+                CONTACT_FIELDS.push(firstNameField);
+            } else if (dataField.slotName === "last_name") {
+                const lastNameField: FormTextInput = {
+                    ...field,
+                    name: "last_name",
+                    multiline: false,
+                    label: "Last Name",
+                    placeholder: "Your last name",
+                    mandatory: dataField.required !== false, // default to true unless explicitly false
+                    maxLength: 50,
+                };
+                CONTACT_FIELDS.push(lastNameField);
             } else if (dataField.slotName === "email") {
                 const emailField: FormTextInput = {
                     ...field,
@@ -408,11 +430,15 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
         });
     }
 
-    // find index of name field
+    // find index of name field(s)
+    // Support both full_name OR first_name+last_name patterns
     let nameFieldIndex = CONTACT_FIELDS.findIndex((field) => field.name === "full_name");
+    const firstNameFieldIndex = CONTACT_FIELDS.findIndex((field) => field.name === "first_name");
+    const lastNameFieldIndex = CONTACT_FIELDS.findIndex((field) => field.name === "last_name");
+    const hasFirstAndLastName = firstNameFieldIndex >= 0 && lastNameFieldIndex >= 0;
 
-    if (nameFieldIndex < 0) {
-        // add a default name field
+    if (nameFieldIndex < 0 && !hasFirstAndLastName) {
+        // add a default name field only if we don't have full_name or first_name+last_name
         CONTACT_FIELDS.unshift({
             name: "full_name",
             label: "Name",
@@ -539,7 +565,14 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
             name: "confirmation_card_name",
             variant: "body1",
             text: "#{full_name}",
-            condition: "!!full_name",
+            condition: "!!full_name && !first_name && !last_name",
+            type: "CARD",
+        },
+        {
+            name: "confirmation_card_name_split",
+            variant: "body1",
+            text: "#{first_name} #{last_name}",
+            condition: "!!first_name || !!last_name",
             type: "CARD",
         },
         {
@@ -919,10 +952,17 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
     }
 
     // Build contact-only form fields
-    const contactOnlyFields: FormField[] = [
-        // name
-        { ...CONTACT_FIELDS[nameFieldIndex] },
-    ];
+    const contactOnlyFields: FormField[] = [];
+
+    // Add name field(s) - either full_name or first_name+last_name
+    if (hasFirstAndLastName) {
+        // Use first_name and last_name fields
+        contactOnlyFields.push({ ...CONTACT_FIELDS[firstNameFieldIndex] });
+        contactOnlyFields.push({ ...CONTACT_FIELDS[lastNameFieldIndex] });
+    } else if (nameFieldIndex >= 0) {
+        // Use full_name field
+        contactOnlyFields.push({ ...CONTACT_FIELDS[nameFieldIndex] });
+    }
 
     // Add both phone and email if they exist (they should have mandatoryGroup set)
     if (phoneFieldIndex >= 0) {
