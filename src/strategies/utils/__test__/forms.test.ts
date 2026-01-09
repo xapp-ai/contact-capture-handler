@@ -822,7 +822,31 @@ describe(`#${getContactFormFallback.name}()`, () => {
             const nameCard = confirmationStep!.fields.find((f) => f.name === "confirmation_card_name_split");
             expect(nameCard).to.exist;
             expect((nameCard as any).text).to.equal("#{first_name} #{last_name}");
-            expect((nameCard as any).condition).to.equal("!!first_name || !!last_name");
+            // Uses AND logic to only display when BOTH fields have values (avoids partial name display)
+            expect((nameCard as any).condition).to.equal("!!first_name && !!last_name");
+        });
+
+        it("confirmation card conditions prevent partial name display", () => {
+            const form = getContactFormFallback(
+                { capture: BLUEPRINT_WITHOUT_FULL_NAME },
+                { enablePreferredTime: true },
+            );
+
+            const confirmationStep = form.steps.find((s) => s.name === "confirmation");
+            expect(confirmationStep).to.exist;
+
+            // Find both name cards
+            const fullNameCard = confirmationStep!.fields.find((f) => f.name === "confirmation_card_name");
+            const splitNameCard = confirmationStep!.fields.find((f) => f.name === "confirmation_card_name_split");
+
+            expect(fullNameCard).to.exist;
+            expect(splitNameCard).to.exist;
+
+            // full_name card only shows when full_name exists AND first/last don't
+            expect((fullNameCard as any).condition).to.equal("!!full_name && !first_name && !last_name");
+
+            // split name card only shows when BOTH first AND last exist (prevents "John " or " Smith")
+            expect((splitNameCard as any).condition).to.equal("!!first_name && !!last_name");
         });
 
         it("falls back to full_name when only first_name is provided (no last_name)", () => {

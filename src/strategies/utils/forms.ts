@@ -572,7 +572,7 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
             name: "confirmation_card_name_split",
             variant: "body1",
             text: "#{first_name} #{last_name}",
-            condition: "!!first_name || !!last_name",
+            condition: "!!first_name && !!last_name",
             type: "CARD",
         },
         {
