@@ -1,3 +1,10 @@
+# [1.18.0](https://github.com/xapp-ai/contact-capture-handler/compare/v1.17.1...v1.18.0) (2026-01-09)
+
+
+### Features
+
+* Support first_name and last_name fields in form strategy ([#624](https://github.com/xapp-ai/contact-capture-handler/issues/624)) ([3784c17](https://github.com/xapp-ai/contact-capture-handler/commit/3784c1757ef44f4d8b179db8c63b1aaa2f8a44fa))
+
 ## [1.17.1](https://github.com/xapp-ai/contact-capture-handler/compare/v1.17.0...v1.17.1) (2025-12-18)
 
 
