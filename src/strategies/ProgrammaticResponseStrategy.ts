@@ -36,7 +36,9 @@ function getContactValidation(request: Request): ContactValidation | undefined {
 }
 
 /**
- * Get the appropriate refusal response based on refusal type
+ * Get the appropriate refusal response based on refusal type.
+ * Prefers X-NLU's suggestedResponse (which may include follow-up questions),
+ * falls back to configured/default responses if not available.
  */
 function getRefusalResponse(
     responses: Response[],
@@ -55,7 +57,15 @@ function getRefusalResponse(
 
     const contentTag = tagMapping[refusalType] || Constants.CONTACT_CAPTURE_REFUSAL_CONTENT;
 
-    // Try to get configured response first
+    // Prefer X-NLU's suggestedResponse (may include follow-up questions)
+    if (contactValidation.suggestedResponse) {
+        return {
+            outputSpeech: toResponseOutput(contactValidation.suggestedResponse),
+            tag: contentTag,
+        };
+    }
+
+    // Fall back to configured response
     let response = getResponseByTag(responses, contentTag);
 
     // Fall back to default response
@@ -63,24 +73,7 @@ function getRefusalResponse(
         response = getDefaultResponseByTag(contentTag);
     }
 
-    // If X-NLU provided a suggested response, combine it with configured response
-    if (contactValidation.suggestedResponse && response) {
-        response = {
-            ...response,
-            outputSpeech: concatResponseOutput(
-                toResponseOutput(contactValidation.suggestedResponse),
-                toResponseOutput(response.outputSpeech),
-                { delimiter: " " },
-            ),
-        };
-    } else if (contactValidation.suggestedResponse) {
-        response = {
-            outputSpeech: toResponseOutput(contactValidation.suggestedResponse),
-            tag: contentTag,
-        };
-    }
-
-    // If we still don't have a response, use a fallback
+    // If we still don't have a response, use a hardcoded fallback
     if (!response) {
         response = {
             outputSpeech: toResponseOutput("I understand. If you change your mind, we're here to help."),
