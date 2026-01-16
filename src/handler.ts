@@ -292,6 +292,7 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
         }
 
         const leadSent = context.session.get(Constants.CONTACT_CAPTURE_SENT) as boolean;
+        const leadRefused = context.session.get(Constants.CONTACT_CAPTURE_REFUSED) as boolean;
         const previousType = context.session.get(Constants.CONTACT_CAPTURE_CURRENT_DATA) as ContactDataType;
 
         // If the lead was already sent, nothing to do
@@ -301,6 +302,12 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
             // what happens when we don't have lead sent content?
             // so
             // short circuit to the super
+            return super.handleRequest(request, context);
+        }
+
+        // If the user refused to provide contact info, exit the capture flow
+        if (leadRefused) {
+            log().info(`User previously refused to provide contact info, exiting capture flow`);
             return super.handleRequest(request, context);
         }
 
