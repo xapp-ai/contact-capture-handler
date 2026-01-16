@@ -1,3 +1,10 @@
+# [1.19.0](https://github.com/xapp-ai/contact-capture-handler/compare/v1.18.0...v1.19.0) (2026-01-16)
+
+
+### Features
+
+* Integrate X-NLU CONTACT_VALIDATION for intelligent lead capture ([#628](https://github.com/xapp-ai/contact-capture-handler/issues/628)) ([eecb5cf](https://github.com/xapp-ai/contact-capture-handler/commit/eecb5cfd8643abc91c3d196d92be0bb325e62386))
+
 # [1.18.0](https://github.com/xapp-ai/contact-capture-handler/compare/v1.17.1...v1.18.0) (2026-01-09)
 
 
