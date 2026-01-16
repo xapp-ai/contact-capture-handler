@@ -1,3 +1,10 @@
+## [1.19.1](https://github.com/xapp-ai/contact-capture-handler/compare/v1.19.0...v1.19.1) (2026-01-16)
+
+
+### Bug Fixes
+
+* Exit capture flow on subsequent turns after user refuses contact info ([#629](https://github.com/xapp-ai/contact-capture-handler/issues/629)) ([1a1ac89](https://github.com/xapp-ai/contact-capture-handler/commit/1a1ac89bcbed362deeb1f20c43876a4bee4be5b4))
+
 # [1.19.0](https://github.com/xapp-ai/contact-capture-handler/compare/v1.18.0...v1.19.0) (2026-01-16)
 
 
