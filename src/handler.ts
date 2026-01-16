@@ -392,11 +392,11 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
                     context.session.set(Constants.CONTACT_CAPTURE_ASIDE, asideResponse);
                 }
             // falls through
-            case "RefuseContactIntent":
-                // RefuseContactIntent is handled by ProgrammaticResponseStrategy using CONTACT_VALIDATION
-                // Falls through to default for lead capture logic which will detect the refusal
             default:
-            // default falls through below where we perform the lead capture
+                // Note: RefuseContactIntent is intentionally not handled here.
+                // It falls through to default and is processed by ProgrammaticResponseStrategy
+                // using the CONTACT_VALIDATION attribute from X-NLU.
+                break;
         }
 
         // Alert people the new setting

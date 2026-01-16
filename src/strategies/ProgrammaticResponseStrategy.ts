@@ -92,13 +92,17 @@ function getRefusalResponse(
 }
 
 /**
- * Combine X-NLU's suggested response with configured reprompt
+ * Combine X-NLU's suggested response with configured reprompt.
+ * Returns a new Response object without mutating the input.
  */
 function combineValidationReprompt(response: Response, contactValidation: ContactValidation): Response {
     if (!contactValidation.suggestedResponse) {
         // No suggestion, just use reprompt
         if (response.reprompt) {
-            response.outputSpeech = response.reprompt;
+            return {
+                ...response,
+                outputSpeech: response.reprompt,
+            };
         }
         return response;
     }
@@ -107,9 +111,10 @@ function combineValidationReprompt(response: Response, contactValidation: Contac
     const reprompt = response.reprompt ? toResponseOutput(response.reprompt) : toResponseOutput(response.outputSpeech);
 
     // Combine: X-NLU suggestion + configured reprompt
-    response.outputSpeech = concatResponseOutput(suggestion, reprompt, { delimiter: " " });
-
-    return response;
+    return {
+        ...response,
+        outputSpeech: concatResponseOutput(suggestion, reprompt, { delimiter: " " }),
+    };
 }
 
 export class ProgrammaticResponseStrategy implements ResponseStrategy {
@@ -277,7 +282,8 @@ export class ProgrammaticResponseStrategy implements ResponseStrategy {
                         || (slot?.value ? requestSlotValueToString(slot.value) : undefined)
                         || request.rawQuery;
                     data.validationConfidence = contactValidation.confidence;
-                    log().info(`Validated ${data.type} with confidence ${contactValidation.confidence}: ${data.collectedValue}`);
+                    // Use DEBUG level to avoid logging PII (phone, email, etc.) at INFO level
+                    log().debug(`Validated ${data.type} with confidence ${contactValidation.confidence}: ${data.collectedValue}`);
                 }
                 // Case 2: Refusal - mark as skipped (handled later in refusal handling)
                 else if (contactValidation.refusedToProvide) {
@@ -321,9 +327,10 @@ export class ProgrammaticResponseStrategy implements ResponseStrategy {
             log().info(`User refused to provide contact info, refusal type: ${contactValidation.refusalType}`);
 
             // Store partial lead data in session (don't send to CRM per user requirement)
+            // Deep clone to prevent mutations from affecting stored data
             context.session.set(Constants.CONTACT_CAPTURE_REFUSED, true);
             context.session.set(Constants.CONTACT_CAPTURE_REFUSAL_TYPE, contactValidation.refusalType);
-            context.session.set(Constants.CONTACT_CAPTURE_PARTIAL_LEAD, leadDataList);
+            context.session.set(Constants.CONTACT_CAPTURE_PARTIAL_LEAD, JSON.parse(JSON.stringify(leadDataList)));
 
             // Get appropriate refusal response based on refusal type
             response = getRefusalResponse(responses, contactValidation);
