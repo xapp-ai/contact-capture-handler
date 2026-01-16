@@ -189,6 +189,14 @@ export interface DataDescriptorRuntime extends DataDescriptorBase {
      * Did the user refuse to answer the question.
      */
     userSkipped?: boolean;
+    /**
+     * The type of refusal if user skipped providing information
+     */
+    refusalType?: "privacy" | "not_interested" | "will_contact_them" | "prefers_other_method" | "other";
+    /**
+     * Validation confidence level from X-NLU
+     */
+    validationConfidence?: "high" | "medium" | "low";
 }
 
 export interface CaptureRuntimeData {

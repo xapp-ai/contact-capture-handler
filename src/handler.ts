@@ -261,7 +261,8 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
         if (this?.data?.captureLead) {
             // we add these if we are capturing the lead then we want to keep the
             // user in this flow while still answering their question
-            ALWAYS_HANDLE.push(...["KnowledgeAnswer", "OCSearch"]);
+            // RefuseContactIntent allows X-NLU to route refusals directly here
+            ALWAYS_HANDLE.push(...["KnowledgeAnswer", "OCSearch", "RefuseContactIntent"]);
         }
 
         if (ALWAYS_HANDLE.includes(key)) {
@@ -390,8 +391,12 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
 
                     context.session.set(Constants.CONTACT_CAPTURE_ASIDE, asideResponse);
                 }
+            // falls through
             default:
-            // default falls through below where we perform the lead capture
+                // Note: RefuseContactIntent is intentionally not handled here.
+                // It falls through to default and is processed by ProgrammaticResponseStrategy
+                // using the CONTACT_VALIDATION attribute from X-NLU.
+                break;
         }
 
         // Alert people the new setting

@@ -22,6 +22,7 @@ import { ContactCaptureHandler } from "../../handler";
 import type { ChatResult } from "../models/xnlu";
 
 import { ProgrammaticResponseStrategy } from "../ProgrammaticResponseStrategy";
+import type { ContactValidation } from "../models/xnlu";
 
 const props: Handler<Content, ContactCaptureData> = {
     intentId: "intentId",
@@ -308,6 +309,428 @@ describe(`${ProgrammaticResponseStrategy.name}`, () => {
         });
         describe("when in the middle of data capture", () => {
 
+        });
+    });
+    describe("with CONTACT_VALIDATION on request", () => {
+        describe("when validation is successful", () => {
+            it("uses normalizedValue for collectedValue", async () => {
+                const contactValidation: ContactValidation = {
+                    field: "PHONE",
+                    isValid: true,
+                    confidence: "high",
+                    extractedValue: "(555) 123-4567",
+                    normalizedValue: "5551234567",
+                    isQuestion: false,
+                    shouldAnswerQuestion: false,
+                    refusedToProvide: false
+                };
+
+                const testRequest = new IntentRequestBuilder()
+                    .withSlots({})
+                    .withAttributes({
+                        CONTACT_VALIDATION: contactValidation
+                    })
+                    .withIntentId(props.intentId)
+                    .updateDevice({ canSpeak: false })
+                    .build();
+
+                const testContext = new ContextBuilder()
+                    .withResponse(response)
+                    .withSessionData({
+                        id: "foo",
+                        data: {
+                            [Constants.CONTACT_CAPTURE_CURRENT_DATA]: "PHONE",
+                            [Constants.CONTACT_CAPTURE_SLOTS]: {},
+                            [Constants.CONTACT_CAPTURE_LIST]: {
+                                data: [
+                                    { type: "PHONE", slotName: "phone", questionContentKey: "PhoneQuestionContent", active: true },
+                                    // Add another field so the capture doesn't complete and try to send lead
+                                    { type: "ADDRESS", slotName: "address", questionContentKey: "AddressQuestionContent", active: true }
+                                ],
+                                lastModifiedMs: Date.now()
+                            }
+                        }
+                    })
+                    .build();
+
+                const strategy = new ProgrammaticResponseStrategy(props.data);
+                await strategy.getResponse(handler, testRequest, testContext);
+
+                // Check that the lead data was updated with normalized value
+                const leadDataList = testContext.session.get(Constants.CONTACT_CAPTURE_LIST);
+                expect(leadDataList.data[0].collectedValue).to.equal("5551234567");
+                expect(leadDataList.data[0].validationConfidence).to.equal("high");
+            });
+            it("uses extractedValue when normalizedValue is not available", async () => {
+                const contactValidation: ContactValidation = {
+                    field: "PHONE",
+                    isValid: true,
+                    confidence: "medium",
+                    extractedValue: "(555) 123-4567",
+                    // Note: no normalizedValue
+                    isQuestion: false,
+                    shouldAnswerQuestion: false,
+                    refusedToProvide: false
+                };
+
+                const testRequest = new IntentRequestBuilder()
+                    .withSlots({})
+                    .withAttributes({
+                        CONTACT_VALIDATION: contactValidation
+                    })
+                    .withIntentId(props.intentId)
+                    .updateDevice({ canSpeak: false })
+                    .build();
+
+                const testContext = new ContextBuilder()
+                    .withResponse(response)
+                    .withSessionData({
+                        id: "foo",
+                        data: {
+                            [Constants.CONTACT_CAPTURE_CURRENT_DATA]: "PHONE",
+                            [Constants.CONTACT_CAPTURE_SLOTS]: {},
+                            [Constants.CONTACT_CAPTURE_LIST]: {
+                                data: [
+                                    { type: "PHONE", slotName: "phone", questionContentKey: "PhoneQuestionContent", active: true },
+                                    { type: "ADDRESS", slotName: "address", questionContentKey: "AddressQuestionContent", active: true }
+                                ],
+                                lastModifiedMs: Date.now()
+                            }
+                        }
+                    })
+                    .build();
+
+                const strategy = new ProgrammaticResponseStrategy(props.data);
+                await strategy.getResponse(handler, testRequest, testContext);
+
+                // Should fall back to extractedValue when normalizedValue is missing
+                const leadDataList = testContext.session.get(Constants.CONTACT_CAPTURE_LIST);
+                expect(leadDataList.data[0].collectedValue).to.equal("(555) 123-4567");
+                expect(leadDataList.data[0].validationConfidence).to.equal("medium");
+            });
+        });
+        describe("when user refuses to provide information", () => {
+            it("stores partial lead and returns refusal response for privacy refusal", async () => {
+                const contactValidation: ContactValidation = {
+                    field: "PHONE",
+                    isValid: false,
+                    confidence: "high",
+                    isQuestion: false,
+                    shouldAnswerQuestion: false,
+                    refusedToProvide: true,
+                    refusalType: "privacy",
+                    suggestedResponse: "I understand your privacy concerns."
+                };
+
+                const testRequest = new IntentRequestBuilder()
+                    .withSlots({})
+                    .withAttributes({
+                        CONTACT_VALIDATION: contactValidation
+                    })
+                    .withIntentId(props.intentId)
+                    .updateDevice({ canSpeak: false })
+                    .build();
+
+                const testContext = new ContextBuilder()
+                    .withResponse(response)
+                    .withSessionData({
+                        id: "foo",
+                        data: {
+                            [Constants.CONTACT_CAPTURE_CURRENT_DATA]: "PHONE",
+                            [Constants.CONTACT_CAPTURE_SLOTS]: {},
+                            [Constants.CONTACT_CAPTURE_LIST]: {
+                                data: [
+                                    { type: "FIRST_NAME", slotName: "first_name", questionContentKey: "FirstNameQuestionContent", active: true, collectedValue: "John" },
+                                    { type: "PHONE", slotName: "phone", questionContentKey: "PhoneQuestionContent", active: true }
+                                ],
+                                lastModifiedMs: Date.now()
+                            }
+                        }
+                    })
+                    .build();
+
+                const strategy = new ProgrammaticResponseStrategy(props.data);
+                const result = await strategy.getResponse(handler, testRequest, testContext);
+
+                // Check that refusal was detected and session was updated
+                expect(testContext.session.get(Constants.CONTACT_CAPTURE_REFUSED)).to.be.true;
+                expect(testContext.session.get(Constants.CONTACT_CAPTURE_REFUSAL_TYPE)).to.equal("privacy");
+                expect(testContext.session.get(Constants.CONTACT_CAPTURE_PARTIAL_LEAD)).to.exist;
+
+                // Check that response includes the suggested response
+                const output = toResponseOutput(result.outputSpeech || "");
+                expect(output.displayText).to.include("I understand");
+            });
+            it("returns will-contact response for will_contact_them refusal", async () => {
+                const contactValidation: ContactValidation = {
+                    field: "PHONE",
+                    isValid: false,
+                    confidence: "high",
+                    isQuestion: false,
+                    shouldAnswerQuestion: false,
+                    refusedToProvide: true,
+                    refusalType: "will_contact_them"
+                };
+
+                const testRequest = new IntentRequestBuilder()
+                    .withSlots({})
+                    .withAttributes({
+                        CONTACT_VALIDATION: contactValidation
+                    })
+                    .withIntentId(props.intentId)
+                    .updateDevice({ canSpeak: false })
+                    .build();
+
+                const testContext = new ContextBuilder()
+                    .withResponse(response)
+                    .withSessionData({
+                        id: "foo",
+                        data: {
+                            [Constants.CONTACT_CAPTURE_CURRENT_DATA]: "PHONE",
+                            [Constants.CONTACT_CAPTURE_SLOTS]: {},
+                            [Constants.CONTACT_CAPTURE_LIST]: {
+                                data: [
+                                    { type: "PHONE", slotName: "phone", questionContentKey: "PhoneQuestionContent", active: true }
+                                ],
+                                lastModifiedMs: Date.now()
+                            }
+                        }
+                    })
+                    .build();
+
+                const strategy = new ProgrammaticResponseStrategy(props.data);
+                const result = await strategy.getResponse(handler, testRequest, testContext);
+
+                const output = toResponseOutput(result.outputSpeech || "");
+                expect(output.displayText).to.include("look forward to hearing from you");
+            });
+            it("falls back to default response when suggestedResponse is not provided", async () => {
+                const contactValidation: ContactValidation = {
+                    field: "PHONE",
+                    isValid: false,
+                    confidence: "high",
+                    isQuestion: false,
+                    shouldAnswerQuestion: false,
+                    refusedToProvide: true,
+                    refusalType: "not_interested"
+                    // Note: no suggestedResponse
+                };
+
+                const testRequest = new IntentRequestBuilder()
+                    .withSlots({})
+                    .withAttributes({
+                        CONTACT_VALIDATION: contactValidation
+                    })
+                    .withIntentId(props.intentId)
+                    .updateDevice({ canSpeak: false })
+                    .build();
+
+                const testContext = new ContextBuilder()
+                    .withResponse(response)
+                    .withSessionData({
+                        id: "foo",
+                        data: {
+                            [Constants.CONTACT_CAPTURE_CURRENT_DATA]: "PHONE",
+                            [Constants.CONTACT_CAPTURE_SLOTS]: {},
+                            [Constants.CONTACT_CAPTURE_LIST]: {
+                                data: [
+                                    { type: "PHONE", slotName: "phone", questionContentKey: "PhoneQuestionContent", active: true }
+                                ],
+                                lastModifiedMs: Date.now()
+                            }
+                        }
+                    })
+                    .build();
+
+                const strategy = new ProgrammaticResponseStrategy(props.data);
+                const result = await strategy.getResponse(handler, testRequest, testContext);
+
+                // Should use default "not interested" response since no suggestedResponse
+                const output = toResponseOutput(result.outputSpeech || "");
+                expect(output.displayText).to.include("No problem");
+                expect(output.displayText).to.include("change your mind");
+            });
+        });
+        describe("when validation fails (invalid input)", () => {
+            it("combines suggestedResponse with reprompt on repeat", async () => {
+                const contactValidation: ContactValidation = {
+                    field: "PHONE",
+                    isValid: false,
+                    confidence: "high",
+                    isQuestion: false,
+                    shouldAnswerQuestion: false,
+                    refusedToProvide: false,
+                    errorMessage: "Incomplete phone number",
+                    suggestedResponse: "That doesn't look like a valid phone number."
+                };
+
+                const testRequest = new IntentRequestBuilder()
+                    .withSlots({})
+                    .withAttributes({
+                        CONTACT_VALIDATION: contactValidation
+                    })
+                    .withIntentId(props.intentId)
+                    .updateDevice({ canSpeak: false })
+                    .build();
+
+                const testContext = new ContextBuilder()
+                    .withResponse(response)
+                    .withSessionData({
+                        id: "foo",
+                        data: {
+                            [Constants.CONTACT_CAPTURE_CURRENT_DATA]: "PHONE",
+                            [Constants.CONTACT_CAPTURE_SLOTS]: {},
+                            [Constants.CONTACT_CAPTURE_LIST]: {
+                                data: [
+                                    { type: "PHONE", slotName: "phone", questionContentKey: "PhoneQuestionContent", active: true }
+                                ],
+                                lastModifiedMs: Date.now()
+                            }
+                        }
+                    })
+                    .build();
+
+                const strategy = new ProgrammaticResponseStrategy(props.data);
+                const result = await strategy.getResponse(handler, testRequest, testContext);
+
+                // Check that response combines X-NLU suggestion with reprompt
+                const output = toResponseOutput(result.outputSpeech || "");
+                expect(output.displayText).to.include("That doesn't look like a valid phone number");
+                expect(output.displayText).to.include("phone number");
+            });
+            it("uses only reprompt when suggestedResponse is not provided", async () => {
+                const contactValidation: ContactValidation = {
+                    field: "PHONE",
+                    isValid: false,
+                    confidence: "high",
+                    isQuestion: false,
+                    shouldAnswerQuestion: false,
+                    refusedToProvide: false,
+                    errorMessage: "Incomplete phone number"
+                    // Note: no suggestedResponse
+                };
+
+                const testRequest = new IntentRequestBuilder()
+                    .withSlots({})
+                    .withAttributes({
+                        CONTACT_VALIDATION: contactValidation
+                    })
+                    .withIntentId(props.intentId)
+                    .updateDevice({ canSpeak: false })
+                    .build();
+
+                const testContext = new ContextBuilder()
+                    .withResponse(response)
+                    .withSessionData({
+                        id: "foo",
+                        data: {
+                            [Constants.CONTACT_CAPTURE_CURRENT_DATA]: "PHONE",
+                            [Constants.CONTACT_CAPTURE_SLOTS]: {},
+                            [Constants.CONTACT_CAPTURE_LIST]: {
+                                data: [
+                                    { type: "PHONE", slotName: "phone", questionContentKey: "PhoneQuestionContent", active: true }
+                                ],
+                                lastModifiedMs: Date.now()
+                            }
+                        }
+                    })
+                    .build();
+
+                const strategy = new ProgrammaticResponseStrategy(props.data);
+                const result = await strategy.getResponse(handler, testRequest, testContext);
+
+                // Should use reprompt only (no X-NLU suggestion to prepend)
+                const output = toResponseOutput(result.outputSpeech || "");
+                expect(output.displayText).to.equal("May I have your phone number?");
+            });
+        });
+        describe("when user asks a question (isQuestion: true)", () => {
+            it("does not set collectedValue, allowing aside flow to handle", async () => {
+                const contactValidation: ContactValidation = {
+                    field: "PHONE",
+                    isValid: false,
+                    confidence: "high",
+                    isQuestion: true,
+                    questionIntent: "service_inquiry",
+                    shouldAnswerQuestion: true,
+                    refusedToProvide: false
+                };
+
+                const testRequest = new IntentRequestBuilder()
+                    .withSlots({})
+                    .withAttributes({
+                        CONTACT_VALIDATION: contactValidation
+                    })
+                    .withIntentId(props.intentId)
+                    .updateDevice({ canSpeak: false })
+                    .build();
+
+                const testContext = new ContextBuilder()
+                    .withResponse(response)
+                    .withSessionData({
+                        id: "foo",
+                        data: {
+                            [Constants.CONTACT_CAPTURE_CURRENT_DATA]: "PHONE",
+                            [Constants.CONTACT_CAPTURE_SLOTS]: {},
+                            [Constants.CONTACT_CAPTURE_LIST]: {
+                                data: [
+                                    { type: "PHONE", slotName: "phone", questionContentKey: "PhoneQuestionContent", active: true },
+                                    { type: "ADDRESS", slotName: "address", questionContentKey: "AddressQuestionContent", active: true }
+                                ],
+                                lastModifiedMs: Date.now()
+                            }
+                        }
+                    })
+                    .build();
+
+                const strategy = new ProgrammaticResponseStrategy(props.data);
+                await strategy.getResponse(handler, testRequest, testContext);
+
+                // collectedValue should NOT be set when isQuestion is true
+                const leadDataList = testContext.session.get(Constants.CONTACT_CAPTURE_LIST);
+                expect(leadDataList.data[0].collectedValue).to.be.undefined;
+            });
+        });
+        describe("when no CONTACT_VALIDATION present", () => {
+            it("falls back to existing slot-based logic", async () => {
+                const testRequest = new IntentRequestBuilder()
+                    .withSlots({
+                        phone: { name: "phone", value: "5551234567" }
+                    })
+                    .withIntentId(props.intentId)
+                    .updateDevice({ canSpeak: false })
+                    .build();
+
+                const testContext = new ContextBuilder()
+                    .withResponse(response)
+                    .withSessionData({
+                        id: "foo",
+                        data: {
+                            [Constants.CONTACT_CAPTURE_CURRENT_DATA]: "PHONE",
+                            [Constants.CONTACT_CAPTURE_SLOTS]: {
+                                phone: { name: "phone", value: "5551234567" }
+                            },
+                            [Constants.CONTACT_CAPTURE_LIST]: {
+                                data: [
+                                    { type: "PHONE", slotName: "phone", questionContentKey: "PhoneQuestionContent", active: true },
+                                    // Add another field so the capture doesn't complete and try to send lead
+                                    { type: "ADDRESS", slotName: "address", questionContentKey: "AddressQuestionContent", active: true }
+                                ],
+                                lastModifiedMs: Date.now()
+                            }
+                        }
+                    })
+                    .build();
+
+                const strategy = new ProgrammaticResponseStrategy(props.data);
+                await strategy.getResponse(handler, testRequest, testContext);
+
+                // Check that the lead data was updated from slot value (fallback behavior)
+                const leadDataList = testContext.session.get(Constants.CONTACT_CAPTURE_LIST);
+                expect(leadDataList.data[0].collectedValue).to.equal("5551234567");
+                // No validationConfidence since we didn't use X-NLU validation
+                expect(leadDataList.data[0].validationConfidence).to.be.undefined;
+            });
         });
     });
 });

@@ -98,3 +98,60 @@ export interface ChatResult {
      */
     queryTime: number;
 }
+
+/**
+ * Contact validation result from X-NLU for validating user input
+ * during the contact capture flow.
+ *
+ * Found in request.attributes["CONTACT_VALIDATION"]
+ */
+export interface ContactValidation {
+    /**
+     * The type of field being validated
+     */
+    field: "PHONE" | "EMAIL" | "NAME" | "ADDRESS" | "MESSAGE" | "OTHER";
+    /**
+     * Whether the input is valid for the expected field type
+     */
+    isValid: boolean;
+    /**
+     * Confidence level of the validation
+     */
+    confidence: "high" | "medium" | "low";
+    /**
+     * The value extracted from the user's input
+     */
+    extractedValue?: string;
+    /**
+     * The normalized/formatted value (e.g., phone: "5551234567")
+     */
+    normalizedValue?: string;
+    /**
+     * Whether the user asked a question instead of providing data
+     */
+    isQuestion: boolean;
+    /**
+     * The detected intent of the question if isQuestion is true
+     */
+    questionIntent?: string;
+    /**
+     * Whether the system should answer the question before continuing
+     */
+    shouldAnswerQuestion: boolean;
+    /**
+     * Error message explaining why validation failed
+     */
+    errorMessage?: string;
+    /**
+     * AI-generated response to guide the user back on track
+     */
+    suggestedResponse?: string;
+    /**
+     * Whether the user refused to provide the requested information
+     */
+    refusedToProvide?: boolean;
+    /**
+     * The type of refusal if refusedToProvide is true
+     */
+    refusalType?: "privacy" | "not_interested" | "will_contact_them" | "prefers_other_method" | "other";
+}

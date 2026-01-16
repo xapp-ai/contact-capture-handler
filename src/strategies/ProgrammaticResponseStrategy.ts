@@ -26,7 +26,89 @@ import { GooglePlacesService, PlacesService } from "../services";
 
 import type { ResponseStrategy } from "./ResponseStrategy";
 import type { ResultVariableGeneratedInformation } from "@xapp/question-answering-handler/lib/models";
-import type { ChatResult } from "./models/xnlu";
+import type { ChatResult, ContactValidation } from "./models/xnlu";
+
+/**
+ * Extract CONTACT_VALIDATION from request attributes
+ */
+function getContactValidation(request: Request): ContactValidation | undefined {
+    return request.attributes?.["CONTACT_VALIDATION"] as ContactValidation | undefined;
+}
+
+/**
+ * Get the appropriate refusal response based on refusal type.
+ * Prefers X-NLU's suggestedResponse (which may include follow-up questions),
+ * falls back to configured/default responses if not available.
+ */
+function getRefusalResponse(
+    responses: Response[],
+    contactValidation: ContactValidation,
+): Response {
+    const refusalType = contactValidation.refusalType || "other";
+
+    // Map refusal types to content tags
+    const tagMapping: Record<string, string> = {
+        "privacy": Constants.CONTACT_CAPTURE_REFUSAL_PRIVACY_CONTENT,
+        "not_interested": Constants.CONTACT_CAPTURE_REFUSAL_NOT_INTERESTED_CONTENT,
+        "will_contact_them": Constants.CONTACT_CAPTURE_REFUSAL_WILL_CONTACT_CONTENT,
+        "prefers_other_method": Constants.CONTACT_CAPTURE_REFUSAL_OTHER_METHOD_CONTENT,
+        "other": Constants.CONTACT_CAPTURE_REFUSAL_CONTENT,
+    };
+
+    const contentTag = tagMapping[refusalType] || Constants.CONTACT_CAPTURE_REFUSAL_CONTENT;
+
+    // Prefer X-NLU's suggestedResponse (may include follow-up questions)
+    if (contactValidation.suggestedResponse) {
+        return {
+            outputSpeech: toResponseOutput(contactValidation.suggestedResponse),
+            tag: contentTag,
+        };
+    }
+
+    // Fall back to configured response
+    let response = getResponseByTag(responses, contentTag);
+
+    // Fall back to default response
+    if (!response) {
+        response = getDefaultResponseByTag(contentTag);
+    }
+
+    // If we still don't have a response, use a hardcoded fallback
+    if (!response) {
+        response = {
+            outputSpeech: toResponseOutput("I understand. If you change your mind, we're here to help."),
+            tag: Constants.CONTACT_CAPTURE_REFUSAL_CONTENT,
+        };
+    }
+
+    return response;
+}
+
+/**
+ * Combine X-NLU's suggested response with configured reprompt.
+ * Returns a new Response object without mutating the input.
+ */
+function combineValidationReprompt(response: Response, contactValidation: ContactValidation): Response {
+    if (!contactValidation.suggestedResponse) {
+        // No suggestion, just use reprompt
+        if (response.reprompt) {
+            return {
+                ...response,
+                outputSpeech: response.reprompt,
+            };
+        }
+        return response;
+    }
+
+    const suggestion = toResponseOutput(contactValidation.suggestedResponse);
+    const reprompt = response.reprompt ? toResponseOutput(response.reprompt) : toResponseOutput(response.outputSpeech);
+
+    // Combine: X-NLU suggestion + configured reprompt
+    return {
+        ...response,
+        outputSpeech: concatResponseOutput(suggestion, reprompt, { delimiter: " " }),
+    };
+}
 
 export class ProgrammaticResponseStrategy implements ResponseStrategy {
     private data: ContactCaptureData;
@@ -175,12 +257,38 @@ export class ProgrammaticResponseStrategy implements ResponseStrategy {
             }
         }
 
+        // Get contact validation result from X-NLU (if available)
+        const contactValidation = getContactValidation(request);
+
         // Based on slots figure out what information is missing
         // go through each and check on the slot
         leadDataList.data.forEach((data) => {
             // see if slot exists
             const slot = slots ? slots[data.slotName] : undefined;
-            if (slot && slot.value) {
+
+            // Check if we have contact validation for the current field being collected
+            if (contactValidation && data.type === previousType) {
+                // Case 1: Valid input - use normalized value if available
+                if (contactValidation.isValid && !contactValidation.isQuestion && !contactValidation.refusedToProvide) {
+                    data.collectedValue = contactValidation.normalizedValue
+                        || contactValidation.extractedValue
+                        || (slot?.value ? requestSlotValueToString(slot.value) : undefined)
+                        || request.rawQuery;
+                    data.validationConfidence = contactValidation.confidence;
+                    // Use DEBUG level to avoid logging PII (phone, email, etc.) at INFO level
+                    log().debug(`Validated ${data.type} with confidence ${contactValidation.confidence}: ${data.collectedValue}`);
+                }
+                // Case 2: Refusal - mark as skipped (handled later in refusal handling)
+                else if (contactValidation.refusedToProvide) {
+                    data.userSkipped = true;
+                    data.refusalType = contactValidation.refusalType;
+                    log().info(`User refused to provide ${data.type}, refusal type: ${contactValidation.refusalType}`);
+                }
+                // Case 3: Question detected - let existing flow handle via asideResponse (don't set collectedValue)
+                // Case 4: Invalid input - don't set collectedValue, will trigger reprompt
+            }
+            // Fallback to existing slot-based logic when no validation present
+            else if (slot && slot.value) {
                 // Ok, we have it!
                 data.collectedValue = requestSlotValueToString(slot.value);
             } else if (data.acceptAnyInput && data.type === previousType) {
@@ -206,6 +314,23 @@ export class ProgrammaticResponseStrategy implements ResponseStrategy {
         log().info(`isFirstQuestion: ${isFirstQuestion}  lookingForHelp: ${isLookingForHelp}`);
 
         context.session.set(Constants.CONTACT_CAPTURE_CURRENT_DATA, nextType);
+
+        // Check for refusal - this takes priority and exits the capture flow
+        if (contactValidation?.refusedToProvide) {
+            log().info(`User refused to provide contact info, refusal type: ${contactValidation.refusalType}`);
+
+            // Store partial lead data in session (don't send to CRM per user requirement)
+            // Deep clone to prevent mutations from affecting stored data
+            context.session.set(Constants.CONTACT_CAPTURE_REFUSED, true);
+            context.session.set(Constants.CONTACT_CAPTURE_REFUSAL_TYPE, contactValidation.refusalType);
+            context.session.set(Constants.CONTACT_CAPTURE_PARTIAL_LEAD, JSON.parse(JSON.stringify(leadDataList)));
+
+            // Get appropriate refusal response based on refusal type
+            response = getRefusalResponse(responses, contactValidation);
+
+            // Exit capture flow by returning early
+            return response;
+        }
 
         // Two paths here to get the response depending on if we have a next step or not
         // 1. We have a step, we find the content and ask the question
@@ -242,6 +367,10 @@ export class ProgrammaticResponseStrategy implements ResponseStrategy {
                 log().debug(asideResponse);
                 // I think we want to use the reprompt here.
                 response = concatenateAside(response, asideResponse);
+            } else if (repeat && contactValidation && !contactValidation.isValid && !contactValidation.isQuestion) {
+                // Invalid input detected by X-NLU - combine suggestedResponse with reprompt
+                log().debug(`Invalid input detected, combining X-NLU suggestion with reprompt`);
+                response = combineValidationReprompt(response, contactValidation);
             } else if (repeat) {
                 // Give them the reprompt on a repeat
                 response.outputSpeech = response.reprompt;

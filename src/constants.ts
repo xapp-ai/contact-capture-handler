@@ -15,6 +15,13 @@ export const CONTACT_CAPTURE_NO_LEAD_CAPTURE_CONTENT = CONTACT_CAPTURE_PREFIX + 
 export const CONTACT_CAPTURE_END_CONTENT = CONTACT_CAPTURE_PREFIX + "End";
 export const CONTACT_CAPTURE_SENT_CONTENT = CONTACT_CAPTURE_PREFIX + "Sent";
 
+// Refusal content tags
+export const CONTACT_CAPTURE_REFUSAL_CONTENT = CONTACT_CAPTURE_PREFIX + "Refusal";
+export const CONTACT_CAPTURE_REFUSAL_PRIVACY_CONTENT = CONTACT_CAPTURE_PREFIX + "RefusalPrivacy";
+export const CONTACT_CAPTURE_REFUSAL_NOT_INTERESTED_CONTENT = CONTACT_CAPTURE_PREFIX + "RefusalNotInterested";
+export const CONTACT_CAPTURE_REFUSAL_WILL_CONTACT_CONTENT = CONTACT_CAPTURE_PREFIX + "RefusalWillContact";
+export const CONTACT_CAPTURE_REFUSAL_OTHER_METHOD_CONTENT = CONTACT_CAPTURE_PREFIX + "RefusalOtherMethod";
+
 // Session variables
 
 /**
@@ -57,6 +64,18 @@ export const CONTACT_CAPTURE_JOB_TYPE = CONTACT_CAPTURE_PREFIX + "JobType";
  * The description we used to get the job type
  */
 export const CONTACT_CAPTURE_DESCRIPTION = CONTACT_CAPTURE_PREFIX + "Description";
+/**
+ * Tracks if the user refused to provide contact information
+ */
+export const CONTACT_CAPTURE_REFUSED = CONTACT_CAPTURE_PREFIX + "Refused";
+/**
+ * The type of refusal from the user
+ */
+export const CONTACT_CAPTURE_REFUSAL_TYPE = CONTACT_CAPTURE_PREFIX + "RefusalType";
+/**
+ * Partial lead data stored when user refuses to complete capture
+ */
+export const CONTACT_CAPTURE_PARTIAL_LEAD = CONTACT_CAPTURE_PREFIX + "PartialLead";
 
 // Intents/Handlers
 export const CONTACT_CAPTURE_HANDLER = CONTACT_CAPTURE_PREFIX + "Handler";
@@ -341,5 +360,45 @@ export const DEFAULT_RESPONSES: Response[] = [
         },
         "name": "Capture Help Start",
         "tag": "ContactCaptureHelpStart",
+    },
+    {
+        "outputSpeech": {
+            "ssml": "<speak>I understand. If you change your mind, we're here to help.</speak>",
+            "displayText": "I understand. If you change your mind, we're here to help.",
+        },
+        "name": "Refusal - General",
+        "tag": "ContactCaptureRefusal",
+    },
+    {
+        "outputSpeech": {
+            "ssml": "<speak>I completely understand your privacy concerns. If you'd prefer, you can reach us directly at your convenience.</speak>",
+            "displayText": "I completely understand your privacy concerns. If you'd prefer, you can reach us directly at your convenience.",
+        },
+        "name": "Refusal - Privacy",
+        "tag": "ContactCaptureRefusalPrivacy",
+    },
+    {
+        "outputSpeech": {
+            "ssml": "<speak>No problem at all. Thanks for letting us know. If you change your mind, we're here to help.</speak>",
+            "displayText": "No problem at all. Thanks for letting us know. If you change your mind, we're here to help.",
+        },
+        "name": "Refusal - Not Interested",
+        "tag": "ContactCaptureRefusalNotInterested",
+    },
+    {
+        "outputSpeech": {
+            "ssml": "<speak>Sounds good! We look forward to hearing from you.</speak>",
+            "displayText": "Sounds good! We look forward to hearing from you.",
+        },
+        "name": "Refusal - Will Contact",
+        "tag": "ContactCaptureRefusalWillContact",
+    },
+    {
+        "outputSpeech": {
+            "ssml": "<speak>Of course. You can reach us by phone or visit our website whenever it's convenient for you.</speak>",
+            "displayText": "Of course. You can reach us by phone or visit our website whenever it's convenient for you.",
+        },
+        "name": "Refusal - Other Method",
+        "tag": "ContactCaptureRefusalOtherMethod",
     }
 ]
