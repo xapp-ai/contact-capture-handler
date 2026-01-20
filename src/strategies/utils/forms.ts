@@ -32,6 +32,11 @@ export const DEFAULT_SERVICE_CHIP_ITEMS: SelectableItem[] = [
     },
 ];
 
+/**
+ * Default maximum character length for message/textarea fields.
+ */
+export const DEFAULT_MESSAGE_MAX_LENGTH = 1500;
+
 export const DEFAULT_CONTACT_FIELDS: FormField[] = [
     {
         name: "full_name",
@@ -118,6 +123,23 @@ export interface FormResponseProps {
      * Optional message description to help people leave meaningful messages
      */
     messageDescription?: string;
+    /**
+     * Maximum character length for message/textarea fields.
+     *
+     * This applies to:
+     * - The message field in contact-only forms
+     * - The message field in preferred time forms (first page)
+     * - The help_type dropdown field when using `firstPageInputType: "dropdown"`
+     *
+     * @default 1500
+     * @example
+     * // Allow longer messages
+     * { messageMaxLength: 3000 }
+     * @example
+     * // Restrict to shorter messages
+     * { messageMaxLength: 500 }
+     */
+    messageMaxLength?: number;
     /**
      * Is there a preselected service
      */
@@ -230,6 +252,7 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
         ...(data.preferredTimeNotification && { preferredTimeNotification: data.preferredTimeNotification }),
         ...(existsAndNotEmpty(data.capture?.serviceOptions) && { serviceOptions: data.capture.serviceOptions }),
         ...(data.capture?.messageDescription && { messageDescription: data.capture.messageDescription }),
+        ...(typeof data.capture?.messageMaxLength === "number" && { messageMaxLength: data.capture.messageMaxLength }),
         ...(data.capture?.disclaimer && { disclaimer: data.capture.disclaimer }),
         ...props, // Props override data
     };
@@ -836,6 +859,7 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
 
     // Build the service selection field based on firstPageInputType
     const serviceSelectionTitle = props.serviceSelectionTitle || "What can we help you with?";
+    const messageMaxLength = props.messageMaxLength ?? DEFAULT_MESSAGE_MAX_LENGTH;
     const serviceSelectionField: FormChipsInput | FormDropdownInput =
         props.firstPageInputType === "dropdown"
             ? {
@@ -843,7 +867,7 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
                   type: "DROPDOWN",
                   items: chips,
                   mandatory: true,
-                  maxLength: 2000,
+                  maxLength: messageMaxLength,
               }
             : {
                   name: "help_type",
@@ -866,7 +890,7 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
             type: "TEXT",
             multiline: true,
             mandatory: requiredMessage,
-            maxLength: 2000,
+            maxLength: messageMaxLength,
         });
     }
 
@@ -995,7 +1019,7 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
         type: "TEXT",
         multiline: true,
         mandatory: true,
-        maxLength: 2000,
+        maxLength: messageMaxLength,
     });
 
     // Add disclaimer fields to contact-only form if provided

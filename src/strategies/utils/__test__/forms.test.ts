@@ -12,7 +12,7 @@ import {
 } from "stentor-models";
 
 import { isFormDateInput, isMultistepForm } from "../../../guards";
-import { getFormResponse, getContactFormFallback, FormResponseProps } from "../forms";
+import { getFormResponse, getContactFormFallback, FormResponseProps, DEFAULT_MESSAGE_MAX_LENGTH } from "../forms";
 import { ContactCaptureBlueprint } from "../../../data";
 
 import {
@@ -2083,7 +2083,7 @@ describe(`#${getContactFormFallback.name}()`, () => {
                 const helpTypeField = serviceRequestStep.fields[0] as FormDropdownInput;
 
                 expect(helpTypeField.type).to.equal("DROPDOWN");
-                expect(helpTypeField.maxLength).to.equal(2000);
+                expect(helpTypeField.maxLength).to.equal(1500);
             });
         });
 
@@ -2725,7 +2725,7 @@ describe(`#${getContactFormFallback.name}()`, () => {
                     const messageField = contactStep.fields.find((field) => field.name === "message");
                     expect(messageField).to.exist;
                     if (messageField?.type === "TEXT") {
-                        expect((messageField as FormTextInput).maxLength).to.equal(2000);
+                        expect((messageField as FormTextInput).maxLength).to.equal(1500);
                     }
                 });
             });
@@ -2748,7 +2748,7 @@ describe(`#${getContactFormFallback.name}()`, () => {
                     const messageField = serviceRequestStep.fields.find((field) => field.name === "message");
                     expect(messageField).to.exist;
                     if (messageField?.type === "TEXT") {
-                        expect((messageField as FormTextInput).maxLength).to.equal(2000);
+                        expect((messageField as FormTextInput).maxLength).to.equal(1500);
                     }
 
                     // Check contact fields on second page (contact_info)
@@ -2871,7 +2871,7 @@ describe(`#${getContactFormFallback.name}()`, () => {
                     const messageField = serviceRequestStep.fields.find((field) => field.name === "message");
                     expect(messageField).to.exist;
                     if (messageField?.type === "TEXT") {
-                        expect((messageField as FormTextInput).maxLength).to.equal(2000);
+                        expect((messageField as FormTextInput).maxLength).to.equal(1500);
                     }
                 });
 
@@ -2941,6 +2941,442 @@ describe(`#${getContactFormFallback.name}()`, () => {
                         if (zipField?.type === "TEXT") {
                             expect((zipField as FormTextInput).maxLength).to.equal(10);
                         }
+                    }
+                });
+            });
+        });
+
+        describe("messageMaxLength", () => {
+            describe("default value", () => {
+                it("exports DEFAULT_MESSAGE_MAX_LENGTH constant as 1500", () => {
+                    expect(DEFAULT_MESSAGE_MAX_LENGTH).to.equal(1500);
+                });
+
+                it("uses default maxLength (1500) for message field in contact-only form", () => {
+                    const form = getContactFormFallback({ capture: SIMPLE_BLUEPRINT }, {});
+                    expect(form).to.exist;
+
+                    const contactStep = form.steps[0];
+                    const messageField = contactStep.fields.find((field) => field.name === "message");
+                    expect(messageField).to.exist;
+                    if (messageField?.type === "TEXT") {
+                        expect((messageField as FormTextInput).maxLength).to.equal(DEFAULT_MESSAGE_MAX_LENGTH);
+                    }
+                });
+
+                it("uses default maxLength (1500) for message field in preferred time form", () => {
+                    const form = getContactFormFallback(
+                        {
+                            capture: SIMPLE_BLUEPRINT,
+                            enablePreferredTime: true,
+                        },
+                        {},
+                    );
+
+                    const serviceRequestStep = form.steps[0];
+                    const messageField = serviceRequestStep.fields.find((field) => field.name === "message");
+                    expect(messageField).to.exist;
+                    if (messageField?.type === "TEXT") {
+                        expect((messageField as FormTextInput).maxLength).to.equal(DEFAULT_MESSAGE_MAX_LENGTH);
+                    }
+                });
+
+                it("uses default maxLength (1500) for DROPDOWN help_type field", () => {
+                    const form = getContactFormFallback(
+                        {
+                            capture: SIMPLE_BLUEPRINT,
+                            firstPageInputType: "dropdown",
+                        },
+                        { enablePreferredTime: true },
+                    );
+
+                    const serviceRequestStep = form.steps[0];
+                    const helpTypeField = serviceRequestStep.fields[0] as FormDropdownInput;
+                    expect(helpTypeField.type).to.equal("DROPDOWN");
+                    expect(helpTypeField.maxLength).to.equal(DEFAULT_MESSAGE_MAX_LENGTH);
+                });
+            });
+
+            describe("custom value via props", () => {
+                it("allows custom maxLength for message field via props", () => {
+                    const customMaxLength = 3000;
+                    const form = getContactFormFallback(
+                        { capture: SIMPLE_BLUEPRINT },
+                        { messageMaxLength: customMaxLength },
+                    );
+
+                    const contactStep = form.steps[0];
+                    const messageField = contactStep.fields.find((field) => field.name === "message");
+                    expect(messageField).to.exist;
+                    if (messageField?.type === "TEXT") {
+                        expect((messageField as FormTextInput).maxLength).to.equal(customMaxLength);
+                    }
+                });
+
+                it("allows custom maxLength for message field in preferred time form via props", () => {
+                    const customMaxLength = 500;
+                    const form = getContactFormFallback(
+                        {
+                            capture: SIMPLE_BLUEPRINT,
+                            enablePreferredTime: true,
+                        },
+                        { messageMaxLength: customMaxLength },
+                    );
+
+                    const serviceRequestStep = form.steps[0];
+                    const messageField = serviceRequestStep.fields.find((field) => field.name === "message");
+                    expect(messageField).to.exist;
+                    if (messageField?.type === "TEXT") {
+                        expect((messageField as FormTextInput).maxLength).to.equal(customMaxLength);
+                    }
+                });
+
+                it("allows custom maxLength for DROPDOWN help_type field via props", () => {
+                    const customMaxLength = 2500;
+                    const form = getContactFormFallback(
+                        {
+                            capture: SIMPLE_BLUEPRINT,
+                            firstPageInputType: "dropdown",
+                        },
+                        { enablePreferredTime: true, messageMaxLength: customMaxLength },
+                    );
+
+                    const serviceRequestStep = form.steps[0];
+                    const helpTypeField = serviceRequestStep.fields[0] as FormDropdownInput;
+                    expect(helpTypeField.type).to.equal("DROPDOWN");
+                    expect(helpTypeField.maxLength).to.equal(customMaxLength);
+                });
+
+                it("applies same custom maxLength to both message and DROPDOWN fields", () => {
+                    const customMaxLength = 800;
+                    const form = getContactFormFallback(
+                        {
+                            capture: SIMPLE_BLUEPRINT,
+                            firstPageInputType: "dropdown",
+                        },
+                        { enablePreferredTime: true, messageMaxLength: customMaxLength, showFirstPageMessage: true },
+                    );
+
+                    const serviceRequestStep = form.steps[0];
+
+                    // Check DROPDOWN field
+                    const helpTypeField = serviceRequestStep.fields[0] as FormDropdownInput;
+                    expect(helpTypeField.type).to.equal("DROPDOWN");
+                    expect(helpTypeField.maxLength).to.equal(customMaxLength);
+
+                    // Check message field
+                    const messageField = serviceRequestStep.fields.find((field) => field.name === "message");
+                    expect(messageField).to.exist;
+                    if (messageField?.type === "TEXT") {
+                        expect((messageField as FormTextInput).maxLength).to.equal(customMaxLength);
+                    }
+                });
+            });
+
+            describe("custom value via data.capture.messageMaxLength", () => {
+                it("propagates messageMaxLength from capture blueprint", () => {
+                    const customMaxLength = 2000;
+                    const form = getContactFormFallback(
+                        {
+                            capture: {
+                                ...SIMPLE_BLUEPRINT,
+                                messageMaxLength: customMaxLength,
+                            },
+                        },
+                        {},
+                    );
+
+                    const contactStep = form.steps[0];
+                    const messageField = contactStep.fields.find((field) => field.name === "message");
+                    expect(messageField).to.exist;
+                    if (messageField?.type === "TEXT") {
+                        expect((messageField as FormTextInput).maxLength).to.equal(customMaxLength);
+                    }
+                });
+
+                it("propagates messageMaxLength from capture blueprint in preferred time form", () => {
+                    const customMaxLength = 1000;
+                    const form = getContactFormFallback(
+                        {
+                            capture: {
+                                ...SIMPLE_BLUEPRINT,
+                                messageMaxLength: customMaxLength,
+                            },
+                            enablePreferredTime: true,
+                        },
+                        {},
+                    );
+
+                    const serviceRequestStep = form.steps[0];
+                    const messageField = serviceRequestStep.fields.find((field) => field.name === "message");
+                    expect(messageField).to.exist;
+                    if (messageField?.type === "TEXT") {
+                        expect((messageField as FormTextInput).maxLength).to.equal(customMaxLength);
+                    }
+                });
+
+                it("propagates messageMaxLength to DROPDOWN field from capture blueprint", () => {
+                    const customMaxLength = 1800;
+                    const form = getContactFormFallback(
+                        {
+                            capture: {
+                                ...SIMPLE_BLUEPRINT,
+                                messageMaxLength: customMaxLength,
+                            },
+                            firstPageInputType: "dropdown",
+                            enablePreferredTime: true,
+                        },
+                        {},
+                    );
+
+                    const serviceRequestStep = form.steps[0];
+                    const helpTypeField = serviceRequestStep.fields[0] as FormDropdownInput;
+                    expect(helpTypeField.type).to.equal("DROPDOWN");
+                    expect(helpTypeField.maxLength).to.equal(customMaxLength);
+                });
+            });
+
+            describe("props override data.capture.messageMaxLength", () => {
+                it("props messageMaxLength overrides capture blueprint messageMaxLength", () => {
+                    const dataMaxLength = 2000;
+                    const propsMaxLength = 500;
+                    const form = getContactFormFallback(
+                        {
+                            capture: {
+                                ...SIMPLE_BLUEPRINT,
+                                messageMaxLength: dataMaxLength,
+                            },
+                        },
+                        { messageMaxLength: propsMaxLength },
+                    );
+
+                    const contactStep = form.steps[0];
+                    const messageField = contactStep.fields.find((field) => field.name === "message");
+                    expect(messageField).to.exist;
+                    if (messageField?.type === "TEXT") {
+                        // Props should win
+                        expect((messageField as FormTextInput).maxLength).to.equal(propsMaxLength);
+                    }
+                });
+
+                it("props messageMaxLength overrides capture blueprint in preferred time form", () => {
+                    const dataMaxLength = 3000;
+                    const propsMaxLength = 750;
+                    const form = getContactFormFallback(
+                        {
+                            capture: {
+                                ...SIMPLE_BLUEPRINT,
+                                messageMaxLength: dataMaxLength,
+                            },
+                            enablePreferredTime: true,
+                        },
+                        { messageMaxLength: propsMaxLength },
+                    );
+
+                    const serviceRequestStep = form.steps[0];
+                    const messageField = serviceRequestStep.fields.find((field) => field.name === "message");
+                    expect(messageField).to.exist;
+                    if (messageField?.type === "TEXT") {
+                        // Props should win
+                        expect((messageField as FormTextInput).maxLength).to.equal(propsMaxLength);
+                    }
+                });
+
+                it("props messageMaxLength overrides capture blueprint for DROPDOWN field", () => {
+                    const dataMaxLength = 2500;
+                    const propsMaxLength = 1200;
+                    const form = getContactFormFallback(
+                        {
+                            capture: {
+                                ...SIMPLE_BLUEPRINT,
+                                messageMaxLength: dataMaxLength,
+                            },
+                            firstPageInputType: "dropdown",
+                            enablePreferredTime: true,
+                        },
+                        { messageMaxLength: propsMaxLength },
+                    );
+
+                    const serviceRequestStep = form.steps[0];
+                    const helpTypeField = serviceRequestStep.fields[0] as FormDropdownInput;
+                    expect(helpTypeField.type).to.equal("DROPDOWN");
+                    // Props should win
+                    expect(helpTypeField.maxLength).to.equal(propsMaxLength);
+                });
+            });
+
+            describe("via getFormResponse", () => {
+                it("passes messageMaxLength from data through to form", () => {
+                    const customMaxLength = 2500;
+                    const response = getFormResponse(
+                        {
+                            capture: {
+                                ...SIMPLE_BLUEPRINT,
+                                messageMaxLength: customMaxLength,
+                            },
+                        },
+                        {},
+                    );
+
+                    expect(response).to.exist;
+
+                    const form =
+                        response && Array.isArray(response.displays) && response?.displays?.length > 0
+                            ? response.displays[0]
+                            : undefined;
+
+                    expect(isMultistepForm(form)).to.be.true;
+
+                    if (isMultistepForm(form)) {
+                        const contactStep = form.steps[0];
+                        const messageField = contactStep.fields.find((field) => field.name === "message");
+                        expect(messageField).to.exist;
+                        if (messageField?.type === "TEXT") {
+                            expect((messageField as FormTextInput).maxLength).to.equal(customMaxLength);
+                        }
+                    }
+                });
+
+                it("passes messageMaxLength from props through to form", () => {
+                    const customMaxLength = 600;
+                    const response = getFormResponse(
+                        {
+                            capture: SIMPLE_BLUEPRINT,
+                        },
+                        { messageMaxLength: customMaxLength },
+                    );
+
+                    expect(response).to.exist;
+
+                    const form =
+                        response && Array.isArray(response.displays) && response?.displays?.length > 0
+                            ? response.displays[0]
+                            : undefined;
+
+                    expect(isMultistepForm(form)).to.be.true;
+
+                    if (isMultistepForm(form)) {
+                        const contactStep = form.steps[0];
+                        const messageField = contactStep.fields.find((field) => field.name === "message");
+                        expect(messageField).to.exist;
+                        if (messageField?.type === "TEXT") {
+                            expect((messageField as FormTextInput).maxLength).to.equal(customMaxLength);
+                        }
+                    }
+                });
+
+                it("props messageMaxLength overrides data in getFormResponse", () => {
+                    const dataMaxLength = 3000;
+                    const propsMaxLength = 400;
+                    const response = getFormResponse(
+                        {
+                            capture: {
+                                ...SIMPLE_BLUEPRINT,
+                                messageMaxLength: dataMaxLength,
+                            },
+                        },
+                        { messageMaxLength: propsMaxLength },
+                    );
+
+                    expect(response).to.exist;
+
+                    const form =
+                        response && Array.isArray(response.displays) && response?.displays?.length > 0
+                            ? response.displays[0]
+                            : undefined;
+
+                    expect(isMultistepForm(form)).to.be.true;
+
+                    if (isMultistepForm(form)) {
+                        const contactStep = form.steps[0];
+                        const messageField = contactStep.fields.find((field) => field.name === "message");
+                        expect(messageField).to.exist;
+                        if (messageField?.type === "TEXT") {
+                            // Props should win
+                            expect((messageField as FormTextInput).maxLength).to.equal(propsMaxLength);
+                        }
+                    }
+                });
+            });
+
+            describe("edge cases", () => {
+                it("allows very small maxLength value", () => {
+                    const form = getContactFormFallback(
+                        { capture: SIMPLE_BLUEPRINT },
+                        { messageMaxLength: 50 },
+                    );
+
+                    const contactStep = form.steps[0];
+                    const messageField = contactStep.fields.find((field) => field.name === "message");
+                    expect(messageField).to.exist;
+                    if (messageField?.type === "TEXT") {
+                        expect((messageField as FormTextInput).maxLength).to.equal(50);
+                    }
+                });
+
+                it("allows very large maxLength value", () => {
+                    const form = getContactFormFallback(
+                        { capture: SIMPLE_BLUEPRINT },
+                        { messageMaxLength: 10000 },
+                    );
+
+                    const contactStep = form.steps[0];
+                    const messageField = contactStep.fields.find((field) => field.name === "message");
+                    expect(messageField).to.exist;
+                    if (messageField?.type === "TEXT") {
+                        expect((messageField as FormTextInput).maxLength).to.equal(10000);
+                    }
+                });
+
+                it("uses default when messageMaxLength is undefined in both data and props", () => {
+                    const form = getContactFormFallback(
+                        { capture: SIMPLE_BLUEPRINT },
+                        {},
+                    );
+
+                    const contactStep = form.steps[0];
+                    const messageField = contactStep.fields.find((field) => field.name === "message");
+                    expect(messageField).to.exist;
+                    if (messageField?.type === "TEXT") {
+                        expect((messageField as FormTextInput).maxLength).to.equal(DEFAULT_MESSAGE_MAX_LENGTH);
+                    }
+                });
+
+                it("messageMaxLength does not affect other field maxLengths", () => {
+                    const customMaxLength = 999;
+                    const form = getContactFormFallback(
+                        {
+                            capture: SIMPLE_BLUEPRINT,
+                        },
+                        { messageMaxLength: customMaxLength },
+                    );
+
+                    const contactStep = form.steps[0];
+
+                    // Message field should use custom maxLength
+                    const messageField = contactStep.fields.find((field) => field.name === "message");
+                    expect(messageField).to.exist;
+                    if (messageField?.type === "TEXT") {
+                        expect((messageField as FormTextInput).maxLength).to.equal(customMaxLength);
+                    }
+
+                    // Other fields should keep their original maxLengths
+                    const nameField = contactStep.fields.find((field) => field.name === "full_name");
+                    expect(nameField).to.exist;
+                    if (nameField?.type === "TEXT") {
+                        expect((nameField as FormTextInput).maxLength).to.equal(100); // Original maxLength
+                    }
+
+                    const phoneField = contactStep.fields.find((field) => field.name === "phone");
+                    expect(phoneField).to.exist;
+                    if (phoneField?.type === "TEXT") {
+                        expect((phoneField as FormTextInput).maxLength).to.equal(15); // Original maxLength
+                    }
+
+                    const emailField = contactStep.fields.find((field) => field.name === "email");
+                    expect(emailField).to.exist;
+                    if (emailField?.type === "TEXT") {
+                        expect((emailField as FormTextInput).maxLength).to.equal(254); // Original maxLength
                     }
                 });
             });
