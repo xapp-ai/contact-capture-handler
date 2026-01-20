@@ -101,7 +101,7 @@ export interface ContactCaptureData extends QuestionAnsweringData, Pick<FormResp
 }
 
 export interface ContactCaptureBlueprint
-    extends Pick<FormResponseProps, "disclaimer" | "messageDescription" | "serviceOptions"> {
+    extends Pick<FormResponseProps, "disclaimer" | "messageDescription" | "messageMaxLength" | "serviceOptions"> {
     /**
      * The items to capture from the user.
      */
