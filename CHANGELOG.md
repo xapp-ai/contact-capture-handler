@@ -1,3 +1,10 @@
+# [1.20.0](https://github.com/xapp-ai/contact-capture-handler/compare/v1.19.1...v1.20.0) (2026-01-20)
+
+
+### Features
+
+* Add configurable messageMaxLength with 1500 default ([#631](https://github.com/xapp-ai/contact-capture-handler/issues/631)) ([f39d54c](https://github.com/xapp-ai/contact-capture-handler/commit/f39d54ccc7c119df485b9b161c693a9b05315d72))
+
 ## [1.19.1](https://github.com/xapp-ai/contact-capture-handler/compare/v1.19.0...v1.19.1) (2026-01-16)
 
 
