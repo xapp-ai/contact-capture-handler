@@ -43,7 +43,7 @@
     "eslint-plugin-notice": "1.0.0",
     "mocha": "11.7.5",
     "prettier": "3.8.0",
-    "semantic-release": "25.0.2",
+    "semantic-release": "25.0.3",
     "sinon": "19.0.2",
     "sinon-chai": "3.7.0",
     "stentor-constants": "1.68.6",
