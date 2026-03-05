@@ -37,7 +37,7 @@
     "@xapp/config": "0.3.0",
     "@xapp/question-answering-handler": "2.5.22",
     "chai": "4.5.0",
-    "conventional-changelog-conventionalcommits": "9.1.0",
+    "conventional-changelog-conventionalcommits": "9.3.0",
     "dotenv": "16.6.1",
     "eslint": "8.57.1",
     "eslint-plugin-notice": "1.0.0",
