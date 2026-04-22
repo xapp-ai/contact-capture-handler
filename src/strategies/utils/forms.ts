@@ -37,6 +37,24 @@ export const DEFAULT_SERVICE_CHIP_ITEMS: SelectableItem[] = [
  */
 export const DEFAULT_MESSAGE_MAX_LENGTH = 1500;
 
+/**
+ * Default preferred time options for scheduling forms.
+ */
+export const DEFAULT_PREFERRED_TIME_ITEMS: SelectableItem[] = [
+    {
+        id: "first_available",
+        label: "First Available Time",
+    },
+    {
+        id: "morning",
+        label: "Morning",
+    },
+    {
+        id: "afternoon",
+        label: "Afternoon",
+    },
+];
+
 export const DEFAULT_CONTACT_FIELDS: FormField[] = [
     {
         name: "full_name",
@@ -819,20 +837,7 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
     // Add preferred_time field with custom or default items
     const preferredTimeItems = existsAndNotEmpty(props.preferredTimeOptions)
         ? props.preferredTimeOptions
-        : [
-              {
-                  id: "first_available",
-                  label: "First Available Time",
-              },
-              {
-                  id: "morning",
-                  label: "Morning",
-              },
-              {
-                  id: "afternoon",
-                  label: "Afternoon",
-              },
-          ];
+        : DEFAULT_PREFERRED_TIME_ITEMS;
 
     preferredTimeFields.push({
         name: "preferred_time",
