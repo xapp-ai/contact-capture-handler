@@ -1,3 +1,10 @@
+# [1.21.0](https://github.com/xapp-ai/contact-capture-handler/compare/v1.20.0...v1.21.0) (2026-04-23)
+
+
+### Features
+
+* Export DEFAULT_PREFERRED_TIME_ITEMS constant ([#640](https://github.com/xapp-ai/contact-capture-handler/issues/640)) ([7cbfe06](https://github.com/xapp-ai/contact-capture-handler/commit/7cbfe06eb88b37d6f8d68e7a681bfa4d28919ee0))
+
 # [1.20.0](https://github.com/xapp-ai/contact-capture-handler/compare/v1.19.1...v1.20.0) (2026-01-20)
 
 
