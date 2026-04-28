@@ -267,7 +267,7 @@ describe(`#${newLeadGenerationData.name}()`, () => {
     });
 
     describe("when capture.data is missing or invalid", () => {
-        it("returns an empty data array when capture.data is undefined", () => {
+        it("returns default capture fields when capture.data is undefined", () => {
             const invalidData = {
                 capture: {
                     serviceOptions: [
@@ -277,35 +277,39 @@ describe(`#${newLeadGenerationData.name}()`, () => {
             } as unknown as ContactCaptureData;
 
             const result = newLeadGenerationData(invalidData);
-            expect(result.data).to.deep.equal([]);
+            expect(result.data).to.have.length(4);
+            expect(result.data.map((d) => d.type)).to.deep.equal(["FULL_NAME", "PHONE", "EMAIL", "ZIP"]);
             expect(result.lastModifiedMs).to.be.a("number");
         });
 
-        it("returns an empty data array when capture is undefined", () => {
+        it("returns default capture fields when capture is undefined", () => {
             const invalidData = {} as unknown as ContactCaptureData;
 
             const result = newLeadGenerationData(invalidData);
-            expect(result.data).to.deep.equal([]);
+            expect(result.data).to.have.length(4);
+            expect(result.data.map((d) => d.type)).to.deep.equal(["FULL_NAME", "PHONE", "EMAIL", "ZIP"]);
             expect(result.lastModifiedMs).to.be.a("number");
         });
 
-        it("returns an empty data array when data is null", () => {
+        it("returns default capture fields when data is null", () => {
             const invalidData = null as unknown as ContactCaptureData;
 
             const result = newLeadGenerationData(invalidData);
-            expect(result.data).to.deep.equal([]);
+            expect(result.data).to.have.length(4);
+            expect(result.data.map((d) => d.type)).to.deep.equal(["FULL_NAME", "PHONE", "EMAIL", "ZIP"]);
             expect(result.lastModifiedMs).to.be.a("number");
         });
 
-        it("returns an empty data array when data is undefined", () => {
+        it("returns default capture fields when data is undefined", () => {
             const invalidData = undefined as unknown as ContactCaptureData;
 
             const result = newLeadGenerationData(invalidData);
-            expect(result.data).to.deep.equal([]);
+            expect(result.data).to.have.length(4);
+            expect(result.data.map((d) => d.type)).to.deep.equal(["FULL_NAME", "PHONE", "EMAIL", "ZIP"]);
             expect(result.lastModifiedMs).to.be.a("number");
         });
 
-        it("works correctly with FORM channel when capture.data is missing", () => {
+        it("returns default capture fields with FORM channel when capture.data is missing", () => {
             const invalidData = {
                 capture: {
                     serviceOptions: []
@@ -313,17 +317,19 @@ describe(`#${newLeadGenerationData.name}()`, () => {
             } as unknown as ContactCaptureData;
 
             const result = newLeadGenerationData(invalidData, "FORM");
-            expect(result.data).to.deep.equal([]);
+            expect(result.data).to.have.length(4);
+            expect(result.data.map((d) => d.type)).to.deep.equal(["FULL_NAME", "PHONE", "EMAIL", "ZIP"]);
             expect(result.lastModifiedMs).to.be.a("number");
         });
 
-        it("works correctly with CHAT channel when capture.data is missing", () => {
+        it("returns default capture fields with CHAT channel when capture.data is missing", () => {
             const invalidData = {
                 capture: {}
             } as unknown as ContactCaptureData;
 
             const result = newLeadGenerationData(invalidData, "CHAT");
-            expect(result.data).to.deep.equal([]);
+            expect(result.data).to.have.length(4);
+            expect(result.data.map((d) => d.type)).to.deep.equal(["FULL_NAME", "PHONE", "EMAIL", "ZIP"]);
             expect(result.lastModifiedMs).to.be.a("number");
         });
     });
