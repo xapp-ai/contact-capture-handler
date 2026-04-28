@@ -3609,5 +3609,118 @@ describe(`#${getContactFormFallback.name}()`, () => {
             expect((phoneField as any).mandatoryGroup).to.be.undefined;
             expect((emailField as any).mandatoryGroup).to.be.undefined;
         });
+
+        it("does not apply mandatoryGroup when email is individually required", () => {
+            const form = getContactFormFallback(
+                {
+                    capture: {
+                        data: [
+                            {
+                                slotName: "full_name",
+                                active: true,
+                                type: "FULL_NAME" as const,
+                                questionContentKey: "NameQuestionContent",
+                                required: true,
+                            },
+                            {
+                                slotName: "phone",
+                                active: true,
+                                type: "PHONE" as const,
+                                questionContentKey: "PhoneQuestionContent",
+                                required: false,
+                            },
+                            {
+                                slotName: "email",
+                                active: true,
+                                type: "EMAIL" as const,
+                                questionContentKey: "EmailQuestionContent",
+                                required: true,
+                            },
+                        ],
+                    },
+                },
+                {},
+            );
+
+            const contactStep = form.steps[0];
+            const phoneField = contactStep.fields.find((f) => f.name === "phone");
+            const emailField = contactStep.fields.find((f) => f.name === "email");
+
+            expect(phoneField).to.exist;
+            expect(emailField).to.exist;
+            // Email is individually mandatory, so no mandatoryGroup needed
+            expect(emailField!.mandatory).to.be.true;
+            expect((phoneField as any).mandatoryGroup).to.be.undefined;
+            expect((emailField as any).mandatoryGroup).to.be.undefined;
+        });
+
+        it("does not apply mandatoryGroup when only phone is present (no email)", () => {
+            const form = getContactFormFallback(
+                {
+                    capture: {
+                        data: [
+                            {
+                                slotName: "full_name",
+                                active: true,
+                                type: "FULL_NAME" as const,
+                                questionContentKey: "NameQuestionContent",
+                                required: true,
+                            },
+                            {
+                                slotName: "phone",
+                                active: true,
+                                type: "PHONE" as const,
+                                questionContentKey: "PhoneQuestionContent",
+                                required: false,
+                            },
+                        ],
+                    },
+                },
+                {},
+            );
+
+            const contactStep = form.steps[0];
+            const phoneField = contactStep.fields.find((f) => f.name === "phone");
+            const emailField = contactStep.fields.find((f) => f.name === "email");
+
+            expect(phoneField).to.exist;
+            expect(emailField).to.not.exist;
+            expect((phoneField as any).mandatoryGroup).to.be.undefined;
+        });
+
+        it("does not apply mandatoryGroup when only email is present (no phone)", () => {
+            const form = getContactFormFallback(
+                {
+                    capture: {
+                        data: [
+                            {
+                                slotName: "full_name",
+                                active: true,
+                                type: "FULL_NAME" as const,
+                                questionContentKey: "NameQuestionContent",
+                                required: true,
+                            },
+                            {
+                                slotName: "email",
+                                active: true,
+                                type: "EMAIL" as const,
+                                questionContentKey: "EmailQuestionContent",
+                                required: false,
+                            },
+                        ],
+                    },
+                },
+                {},
+            );
+
+            const contactStep = form.steps[0];
+            const phoneField = contactStep.fields.find((f) => f.name === "phone");
+            const emailField = contactStep.fields.find((f) => f.name === "email");
+
+            // Only email in capture.data, no phone added to contact-only form
+            expect(phoneField).to.not.exist;
+            expect(emailField).to.exist;
+            expect((emailField as any).mandatoryGroup).to.be.undefined;
+        });
     });
 });

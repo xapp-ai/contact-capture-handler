@@ -19,7 +19,12 @@ import { DEFAULT_RESPONSES } from "./constants";
 
 /**
  * Default capture data fields used when capture.data is not configured.
- * Mirrors the default contact fields used by the form widget.
+ * Mirrors the default contact fields used by the form widget (DEFAULT_CONTACT_FIELDS).
+ *
+ * Note: The chat/programmatic strategy asks for every field sequentially regardless
+ * of `required`, so the required values here only affect form widget behavior.
+ * Phone and email are both not individually required to match the form widget's
+ * mandatoryGroup pattern (at least one of the two is needed).
  */
 export const DEFAULT_CAPTURE_DATA: DataDescriptorBase[] = [
     {
@@ -34,7 +39,7 @@ export const DEFAULT_CAPTURE_DATA: DataDescriptorBase[] = [
         questionContentKey: "PhoneQuestionContent",
         slotName: "phone",
         active: true,
-        required: true,
+        required: false,
     },
     {
         type: "EMAIL",
@@ -59,11 +64,11 @@ export const DEFAULT_CAPTURE_DATA: DataDescriptorBase[] = [
  */
 export function newLeadGenerationData(data: ContactCaptureData, channel?: "CHAT" | "FORM"): CaptureRuntimeData {
     // Fall back to default capture data when capture.data is not configured
-    if (!data?.capture?.data || data.capture.data.length === 0) {
+    const captureData = existsAndNotEmpty(data?.capture?.data) ? data.capture.data : DEFAULT_CAPTURE_DATA;
+
+    if (captureData === DEFAULT_CAPTURE_DATA) {
         log().warn("ContactCaptureData is missing capture.data, using default capture fields.");
     }
-
-    const captureData = existsAndNotEmpty(data?.capture?.data) ? data.capture.data : DEFAULT_CAPTURE_DATA;
 
     const runtimeData: CaptureRuntimeData = {
         data: captureData
