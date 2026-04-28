@@ -18,44 +18,46 @@ import { PseudoSlots } from "./model";
 import { DEFAULT_RESPONSES } from "./constants";
 
 /**
- * Default capture data fields used when capture.data is not configured.
+ * Default capture data fields used when capture.data is not configured or empty.
  * Mirrors the default contact fields used by the form widget (DEFAULT_CONTACT_FIELDS).
  *
  * Note: The chat/programmatic strategy asks for every field sequentially regardless
  * of `required`, so the required values here only affect form widget behavior.
  * Phone and email are both not individually required to match the form widget's
  * mandatoryGroup pattern (at least one of the two is needed).
+ *
+ * Frozen to prevent accidental mutation since this is a shared constant.
  */
-export const DEFAULT_CAPTURE_DATA: DataDescriptorBase[] = [
-    {
-        type: "FULL_NAME",
+export const DEFAULT_CAPTURE_DATA: readonly DataDescriptorBase[] = Object.freeze([
+    Object.freeze({
+        type: "FULL_NAME" as const,
         questionContentKey: "FullNameQuestionContent",
         slotName: "full_name",
         active: true,
         required: true,
-    },
-    {
-        type: "PHONE",
+    }),
+    Object.freeze({
+        type: "PHONE" as const,
         questionContentKey: "PhoneQuestionContent",
         slotName: "phone",
         active: true,
         required: false,
-    },
-    {
-        type: "EMAIL",
+    }),
+    Object.freeze({
+        type: "EMAIL" as const,
         questionContentKey: "EmailQuestionContent",
         slotName: "email",
         active: true,
         required: false,
-    },
-    {
-        type: "ZIP",
+    }),
+    Object.freeze({
+        type: "ZIP" as const,
         questionContentKey: "ZipQuestionContent",
         slotName: "zip",
         active: true,
         required: true,
-    },
-];
+    }),
+]);
 
 /**
  * Returns a fresh data fields to capture
@@ -63,9 +65,11 @@ export const DEFAULT_CAPTURE_DATA: DataDescriptorBase[] = [
  * If a channel is passed in, it will filter
  */
 export function newLeadGenerationData(data: ContactCaptureData, channel?: "CHAT" | "FORM"): CaptureRuntimeData {
-    // Fall back to default capture data when capture.data is not configured
+    // Fall back to default capture data when capture.data is not configured or empty.
+    // An empty array is treated the same as missing — some information must always be collected.
     const captureData = existsAndNotEmpty(data?.capture?.data) ? data.capture.data : DEFAULT_CAPTURE_DATA;
 
+    // Reference equality — true only when the fallback was used
     if (captureData === DEFAULT_CAPTURE_DATA) {
         log().warn("ContactCaptureData is missing capture.data, using default capture fields.");
     }
@@ -81,17 +85,13 @@ export function newLeadGenerationData(data: ContactCaptureData, channel?: "CHAT"
                 }
                 return true;
             })
-            .map((value) => {
-                if (value.active) {
-                    return {
-                        type: value.type,
-                        enums: value.enums,
-                        questionContentKey: value.questionContentKey,
-                        slotName: value.slotName,
-                        acceptAnyInput: value.acceptAnyInput,
-                    };
-                }
-            }),
+            .map((value) => ({
+                type: value.type,
+                enums: value.enums,
+                questionContentKey: value.questionContentKey,
+                slotName: value.slotName,
+                acceptAnyInput: value.acceptAnyInput,
+            })),
     };
 
     runtimeData.lastModifiedMs = new Date().getTime();
