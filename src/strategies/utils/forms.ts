@@ -468,6 +468,20 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
                 CONTACT_FIELDS.push(selectionField);
             }
         });
+
+        // When both phone and email are present but neither is individually mandatory,
+        // apply mandatoryGroup so the form requires at least one contact method
+        const phoneField = CONTACT_FIELDS.find((f) => f.name === "phone");
+        const emailField = CONTACT_FIELDS.find((f) => f.name === "email");
+
+        if (phoneField && emailField && !phoneField.mandatory && !emailField.mandatory) {
+            (phoneField as FormTextInput).mandatoryGroup = "contact_method";
+            (phoneField as FormTextInput).mandatoryError =
+                "Please provide either a phone number or email address";
+            (emailField as FormTextInput).mandatoryGroup = "contact_method";
+            (emailField as FormTextInput).mandatoryError =
+                "Please provide either a phone number or email address";
+        }
     }
 
     // find index of name field(s)

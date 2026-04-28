@@ -3509,4 +3509,105 @@ describe(`#${getContactFormFallback.name}()`, () => {
             });
         });
     });
+
+    describe("mandatoryGroup on phone and email from capture.data", () => {
+        it("applies mandatoryGroup contact_method when both phone and email are present and not individually required", () => {
+            const form = getContactFormFallback(
+                {
+                    capture: {
+                        data: [
+                            {
+                                slotName: "full_name",
+                                active: true,
+                                type: "FULL_NAME" as const,
+                                questionContentKey: "NameQuestionContent",
+                                required: true,
+                            },
+                            {
+                                slotName: "phone",
+                                active: true,
+                                type: "PHONE" as const,
+                                questionContentKey: "PhoneQuestionContent",
+                                required: false,
+                            },
+                            {
+                                slotName: "email",
+                                active: true,
+                                type: "EMAIL" as const,
+                                questionContentKey: "EmailQuestionContent",
+                                required: false,
+                            },
+                            {
+                                slotName: "zip",
+                                active: true,
+                                type: "ZIP" as const,
+                                questionContentKey: "ZipQuestionContent",
+                                required: true,
+                            },
+                        ],
+                    },
+                },
+                {},
+            );
+
+            const contactStep = form.steps[0];
+            const phoneField = contactStep.fields.find((f) => f.name === "phone");
+            const emailField = contactStep.fields.find((f) => f.name === "email");
+
+            expect(phoneField).to.exist;
+            expect(emailField).to.exist;
+            expect((phoneField as any).mandatoryGroup).to.equal("contact_method");
+            expect((phoneField as any).mandatoryError).to.equal(
+                "Please provide either a phone number or email address",
+            );
+            expect((emailField as any).mandatoryGroup).to.equal("contact_method");
+            expect((emailField as any).mandatoryError).to.equal(
+                "Please provide either a phone number or email address",
+            );
+        });
+
+        it("does not apply mandatoryGroup when phone is individually required", () => {
+            const form = getContactFormFallback(
+                {
+                    capture: {
+                        data: [
+                            {
+                                slotName: "full_name",
+                                active: true,
+                                type: "FULL_NAME" as const,
+                                questionContentKey: "NameQuestionContent",
+                                required: true,
+                            },
+                            {
+                                slotName: "phone",
+                                active: true,
+                                type: "PHONE" as const,
+                                questionContentKey: "PhoneQuestionContent",
+                                required: true,
+                            },
+                            {
+                                slotName: "email",
+                                active: true,
+                                type: "EMAIL" as const,
+                                questionContentKey: "EmailQuestionContent",
+                                required: false,
+                            },
+                        ],
+                    },
+                },
+                {},
+            );
+
+            const contactStep = form.steps[0];
+            const phoneField = contactStep.fields.find((f) => f.name === "phone");
+            const emailField = contactStep.fields.find((f) => f.name === "email");
+
+            expect(phoneField).to.exist;
+            expect(emailField).to.exist;
+            // Phone is individually mandatory, so no mandatoryGroup needed
+            expect(phoneField!.mandatory).to.be.true;
+            expect((phoneField as any).mandatoryGroup).to.be.undefined;
+            expect((emailField as any).mandatoryGroup).to.be.undefined;
+        });
+    });
 });
