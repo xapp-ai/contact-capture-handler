@@ -16,6 +16,9 @@ import { capitalize, existsAndNotEmpty } from "stentor-utils";
 import { ContactCaptureData, ContactCaptureService, DataDescriptorBase } from "../../data";
 import { isFormDateInput } from "../../guards";
 
+export const CONTACT_METHOD_GROUP = "contact_method";
+export const CONTACT_METHOD_ERROR = "Please provide either a phone number or email address";
+
 // THE DEFAULT CHIPS
 export const DEFAULT_SERVICE_CHIP_ITEMS: SelectableItem[] = [
     {
@@ -70,8 +73,8 @@ export const DEFAULT_CONTACT_FIELDS: FormField[] = [
         label: "Phone",
         placeholder: "Your 10 digit phone number",
         type: "TEXT",
-        mandatoryGroup: "contact_method",
-        mandatoryError: "Please provide either a phone number or email address",
+        mandatoryGroup: CONTACT_METHOD_GROUP,
+        mandatoryError: CONTACT_METHOD_ERROR,
         maxLength: 15,
     },
     {
@@ -80,8 +83,8 @@ export const DEFAULT_CONTACT_FIELDS: FormField[] = [
         label: "Email",
         placeholder: "Your email address",
         type: "TEXT",
-        mandatoryGroup: "contact_method",
-        mandatoryError: "Please provide either a phone number or email address",
+        mandatoryGroup: CONTACT_METHOD_GROUP,
+        mandatoryError: CONTACT_METHOD_ERROR,
         maxLength: 254,
     },
     {
@@ -468,6 +471,20 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
                 CONTACT_FIELDS.push(selectionField);
             }
         });
+
+        // When both phone and email are present but neither is individually mandatory,
+        // apply mandatoryGroup so the form requires at least one contact method.
+        // When only one contact method is present, it keeps whatever mandatory value
+        // was set from capture.data (no group needed for a single field).
+        const phoneField = CONTACT_FIELDS.find((f) => f.name === "phone") as FormTextInput | undefined;
+        const emailField = CONTACT_FIELDS.find((f) => f.name === "email") as FormTextInput | undefined;
+
+        if (phoneField && emailField && !phoneField.mandatory && !emailField.mandatory) {
+            phoneField.mandatoryGroup = CONTACT_METHOD_GROUP;
+            phoneField.mandatoryError = CONTACT_METHOD_ERROR;
+            emailField.mandatoryGroup = CONTACT_METHOD_GROUP;
+            emailField.mandatoryError = CONTACT_METHOD_ERROR;
+        }
     }
 
     // find index of name field(s)
