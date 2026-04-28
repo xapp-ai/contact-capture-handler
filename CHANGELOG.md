@@ -1,3 +1,10 @@
+## [1.21.1](https://github.com/xapp-ai/contact-capture-handler/compare/v1.21.0...v1.21.1) (2026-04-28)
+
+
+### Bug Fixes
+
+* Apply mandatoryGroup to phone/email from capture.data ([#642](https://github.com/xapp-ai/contact-capture-handler/issues/642)) ([bc4df27](https://github.com/xapp-ai/contact-capture-handler/commit/bc4df27d9b1fba7016ebbb82214ad6d9d238008f))
+
 # [1.21.0](https://github.com/xapp-ai/contact-capture-handler/compare/v1.20.0...v1.21.0) (2026-04-23)
 
 
