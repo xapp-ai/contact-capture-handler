@@ -56,7 +56,7 @@
     "stentor-service-fetch": "1.68.6",
     "stentor-utils": "1.68.6",
     "ts-node": "10.9.2",
-    "typescript": "5.9.3"
+    "typescript": "6.0.3"
   },
   "scripts": {
     "build": "tsc -d true -p .",
