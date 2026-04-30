@@ -1,3 +1,10 @@
+# [1.22.0](https://github.com/xapp-ai/contact-capture-handler/compare/v1.21.1...v1.22.0) (2026-04-30)
+
+
+### Features
+
+* pass TrustedForm cert URL through as an extra ([#644](https://github.com/xapp-ai/contact-capture-handler/issues/644)) ([3fcc2e2](https://github.com/xapp-ai/contact-capture-handler/commit/3fcc2e2e33f5e9d25b08714740c71dd8533b270a)), closes [#643](https://github.com/xapp-ai/contact-capture-handler/issues/643)
+
 ## [1.21.1](https://github.com/xapp-ai/contact-capture-handler/compare/v1.21.0...v1.21.1) (2026-04-28)
 
 
