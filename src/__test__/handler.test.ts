@@ -375,6 +375,70 @@ describe(`${ContactCaptureHandler.name}`, () => {
                 expect(extras).to.not.have.property("msclkid");
             });
         });
+        describe("for a request with TrustedForm slots", () => {
+            it("adds TrustedForm cert and ping URLs to extras", () => {
+                const request = new IntentRequestBuilder().build();
+
+                const crmService = new MockCRM();
+                const sendSpy = sandbox.spy(crmService, "send");
+
+                const slots = {
+                    xxTrustedFormCertUrl: {
+                        name: "xxTrustedFormCertUrl",
+                        value: "https://cert.trustedform.com/abc123",
+                    },
+                    xxTrustedFormPingUrl: {
+                        name: "xxTrustedFormPingUrl",
+                        value: "https://ping.trustedform.com/abc123",
+                    },
+                };
+
+                ContactCaptureHandler.sendLead(slots, {}, { data: [] }, [], crmService, request, new MockErrorService());
+
+                expect(sendSpy).to.have.been.calledOnce;
+                const extras = sendSpy.getCall(0).args[1];
+
+                expect(extras).to.have.property("xxTrustedFormCertUrl", "https://cert.trustedform.com/abc123");
+                expect(extras).to.have.property("xxTrustedFormPingUrl", "https://ping.trustedform.com/abc123");
+            });
+
+            it("only adds TrustedForm URLs that are present in slots", () => {
+                const request = new IntentRequestBuilder().build();
+
+                const crmService = new MockCRM();
+                const sendSpy = sandbox.spy(crmService, "send");
+
+                const slots = {
+                    xxTrustedFormCertUrl: {
+                        name: "xxTrustedFormCertUrl",
+                        value: "https://cert.trustedform.com/abc123",
+                    },
+                };
+
+                ContactCaptureHandler.sendLead(slots, {}, { data: [] }, [], crmService, request, new MockErrorService());
+
+                expect(sendSpy).to.have.been.calledOnce;
+                const extras = sendSpy.getCall(0).args[1];
+
+                expect(extras).to.have.property("xxTrustedFormCertUrl", "https://cert.trustedform.com/abc123");
+                expect(extras).to.not.have.property("xxTrustedFormPingUrl");
+            });
+
+            it("does not add TrustedForm URLs when slots are absent", () => {
+                const request = new IntentRequestBuilder().build();
+
+                const crmService = new MockCRM();
+                const sendSpy = sandbox.spy(crmService, "send");
+
+                ContactCaptureHandler.sendLead({}, {}, { data: [] }, [], crmService, request, new MockErrorService());
+
+                expect(sendSpy).to.have.been.calledOnce;
+                const extras = sendSpy.getCall(0).args[1];
+
+                expect(extras).to.not.have.property("xxTrustedFormCertUrl");
+                expect(extras).to.not.have.property("xxTrustedFormPingUrl");
+            });
+        });
     });
     describe(`#${ContactCaptureHandler.prototype.handleRequest.name}()`, () => {
         describe("with captureLead set to true", () => {
