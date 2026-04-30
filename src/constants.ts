@@ -83,7 +83,9 @@ export const CONTACT_CAPTURE_INTENT = CONTACT_CAPTURE_PREFIX;
 
 export const CONTACT_CAPTURE_HANDLER_TYPE = "ContactCaptureHandlerType";
 
-
+// TrustedForm slot names (from form submission)
+export const TRUSTED_FORM_CERT_URL_SLOT = "xxTrustedFormCertUrl";
+export const TRUSTED_FORM_PING_URL_SLOT = "xxTrustedFormPingUrl";
 
 export const DEFAULT_RESPONSES: Response[] = [
     {

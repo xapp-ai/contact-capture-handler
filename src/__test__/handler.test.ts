@@ -27,6 +27,8 @@ import {
     CONTACT_CAPTURE_LIST,
     CONTACT_CAPTURE_SENT,
     CONTACT_CAPTURE_SLOTS,
+    TRUSTED_FORM_CERT_URL_SLOT,
+    TRUSTED_FORM_PING_URL_SLOT,
 } from "../constants";
 import { DetailParams, Place, PlacesService, SearchParams } from "../services";
 
@@ -383,12 +385,12 @@ describe(`${ContactCaptureHandler.name}`, () => {
                 const sendSpy = sandbox.spy(crmService, "send");
 
                 const slots = {
-                    xxTrustedFormCertUrl: {
-                        name: "xxTrustedFormCertUrl",
+                    [TRUSTED_FORM_CERT_URL_SLOT]: {
+                        name: TRUSTED_FORM_CERT_URL_SLOT,
                         value: "https://cert.trustedform.com/abc123",
                     },
-                    xxTrustedFormPingUrl: {
-                        name: "xxTrustedFormPingUrl",
+                    [TRUSTED_FORM_PING_URL_SLOT]: {
+                        name: TRUSTED_FORM_PING_URL_SLOT,
                         value: "https://ping.trustedform.com/abc123",
                     },
                 };
@@ -398,8 +400,28 @@ describe(`${ContactCaptureHandler.name}`, () => {
                 expect(sendSpy).to.have.been.calledOnce;
                 const extras = sendSpy.getCall(0).args[1];
 
-                expect(extras).to.have.property("xxTrustedFormCertUrl", "https://cert.trustedform.com/abc123");
-                expect(extras).to.have.property("xxTrustedFormPingUrl", "https://ping.trustedform.com/abc123");
+                expect(extras).to.have.property(TRUSTED_FORM_CERT_URL_SLOT, "https://cert.trustedform.com/abc123");
+                expect(extras).to.have.property(TRUSTED_FORM_PING_URL_SLOT, "https://ping.trustedform.com/abc123");
+            });
+
+            it("preserves the xx-prefixed key names in extras", () => {
+                const request = new IntentRequestBuilder().build();
+
+                const crmService = new MockCRM();
+                const sendSpy = sandbox.spy(crmService, "send");
+
+                const slots = {
+                    [TRUSTED_FORM_CERT_URL_SLOT]: {
+                        name: TRUSTED_FORM_CERT_URL_SLOT,
+                        value: "https://cert.trustedform.com/abc123",
+                    },
+                };
+
+                ContactCaptureHandler.sendLead(slots, {}, { data: [] }, [], crmService, request, new MockErrorService());
+
+                const extras = sendSpy.getCall(0).args[1];
+                expect(Object.keys(extras)).to.include("xxTrustedFormCertUrl");
+                expect(Object.keys(extras)).to.not.include("trustedFormCertUrl");
             });
 
             it("only adds TrustedForm URLs that are present in slots", () => {
@@ -409,8 +431,8 @@ describe(`${ContactCaptureHandler.name}`, () => {
                 const sendSpy = sandbox.spy(crmService, "send");
 
                 const slots = {
-                    xxTrustedFormCertUrl: {
-                        name: "xxTrustedFormCertUrl",
+                    [TRUSTED_FORM_CERT_URL_SLOT]: {
+                        name: TRUSTED_FORM_CERT_URL_SLOT,
                         value: "https://cert.trustedform.com/abc123",
                     },
                 };
@@ -420,8 +442,8 @@ describe(`${ContactCaptureHandler.name}`, () => {
                 expect(sendSpy).to.have.been.calledOnce;
                 const extras = sendSpy.getCall(0).args[1];
 
-                expect(extras).to.have.property("xxTrustedFormCertUrl", "https://cert.trustedform.com/abc123");
-                expect(extras).to.not.have.property("xxTrustedFormPingUrl");
+                expect(extras).to.have.property(TRUSTED_FORM_CERT_URL_SLOT, "https://cert.trustedform.com/abc123");
+                expect(extras).to.not.have.property(TRUSTED_FORM_PING_URL_SLOT);
             });
 
             it("does not add TrustedForm URLs when slots are absent", () => {
@@ -435,8 +457,34 @@ describe(`${ContactCaptureHandler.name}`, () => {
                 expect(sendSpy).to.have.been.calledOnce;
                 const extras = sendSpy.getCall(0).args[1];
 
-                expect(extras).to.not.have.property("xxTrustedFormCertUrl");
-                expect(extras).to.not.have.property("xxTrustedFormPingUrl");
+                expect(extras).to.not.have.property(TRUSTED_FORM_CERT_URL_SLOT);
+                expect(extras).to.not.have.property(TRUSTED_FORM_PING_URL_SLOT);
+            });
+
+            it("does not add TrustedForm URLs when slot value is an empty string", () => {
+                const request = new IntentRequestBuilder().build();
+
+                const crmService = new MockCRM();
+                const sendSpy = sandbox.spy(crmService, "send");
+
+                const slots = {
+                    [TRUSTED_FORM_CERT_URL_SLOT]: {
+                        name: TRUSTED_FORM_CERT_URL_SLOT,
+                        value: "",
+                    },
+                    [TRUSTED_FORM_PING_URL_SLOT]: {
+                        name: TRUSTED_FORM_PING_URL_SLOT,
+                        value: "",
+                    },
+                };
+
+                ContactCaptureHandler.sendLead(slots, {}, { data: [] }, [], crmService, request, new MockErrorService());
+
+                expect(sendSpy).to.have.been.calledOnce;
+                const extras = sendSpy.getCall(0).args[1];
+
+                expect(extras).to.not.have.property(TRUSTED_FORM_CERT_URL_SLOT);
+                expect(extras).to.not.have.property(TRUSTED_FORM_PING_URL_SLOT);
             });
         });
     });
