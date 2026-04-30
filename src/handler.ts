@@ -202,6 +202,14 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
             }
         }
 
+        // TrustedForm certificate URLs (from form submission slots)
+        if (slots[Constants.TRUSTED_FORM_CERT_URL_SLOT]?.value) {
+            extras[Constants.TRUSTED_FORM_CERT_URL_SLOT] = requestSlotValueToString(slots[Constants.TRUSTED_FORM_CERT_URL_SLOT].value);
+        }
+        if (slots[Constants.TRUSTED_FORM_PING_URL_SLOT]?.value) {
+            extras[Constants.TRUSTED_FORM_PING_URL_SLOT] = requestSlotValueToString(slots[Constants.TRUSTED_FORM_PING_URL_SLOT].value);
+        }
+
         log().debug(`Sending lead to FSM/CRM:`);
         log().debug(`===\n${JSON.stringify(externalLead, null, 2)}\n===`);
 
