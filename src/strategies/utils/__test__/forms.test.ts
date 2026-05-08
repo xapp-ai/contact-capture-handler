@@ -3825,7 +3825,7 @@ describe(`#${getContactFormFallback.name}()`, () => {
     });
 
     describe("type-based fallback matching", () => {
-        it("renders a zip field when type is 'ZIP' even with non-standard slotName", () => {
+        it("normalizes name to 'zip' when type is 'ZIP' with non-standard slotName", () => {
             const form = getContactFormFallback(
                 {
                     capture: {
@@ -3851,13 +3851,13 @@ describe(`#${getContactFormFallback.name}()`, () => {
             );
 
             const contactStep = form.steps.find((s) => s.name === "contact_info")!;
-            const zipField = contactStep.fields.find((f) => f.name === "zip_code") as FormTextInput;
+            const zipField = contactStep.fields.find((f) => f.name === "zip") as FormTextInput;
             expect(zipField).to.exist;
             expect(zipField.format).to.equal("ZIP_CODE");
             expect(zipField.maxLength).to.equal(10);
         });
 
-        it("renders a phone field when type is 'PHONE' even with non-standard slotName", () => {
+        it("normalizes name to 'phone' and includes in contact-only form with non-standard slotName", () => {
             const form = getContactFormFallback(
                 {
                     capture: {
@@ -3879,14 +3879,77 @@ describe(`#${getContactFormFallback.name}()`, () => {
                         ],
                     },
                 },
-                { enablePreferredTime: true },
+                {},
             );
 
-            const contactStep = form.steps.find((s) => s.name === "contact_info")!;
-            const phoneField = contactStep.fields.find((f) => f.name === "phone_number") as FormTextInput;
+            const contactStep = form.steps[0];
+            const phoneField = contactStep.fields.find((f) => f.name === "phone") as FormTextInput;
             expect(phoneField).to.exist;
             expect(phoneField.format).to.equal("PHONE");
             expect(phoneField.maxLength).to.equal(15);
+        });
+
+        it("normalizes name to 'email' with non-standard slotName", () => {
+            const form = getContactFormFallback(
+                {
+                    capture: {
+                        data: [
+                            {
+                                slotName: "full_name",
+                                active: true,
+                                type: "FULL_NAME" as const,
+                                questionContentKey: "NameQuestionContent",
+                                required: true,
+                            },
+                            {
+                                slotName: "email_address",
+                                active: true,
+                                type: "EMAIL" as const,
+                                questionContentKey: "EmailQuestionContent",
+                                required: false,
+                            },
+                        ],
+                    },
+                },
+                {},
+            );
+
+            const contactStep = form.steps[0];
+            const emailField = contactStep.fields.find((f) => f.name === "email") as FormTextInput;
+            expect(emailField).to.exist;
+            expect(emailField.format).to.equal("EMAIL");
+            expect(emailField.maxLength).to.equal(254);
+        });
+
+        it("respects MESSAGE type fallback for required flag", () => {
+            const form = getContactFormFallback(
+                {
+                    capture: {
+                        data: [
+                            {
+                                slotName: "full_name",
+                                active: true,
+                                type: "FULL_NAME" as const,
+                                questionContentKey: "NameQuestionContent",
+                                required: true,
+                            },
+                            {
+                                slotName: "notes",
+                                active: true,
+                                type: "MESSAGE" as const,
+                                questionContentKey: "MessageQuestionContent",
+                                required: false,
+                            },
+                        ],
+                    },
+                },
+                {},
+            );
+
+            const contactStep = form.steps[0];
+            const messageField = contactStep.fields.find((f) => f.name === "message") as FormTextInput;
+            expect(messageField).to.exist;
+            expect(messageField.mandatory).to.be.false;
         });
     });
 });

@@ -411,6 +411,7 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
             } else if (dataField.slotName === "email" || dataField.type === "EMAIL") {
                 const emailField: FormTextInput = {
                     ...field,
+                    name: "email",
                     format: "EMAIL",
                     placeholder: "Your email address",
                     maxLength: 254,
@@ -419,6 +420,7 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
             } else if (dataField.slotName === "phone" || dataField.type === "PHONE") {
                 const phoneField: FormTextInput = {
                     ...field,
+                    name: "phone",
                     format: "PHONE",
                     placeholder: "Your phone number we can best reach you on",
                     maxLength: 15,
@@ -427,6 +429,7 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
             } else if (dataField.slotName === "zip" || dataField.type === "ZIP") {
                 const zipField: FormTextInput = {
                     ...field,
+                    name: "zip",
                     format: "ZIP_CODE",
                     placeholder: "Your zip code",
                     maxLength: 10,
@@ -435,6 +438,7 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
             } else if (dataField.slotName === "address" || dataField.type === "ADDRESS") {
                 const addressField: FormFieldTextAddressInput = {
                     ...field,
+                    name: "address",
                     format: "ADDRESS",
                     mapsBaseUrl: "https://places.xapp.ai",
                     maxLength: 500,
@@ -1054,11 +1058,14 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
     }
 
     // Add company/organization fields if they exist
-    CONTACT_FIELDS.forEach((field) => {
-        if (field.name === "company" || field.name === "organization") {
-            contactOnlyFields.push({ ...field });
-        }
-    });
+    const companyFieldIndex = CONTACT_FIELDS.findIndex((f) => f.name === "company");
+    const orgFieldIndex = CONTACT_FIELDS.findIndex((f) => f.name === "organization");
+    if (companyFieldIndex >= 0) {
+        contactOnlyFields.push({ ...CONTACT_FIELDS[companyFieldIndex] });
+    }
+    if (orgFieldIndex >= 0) {
+        contactOnlyFields.push({ ...CONTACT_FIELDS[orgFieldIndex] });
+    }
 
     // message
     contactOnlyFields.push({
@@ -1067,7 +1074,7 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
         rows: 3,
         type: "TEXT",
         multiline: true,
-        mandatory: true,
+        mandatory: requiredMessage,
         maxLength: messageMaxLength,
     });
 
