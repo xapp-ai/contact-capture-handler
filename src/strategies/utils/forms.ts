@@ -415,6 +415,7 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
                     label: "Email",
                     format: "EMAIL",
                     placeholder: "Your email address",
+                    mandatory: dataField.required === true,
                     maxLength: 254,
                 };
                 CONTACT_FIELDS.push(emailField);
@@ -425,6 +426,7 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
                     label: "Phone",
                     format: "PHONE",
                     placeholder: "Your phone number we can best reach you on",
+                    mandatory: dataField.required === true,
                     maxLength: 15,
                 };
                 CONTACT_FIELDS.push(phoneField);
@@ -435,6 +437,7 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
                     label: "Zip Code",
                     format: "ZIP_CODE",
                     placeholder: "Your zip code",
+                    mandatory: dataField.required === true,
                     maxLength: 10,
                 };
                 CONTACT_FIELDS.push(zipField);
@@ -444,6 +447,7 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
                     name: "address",
                     label: "Address",
                     format: "ADDRESS",
+                    mandatory: dataField.required === true,
                     mapsBaseUrl: "https://places.xapp.ai",
                     maxLength: 500,
                 };
@@ -465,7 +469,7 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
                     multiline: false,
                     label: "Company",
                     placeholder: "Your company name",
-                    mandatory: dataField.required === true, // default to false (optional) unless explicitly true
+                    mandatory: dataField.required === true,
                     maxLength: 100,
                 };
                 CONTACT_FIELDS.push(companyField);
@@ -476,7 +480,7 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
                     multiline: false,
                     label: "Organization",
                     placeholder: "Your organization name",
-                    mandatory: dataField.required === true, // default to false (optional) unless explicitly true
+                    mandatory: dataField.required === true,
                     maxLength: 100,
                 };
                 CONTACT_FIELDS.push(organizationField);

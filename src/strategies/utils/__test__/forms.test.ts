@@ -3858,6 +3858,94 @@ describe(`#${getContactFormFallback.name}()`, () => {
             expect(orgField).to.exist;
             expect(orgField.mandatory).to.be.true;
         });
+
+        it("defaults company to optional when required is undefined", () => {
+            const form = getContactFormFallback(
+                {
+                    capture: {
+                        data: [
+                            {
+                                slotName: "full_name",
+                                active: true,
+                                type: "FULL_NAME" as const,
+                                questionContentKey: "NameQuestionContent",
+                                required: true,
+                            },
+                            {
+                                slotName: "company",
+                                active: true,
+                                type: "COMPANY" as const,
+                                questionContentKey: "CompanyQuestionContent",
+                            },
+                        ],
+                    },
+                },
+                {},
+            );
+
+            const contactStep = form.steps[0];
+            const companyField = contactStep.fields.find((f) => f.name === "company") as FormTextInput;
+            expect(companyField).to.exist;
+            expect(companyField.mandatory).to.equal(false);
+        });
+
+        it("renders both company and organization in contact-only form", () => {
+            const form = getContactFormFallback(
+                {
+                    capture: {
+                        data: [
+                            {
+                                slotName: "full_name",
+                                active: true,
+                                type: "FULL_NAME" as const,
+                                questionContentKey: "NameQuestionContent",
+                                required: true,
+                            },
+                            {
+                                slotName: "phone",
+                                active: true,
+                                type: "PHONE" as const,
+                                questionContentKey: "PhoneQuestionContent",
+                                required: true,
+                            },
+                            {
+                                slotName: "company",
+                                active: true,
+                                type: "COMPANY" as const,
+                                questionContentKey: "CompanyQuestionContent",
+                                required: false,
+                            },
+                            {
+                                slotName: "organization",
+                                active: true,
+                                type: "ORGANIZATION" as const,
+                                questionContentKey: "OrgQuestionContent",
+                                required: false,
+                            },
+                        ],
+                    },
+                },
+                {},
+            );
+
+            expect(form.name).to.equal("contact_us_only");
+            const contactStep = form.steps[0];
+            const fieldNames = contactStep.fields.map((f) => f.name);
+
+            // Both should be present
+            expect(fieldNames).to.include("company");
+            expect(fieldNames).to.include("organization");
+
+            // Company and org should appear after phone but before message
+            const phoneIdx = fieldNames.indexOf("phone");
+            const companyIdx = fieldNames.indexOf("company");
+            const orgIdx = fieldNames.indexOf("organization");
+            const messageIdx = fieldNames.indexOf("message");
+
+            expect(companyIdx).to.be.greaterThan(phoneIdx);
+            expect(orgIdx).to.be.greaterThan(companyIdx);
+            expect(messageIdx).to.be.greaterThan(orgIdx);
+        });
     });
 
     describe("type-based fallback matching", () => {
