@@ -3750,6 +3750,8 @@ describe(`#${getContactFormFallback.name}()`, () => {
                 {},
             );
 
+            // Verify this is the contact-only form variant
+            expect(form.name).to.equal("contact_us_only");
             const contactStep = form.steps[0];
             const companyField = contactStep.fields.find((f) => f.name === "company") as FormTextInput;
             expect(companyField).to.exist;
@@ -3815,6 +3817,8 @@ describe(`#${getContactFormFallback.name}()`, () => {
                 {},
             );
 
+            // Verify this is the contact-only form variant
+            expect(form.name).to.equal("contact_us_only");
             const contactStep = form.steps[0];
             const orgField = contactStep.fields.find((f) => f.name === "organization") as FormTextInput;
             expect(orgField).to.exist;
@@ -3854,6 +3858,7 @@ describe(`#${getContactFormFallback.name}()`, () => {
             const zipField = contactStep.fields.find((f) => f.name === "zip") as FormTextInput;
             expect(zipField).to.exist;
             expect(zipField.format).to.equal("ZIP_CODE");
+            expect(zipField.label).to.equal("Zip Code");
             expect(zipField.maxLength).to.equal(10);
         });
 
@@ -3886,6 +3891,7 @@ describe(`#${getContactFormFallback.name}()`, () => {
             const phoneField = contactStep.fields.find((f) => f.name === "phone") as FormTextInput;
             expect(phoneField).to.exist;
             expect(phoneField.format).to.equal("PHONE");
+            expect(phoneField.label).to.equal("Phone");
             expect(phoneField.maxLength).to.equal(15);
         });
 
@@ -3918,6 +3924,7 @@ describe(`#${getContactFormFallback.name}()`, () => {
             const emailField = contactStep.fields.find((f) => f.name === "email") as FormTextInput;
             expect(emailField).to.exist;
             expect(emailField.format).to.equal("EMAIL");
+            expect(emailField.label).to.equal("Email");
             expect(emailField.maxLength).to.equal(254);
         });
 

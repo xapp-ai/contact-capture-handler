@@ -412,6 +412,7 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
                 const emailField: FormTextInput = {
                     ...field,
                     name: "email",
+                    label: "Email",
                     format: "EMAIL",
                     placeholder: "Your email address",
                     maxLength: 254,
@@ -421,6 +422,7 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
                 const phoneField: FormTextInput = {
                     ...field,
                     name: "phone",
+                    label: "Phone",
                     format: "PHONE",
                     placeholder: "Your phone number we can best reach you on",
                     maxLength: 15,
@@ -430,6 +432,7 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
                 const zipField: FormTextInput = {
                     ...field,
                     name: "zip",
+                    label: "Zip Code",
                     format: "ZIP_CODE",
                     placeholder: "Your zip code",
                     maxLength: 10,
@@ -439,6 +442,7 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
                 const addressField: FormFieldTextAddressInput = {
                     ...field,
                     name: "address",
+                    label: "Address",
                     format: "ADDRESS",
                     mapsBaseUrl: "https://places.xapp.ai",
                     maxLength: 500,
