@@ -375,7 +375,7 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
 
             // Handle name fields (full_name, first_name, last_name)
 
-            if (dataField.slotName === "full_name" || dataField.slotName === "name") {
+            if (dataField.slotName === "full_name" || dataField.slotName === "name" || dataField.type === "FULL_NAME") {
                 const namefield: FormTextInput = {
                     ...field,
                     name: "full_name",
@@ -386,7 +386,7 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
                     maxLength: 100,
                 };
                 CONTACT_FIELDS.push(namefield);
-            } else if (dataField.slotName === "first_name") {
+            } else if (dataField.slotName === "first_name" || dataField.type === "FIRST_NAME") {
                 const firstNameField: FormTextInput = {
                     ...field,
                     name: "first_name",
@@ -397,7 +397,7 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
                     maxLength: 50,
                 };
                 CONTACT_FIELDS.push(firstNameField);
-            } else if (dataField.slotName === "last_name") {
+            } else if (dataField.slotName === "last_name" || dataField.type === "LAST_NAME") {
                 const lastNameField: FormTextInput = {
                     ...field,
                     name: "last_name",
@@ -408,7 +408,7 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
                     maxLength: 50,
                 };
                 CONTACT_FIELDS.push(lastNameField);
-            } else if (dataField.slotName === "email") {
+            } else if (dataField.slotName === "email" || dataField.type === "EMAIL") {
                 const emailField: FormTextInput = {
                     ...field,
                     format: "EMAIL",
@@ -416,7 +416,7 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
                     maxLength: 254,
                 };
                 CONTACT_FIELDS.push(emailField);
-            } else if (dataField.slotName === "phone") {
+            } else if (dataField.slotName === "phone" || dataField.type === "PHONE") {
                 const phoneField: FormTextInput = {
                     ...field,
                     format: "PHONE",
@@ -424,7 +424,7 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
                     maxLength: 15,
                 };
                 CONTACT_FIELDS.push(phoneField);
-            } else if (dataField.slotName === "zip") {
+            } else if (dataField.slotName === "zip" || dataField.type === "ZIP") {
                 const zipField: FormTextInput = {
                     ...field,
                     format: "ZIP_CODE",
@@ -432,7 +432,7 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
                     maxLength: 10,
                 };
                 CONTACT_FIELDS.push(zipField);
-            } else if (dataField.slotName === "address") {
+            } else if (dataField.slotName === "address" || dataField.type === "ADDRESS") {
                 const addressField: FormFieldTextAddressInput = {
                     ...field,
                     format: "ADDRESS",
@@ -446,11 +446,31 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
                     addressField.mapsUrlQueryParams = data.capture.addressAutocompleteParams;
                 }
                 CONTACT_FIELDS.push(addressField);
-            } else if (dataField.slotName === "message") {
+            } else if (dataField.slotName === "message" || dataField.type === "MESSAGE") {
                 if (typeof dataField.required === "boolean") {
                     requiredMessage = dataField.required;
                 }
-            } else if (dataField.slotName === "selection") {
+            } else if (dataField.slotName === "company" || dataField.type === "COMPANY") {
+                const companyField: FormTextInput = {
+                    ...field,
+                    name: "company",
+                    multiline: false,
+                    label: "Company",
+                    placeholder: "Your company name",
+                    maxLength: 100,
+                };
+                CONTACT_FIELDS.push(companyField);
+            } else if (dataField.slotName === "organization" || dataField.type === "ORGANIZATION") {
+                const organizationField: FormTextInput = {
+                    ...field,
+                    name: "organization",
+                    multiline: false,
+                    label: "Organization",
+                    placeholder: "Your organization name",
+                    maxLength: 100,
+                };
+                CONTACT_FIELDS.push(organizationField);
+            } else if (dataField.slotName === "selection" || dataField.type === "SELECTION") {
                 const selectionField: FormChipsInput = {
                     type: "CHIPS",
                     name: "selection",
@@ -1032,6 +1052,13 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
     if (emailFieldIndex >= 0) {
         contactOnlyFields.push({ ...CONTACT_FIELDS[emailFieldIndex] });
     }
+
+    // Add company/organization fields if they exist
+    CONTACT_FIELDS.forEach((field) => {
+        if (field.name === "company" || field.name === "organization") {
+            contactOnlyFields.push({ ...field });
+        }
+    });
 
     // message
     contactOnlyFields.push({

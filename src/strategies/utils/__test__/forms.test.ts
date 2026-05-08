@@ -3723,4 +3723,170 @@ describe(`#${getContactFormFallback.name}()`, () => {
             expect((emailField as any).mandatoryGroup).to.be.undefined;
         });
     });
+
+    describe("COMPANY and ORGANIZATION fields", () => {
+        it("renders a company field when slotName is 'company'", () => {
+            const form = getContactFormFallback(
+                {
+                    capture: {
+                        data: [
+                            {
+                                slotName: "full_name",
+                                active: true,
+                                type: "FULL_NAME" as const,
+                                questionContentKey: "NameQuestionContent",
+                                required: true,
+                            },
+                            {
+                                slotName: "company",
+                                active: true,
+                                type: "COMPANY" as const,
+                                questionContentKey: "CompanyQuestionContent",
+                                required: false,
+                            },
+                        ],
+                    },
+                },
+                {},
+            );
+
+            const contactStep = form.steps[0];
+            const companyField = contactStep.fields.find((f) => f.name === "company") as FormTextInput;
+            expect(companyField).to.exist;
+            expect(companyField.label).to.equal("Company");
+            expect(companyField.placeholder).to.equal("Your company name");
+            expect(companyField.maxLength).to.equal(100);
+        });
+
+        it("renders a company field when type is 'COMPANY' regardless of slotName", () => {
+            const form = getContactFormFallback(
+                {
+                    capture: {
+                        data: [
+                            {
+                                slotName: "full_name",
+                                active: true,
+                                type: "FULL_NAME" as const,
+                                questionContentKey: "NameQuestionContent",
+                                required: true,
+                            },
+                            {
+                                slotName: "business_name",
+                                active: true,
+                                type: "COMPANY" as const,
+                                questionContentKey: "CompanyQuestionContent",
+                                required: true,
+                            },
+                        ],
+                    },
+                },
+                {},
+            );
+
+            const contactStep = form.steps[0];
+            const companyField = contactStep.fields.find((f) => f.name === "company") as FormTextInput;
+            expect(companyField).to.exist;
+            expect(companyField.label).to.equal("Company");
+            expect(companyField.mandatory).to.be.true;
+        });
+
+        it("renders an organization field when type is 'ORGANIZATION'", () => {
+            const form = getContactFormFallback(
+                {
+                    capture: {
+                        data: [
+                            {
+                                slotName: "full_name",
+                                active: true,
+                                type: "FULL_NAME" as const,
+                                questionContentKey: "NameQuestionContent",
+                                required: true,
+                            },
+                            {
+                                slotName: "org",
+                                active: true,
+                                type: "ORGANIZATION" as const,
+                                questionContentKey: "OrgQuestionContent",
+                                required: false,
+                            },
+                        ],
+                    },
+                },
+                {},
+            );
+
+            const contactStep = form.steps[0];
+            const orgField = contactStep.fields.find((f) => f.name === "organization") as FormTextInput;
+            expect(orgField).to.exist;
+            expect(orgField.label).to.equal("Organization");
+            expect(orgField.placeholder).to.equal("Your organization name");
+            expect(orgField.maxLength).to.equal(100);
+        });
+    });
+
+    describe("type-based fallback matching", () => {
+        it("renders a zip field when type is 'ZIP' even with non-standard slotName", () => {
+            const form = getContactFormFallback(
+                {
+                    capture: {
+                        data: [
+                            {
+                                slotName: "full_name",
+                                active: true,
+                                type: "FULL_NAME" as const,
+                                questionContentKey: "NameQuestionContent",
+                                required: true,
+                            },
+                            {
+                                slotName: "zip_code",
+                                active: true,
+                                type: "ZIP" as const,
+                                questionContentKey: "ZipQuestionContent",
+                                required: true,
+                            },
+                        ],
+                    },
+                },
+                { enablePreferredTime: true },
+            );
+
+            const contactStep = form.steps.find((s) => s.name === "contact_info")!;
+            const zipField = contactStep.fields.find((f) => f.name === "zip_code") as FormTextInput;
+            expect(zipField).to.exist;
+            expect(zipField.format).to.equal("ZIP_CODE");
+            expect(zipField.maxLength).to.equal(10);
+        });
+
+        it("renders a phone field when type is 'PHONE' even with non-standard slotName", () => {
+            const form = getContactFormFallback(
+                {
+                    capture: {
+                        data: [
+                            {
+                                slotName: "full_name",
+                                active: true,
+                                type: "FULL_NAME" as const,
+                                questionContentKey: "NameQuestionContent",
+                                required: true,
+                            },
+                            {
+                                slotName: "phone_number",
+                                active: true,
+                                type: "PHONE" as const,
+                                questionContentKey: "PhoneQuestionContent",
+                                required: false,
+                            },
+                        ],
+                    },
+                },
+                { enablePreferredTime: true },
+            );
+
+            const contactStep = form.steps.find((s) => s.name === "contact_info")!;
+            const phoneField = contactStep.fields.find((f) => f.name === "phone_number") as FormTextInput;
+            expect(phoneField).to.exist;
+            expect(phoneField.format).to.equal("PHONE");
+            expect(phoneField.maxLength).to.equal(15);
+        });
+    });
 });
