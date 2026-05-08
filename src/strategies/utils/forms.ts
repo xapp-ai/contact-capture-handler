@@ -465,6 +465,7 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
                     multiline: false,
                     label: "Company",
                     placeholder: "Your company name",
+                    mandatory: dataField.required === true, // default to false (optional) unless explicitly true
                     maxLength: 100,
                 };
                 CONTACT_FIELDS.push(companyField);
@@ -475,6 +476,7 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
                     multiline: false,
                     label: "Organization",
                     placeholder: "Your organization name",
+                    mandatory: dataField.required === true, // default to false (optional) unless explicitly true
                     maxLength: 100,
                 };
                 CONTACT_FIELDS.push(organizationField);

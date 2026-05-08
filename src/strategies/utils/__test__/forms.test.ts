@@ -3824,7 +3824,39 @@ describe(`#${getContactFormFallback.name}()`, () => {
             expect(orgField).to.exist;
             expect(orgField.label).to.equal("Organization");
             expect(orgField.placeholder).to.equal("Your organization name");
+            expect(orgField.mandatory).to.be.false;
             expect(orgField.maxLength).to.equal(100);
+        });
+
+        it("renders a required organization field when required is true", () => {
+            const form = getContactFormFallback(
+                {
+                    capture: {
+                        data: [
+                            {
+                                slotName: "full_name",
+                                active: true,
+                                type: "FULL_NAME" as const,
+                                questionContentKey: "NameQuestionContent",
+                                required: true,
+                            },
+                            {
+                                slotName: "organization",
+                                active: true,
+                                type: "ORGANIZATION" as const,
+                                questionContentKey: "OrgQuestionContent",
+                                required: true,
+                            },
+                        ],
+                    },
+                },
+                {},
+            );
+
+            const contactStep = form.steps[0];
+            const orgField = contactStep.fields.find((f) => f.name === "organization") as FormTextInput;
+            expect(orgField).to.exist;
+            expect(orgField.mandatory).to.be.true;
         });
     });
 
