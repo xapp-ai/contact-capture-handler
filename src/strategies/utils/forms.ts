@@ -408,6 +408,9 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
                     maxLength: 50,
                 };
                 CONTACT_FIELDS.push(lastNameField);
+            // Contact fields below default to optional (required === true) unlike name fields
+            // above which default to required (required !== false), since at least one name
+            // field is always enforced separately.
             } else if (dataField.slotName === "email" || dataField.type === "EMAIL") {
                 const emailField: FormTextInput = {
                     ...field,
@@ -466,7 +469,6 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
                 const companyField: FormTextInput = {
                     ...field,
                     name: "company",
-                    multiline: false,
                     label: "Company",
                     placeholder: "Your company name",
                     mandatory: dataField.required === true,
@@ -477,7 +479,6 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
                 const organizationField: FormTextInput = {
                     ...field,
                     name: "organization",
-                    multiline: false,
                     label: "Organization",
                     placeholder: "Your organization name",
                     mandatory: dataField.required === true,

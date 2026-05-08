@@ -3946,6 +3946,59 @@ describe(`#${getContactFormFallback.name}()`, () => {
             expect(orgIdx).to.be.greaterThan(companyIdx);
             expect(messageIdx).to.be.greaterThan(orgIdx);
         });
+
+        it("renders company and organization in the scheduling form", () => {
+            const form = getContactFormFallback(
+                {
+                    capture: {
+                        data: [
+                            {
+                                slotName: "full_name",
+                                active: true,
+                                type: "FULL_NAME" as const,
+                                questionContentKey: "NameQuestionContent",
+                                required: true,
+                            },
+                            {
+                                slotName: "phone",
+                                active: true,
+                                type: "PHONE" as const,
+                                questionContentKey: "PhoneQuestionContent",
+                                required: true,
+                            },
+                            {
+                                slotName: "company",
+                                active: true,
+                                type: "COMPANY" as const,
+                                questionContentKey: "CompanyQuestionContent",
+                                required: false,
+                            },
+                            {
+                                slotName: "organization",
+                                active: true,
+                                type: "ORGANIZATION" as const,
+                                questionContentKey: "OrgQuestionContent",
+                                required: true,
+                            },
+                        ],
+                    },
+                },
+                { enablePreferredTime: true },
+            );
+
+            const contactStep = form.steps.find((s) => s.name === "contact_info")!;
+            expect(contactStep).to.exist;
+
+            const companyField = contactStep.fields.find((f) => f.name === "company") as FormTextInput;
+            expect(companyField).to.exist;
+            expect(companyField.label).to.equal("Company");
+            expect(companyField.mandatory).to.be.false;
+
+            const orgField = contactStep.fields.find((f) => f.name === "organization") as FormTextInput;
+            expect(orgField).to.exist;
+            expect(orgField.label).to.equal("Organization");
+            expect(orgField.mandatory).to.be.true;
+        });
     });
 
     describe("type-based fallback matching", () => {
@@ -3980,6 +4033,39 @@ describe(`#${getContactFormFallback.name}()`, () => {
             expect(zipField.format).to.equal("ZIP_CODE");
             expect(zipField.label).to.equal("Zip Code");
             expect(zipField.maxLength).to.equal(10);
+        });
+
+        it("normalizes name and label to 'address'/'Address' when type is 'ADDRESS' with non-standard slotName", () => {
+            const form = getContactFormFallback(
+                {
+                    capture: {
+                        data: [
+                            {
+                                slotName: "full_name",
+                                active: true,
+                                type: "FULL_NAME" as const,
+                                questionContentKey: "NameQuestionContent",
+                                required: true,
+                            },
+                            {
+                                slotName: "street_address",
+                                active: true,
+                                type: "ADDRESS" as const,
+                                questionContentKey: "AddressQuestionContent",
+                                required: true,
+                            },
+                        ],
+                    },
+                },
+                { enablePreferredTime: true },
+            );
+
+            const contactStep = form.steps.find((s) => s.name === "contact_info")!;
+            const addressField = contactStep.fields.find((f) => f.name === "address") as FormTextInput;
+            expect(addressField).to.exist;
+            expect(addressField.label).to.equal("Address");
+            expect((addressField as any).format).to.equal("ADDRESS");
+            expect(addressField.maxLength).to.equal(500);
         });
 
         it("normalizes name to 'phone' and includes in contact-only form with non-standard slotName", () => {
