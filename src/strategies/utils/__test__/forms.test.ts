@@ -4164,5 +4164,105 @@ describe(`#${getContactFormFallback.name}()`, () => {
             expect(messageField).to.exist;
             expect(messageField.mandatory).to.be.false;
         });
+
+        it("matches FULL_NAME type with non-standard slotName", () => {
+            const form = getContactFormFallback(
+                {
+                    capture: {
+                        data: [
+                            {
+                                slotName: "customer_name",
+                                active: true,
+                                type: "FULL_NAME" as const,
+                                questionContentKey: "NameQuestionContent",
+                                required: true,
+                            },
+                        ],
+                    },
+                },
+                {},
+            );
+
+            const contactStep = form.steps[0];
+            const nameField = contactStep.fields.find((f) => f.name === "full_name") as FormTextInput;
+            expect(nameField).to.exist;
+            expect(nameField.label).to.equal("Name");
+            expect(nameField.placeholder).to.equal("Your full name");
+            expect(nameField.mandatory).to.be.true;
+        });
+
+        it("matches FIRST_NAME and LAST_NAME types with non-standard slotNames", () => {
+            const form = getContactFormFallback(
+                {
+                    capture: {
+                        data: [
+                            {
+                                slotName: "given_name",
+                                active: true,
+                                type: "FIRST_NAME" as const,
+                                questionContentKey: "FirstNameQuestionContent",
+                                required: true,
+                            },
+                            {
+                                slotName: "surname",
+                                active: true,
+                                type: "LAST_NAME" as const,
+                                questionContentKey: "LastNameQuestionContent",
+                                required: true,
+                            },
+                        ],
+                    },
+                },
+                {},
+            );
+
+            const contactStep = form.steps[0];
+            const firstNameField = contactStep.fields.find((f) => f.name === "first_name") as FormTextInput;
+            expect(firstNameField).to.exist;
+            expect(firstNameField.label).to.equal("First Name");
+            expect(firstNameField.mandatory).to.be.true;
+
+            const lastNameField = contactStep.fields.find((f) => f.name === "last_name") as FormTextInput;
+            expect(lastNameField).to.exist;
+            expect(lastNameField.label).to.equal("Last Name");
+            expect(lastNameField.mandatory).to.be.true;
+        });
+
+        it("matches SELECTION type with non-standard slotName", () => {
+            const form = getContactFormFallback(
+                {
+                    capture: {
+                        data: [
+                            {
+                                slotName: "full_name",
+                                active: true,
+                                type: "FULL_NAME" as const,
+                                questionContentKey: "NameQuestionContent",
+                                required: true,
+                            },
+                            {
+                                slotName: "service_type",
+                                active: true,
+                                type: "SELECTION" as const,
+                                questionContentKey: "SelectionQuestionContent",
+                                required: true,
+                                enums: ["Plumbing", "Electrical"],
+                                title: "What service do you need?",
+                            },
+                        ],
+                    },
+                },
+                { enablePreferredTime: true },
+            );
+
+            const contactStep = form.steps.find((s) => s.name === "contact_info")!;
+            const selectionField = contactStep.fields.find((f) => f.name === "selection") as FormChipsInput;
+            expect(selectionField).to.exist;
+            expect(selectionField.type).to.equal("CHIPS");
+            expect(selectionField.title).to.equal("What service do you need?");
+            expect(selectionField.items).to.have.length(2);
+            expect(selectionField.items[0].label).to.equal("Plumbing");
+            expect(selectionField.items[1].label).to.equal("Electrical");
+        });
     });
 });
