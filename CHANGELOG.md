@@ -1,3 +1,10 @@
+## [1.22.1](https://github.com/xapp-ai/contact-capture-handler/compare/v1.22.0...v1.22.1) (2026-05-09)
+
+
+### Bug Fixes
+
+* Support COMPANY/ORGANIZATION types and type-based matching in form fields ([#647](https://github.com/xapp-ai/contact-capture-handler/issues/647)) ([0ac0b35](https://github.com/xapp-ai/contact-capture-handler/commit/0ac0b3548cfc0b3af23e506e24ed9f9cda96374f))
+
 # [1.22.0](https://github.com/xapp-ai/contact-capture-handler/compare/v1.21.1...v1.22.0) (2026-04-30)
 
 
