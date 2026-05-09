@@ -375,7 +375,7 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
 
             // Handle name fields (full_name, first_name, last_name)
 
-            if (dataField.slotName === "full_name" || dataField.slotName === "name") {
+            if (dataField.slotName === "full_name" || dataField.slotName === "name" || dataField.type === "FULL_NAME") {
                 const namefield: FormTextInput = {
                     ...field,
                     name: "full_name",
@@ -386,7 +386,7 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
                     maxLength: 100,
                 };
                 CONTACT_FIELDS.push(namefield);
-            } else if (dataField.slotName === "first_name") {
+            } else if (dataField.slotName === "first_name" || dataField.type === "FIRST_NAME") {
                 const firstNameField: FormTextInput = {
                     ...field,
                     name: "first_name",
@@ -397,7 +397,7 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
                     maxLength: 50,
                 };
                 CONTACT_FIELDS.push(firstNameField);
-            } else if (dataField.slotName === "last_name") {
+            } else if (dataField.slotName === "last_name" || dataField.type === "LAST_NAME") {
                 const lastNameField: FormTextInput = {
                     ...field,
                     name: "last_name",
@@ -408,34 +408,49 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
                     maxLength: 50,
                 };
                 CONTACT_FIELDS.push(lastNameField);
-            } else if (dataField.slotName === "email") {
+            // Contact fields below default to optional (required === true) unlike name fields
+            // above which default to required (required !== false), since at least one name
+            // field is always enforced separately.
+            } else if (dataField.slotName === "email" || dataField.type === "EMAIL") {
                 const emailField: FormTextInput = {
                     ...field,
+                    name: "email",
+                    label: "Email",
                     format: "EMAIL",
                     placeholder: "Your email address",
+                    mandatory: dataField.required === true,
                     maxLength: 254,
                 };
                 CONTACT_FIELDS.push(emailField);
-            } else if (dataField.slotName === "phone") {
+            } else if (dataField.slotName === "phone" || dataField.type === "PHONE") {
                 const phoneField: FormTextInput = {
                     ...field,
+                    name: "phone",
+                    label: "Phone",
                     format: "PHONE",
                     placeholder: "Your phone number we can best reach you on",
+                    mandatory: dataField.required === true,
                     maxLength: 15,
                 };
                 CONTACT_FIELDS.push(phoneField);
-            } else if (dataField.slotName === "zip") {
+            } else if (dataField.slotName === "zip" || dataField.type === "ZIP") {
                 const zipField: FormTextInput = {
                     ...field,
+                    name: "zip",
+                    label: "Zip Code",
                     format: "ZIP_CODE",
                     placeholder: "Your zip code",
+                    mandatory: dataField.required === true,
                     maxLength: 10,
                 };
                 CONTACT_FIELDS.push(zipField);
-            } else if (dataField.slotName === "address") {
+            } else if (dataField.slotName === "address" || dataField.type === "ADDRESS") {
                 const addressField: FormFieldTextAddressInput = {
                     ...field,
+                    name: "address",
+                    label: "Address",
                     format: "ADDRESS",
+                    mandatory: dataField.required === true,
                     mapsBaseUrl: "https://places.xapp.ai",
                     maxLength: 500,
                 };
@@ -446,11 +461,31 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
                     addressField.mapsUrlQueryParams = data.capture.addressAutocompleteParams;
                 }
                 CONTACT_FIELDS.push(addressField);
-            } else if (dataField.slotName === "message") {
+            } else if (dataField.slotName === "message" || dataField.type === "MESSAGE") {
                 if (typeof dataField.required === "boolean") {
                     requiredMessage = dataField.required;
                 }
-            } else if (dataField.slotName === "selection") {
+            } else if (dataField.slotName === "company" || dataField.type === "COMPANY") {
+                const companyField: FormTextInput = {
+                    ...field,
+                    name: "company",
+                    label: "Company",
+                    placeholder: "Your company name",
+                    mandatory: dataField.required === true,
+                    maxLength: 100,
+                };
+                CONTACT_FIELDS.push(companyField);
+            } else if (dataField.slotName === "organization" || dataField.type === "ORGANIZATION") {
+                const organizationField: FormTextInput = {
+                    ...field,
+                    name: "organization",
+                    label: "Organization",
+                    placeholder: "Your organization name",
+                    mandatory: dataField.required === true,
+                    maxLength: 100,
+                };
+                CONTACT_FIELDS.push(organizationField);
+            } else if (dataField.slotName === "selection" || dataField.type === "SELECTION") {
                 const selectionField: FormChipsInput = {
                     type: "CHIPS",
                     name: "selection",
@@ -1033,6 +1068,16 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
         contactOnlyFields.push({ ...CONTACT_FIELDS[emailFieldIndex] });
     }
 
+    // Add company/organization fields if they exist
+    const companyFieldIndex = CONTACT_FIELDS.findIndex((f) => f.name === "company");
+    const orgFieldIndex = CONTACT_FIELDS.findIndex((f) => f.name === "organization");
+    if (companyFieldIndex >= 0) {
+        contactOnlyFields.push({ ...CONTACT_FIELDS[companyFieldIndex] });
+    }
+    if (orgFieldIndex >= 0) {
+        contactOnlyFields.push({ ...CONTACT_FIELDS[orgFieldIndex] });
+    }
+
     // message
     contactOnlyFields.push({
         name: "message",
@@ -1040,7 +1085,7 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
         rows: 3,
         type: "TEXT",
         multiline: true,
-        mandatory: true,
+        mandatory: requiredMessage,
         maxLength: messageMaxLength,
     });
 
