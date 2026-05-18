@@ -1889,7 +1889,7 @@ describe(`#${getContactFormFallback.name}()`, () => {
 
                 expect(form).to.exist;
 
-                const preferredTimeStep = form.steps[2];
+                const preferredTimeStep = form.steps.find(s => s.name === "preferred_time");
                 expect(preferredTimeStep).to.exist;
 
                 // Check that the condition is properly sanitized
@@ -1923,9 +1923,8 @@ describe(`#${getContactFormFallback.name}()`, () => {
 
                 expect(form).to.exist;
 
-                const preferredTimeStep = form.steps[2];
+                const preferredTimeStep = form.steps.find(s => s.name === "preferred_time");
                 expect(preferredTimeStep).to.exist;
-                expect(preferredTimeStep.name).to.equal("preferred_time");
                 // Always show preferred time when all services require a date
                 expect(preferredTimeStep.condition).to.equal("true");
             });

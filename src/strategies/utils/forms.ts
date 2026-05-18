@@ -610,9 +610,9 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
             preferredTimeConditional = "false";
         } else {
             preferredTimeConditional = servicesRequiringDate
-                .map((chip) => {
+                .map((service) => {
                     // Sanitize the chip ID to prevent injection attacks in the conditional
-                    const sanitizedId = sanitizeServiceId(chip.id);
+                    const sanitizedId = sanitizeServiceId(service.id);
                     return `help_type.includes('${sanitizedId}')`;
                 })
                 .join(" || ");
