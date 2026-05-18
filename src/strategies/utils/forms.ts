@@ -600,18 +600,22 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
     // we now loop through our services and build the conditional
     // these will override the default, it turns into a
     if (existsAndNotEmpty(props.serviceOptions)) {
-        preferredTimeConditional = props.serviceOptions
-            .filter((service) => service.requiresDate)
-            .map((chip) => {
-                // Sanitize the chip ID to prevent injection attacks in the conditional
-                const sanitizedId = sanitizeServiceId(chip.id);
-                return `help_type.includes('${sanitizedId}')`;
-            })
-            .join(" || ");
+        const servicesRequiringDate = props.serviceOptions.filter((service) => service.requiresDate);
 
-        // edge case, if we have an empty string, meaning they didn't want any of the chips to go to preferred time, we just false
-        if (preferredTimeConditional.length === 0) {
+        if (servicesRequiringDate.length === props.serviceOptions.length) {
+            // All services require a date, always show preferred time
+            preferredTimeConditional = "true";
+        } else if (servicesRequiringDate.length === 0) {
+            // No services require a date, never show preferred time
             preferredTimeConditional = "false";
+        } else {
+            preferredTimeConditional = servicesRequiringDate
+                .map((chip) => {
+                    // Sanitize the chip ID to prevent injection attacks in the conditional
+                    const sanitizedId = sanitizeServiceId(chip.id);
+                    return `help_type.includes('${sanitizedId}')`;
+                })
+                .join(" || ");
         }
     }
 
