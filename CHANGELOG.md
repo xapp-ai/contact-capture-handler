@@ -1,3 +1,10 @@
+## [1.22.2](https://github.com/xapp-ai/contact-capture-handler/compare/v1.22.1...v1.22.2) (2026-05-18)
+
+
+### Bug Fixes
+
+* always show preferred time step when all services require a date ([#650](https://github.com/xapp-ai/contact-capture-handler/issues/650)) ([317d02e](https://github.com/xapp-ai/contact-capture-handler/commit/317d02e4b1ad8cc0768d368f57f9a50209066a57))
+
 ## [1.22.1](https://github.com/xapp-ai/contact-capture-handler/compare/v1.22.0...v1.22.1) (2026-05-09)
 
 
