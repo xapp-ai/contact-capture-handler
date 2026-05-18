@@ -20,18 +20,21 @@ export const CONTACT_METHOD_GROUP = "contact_method";
 export const CONTACT_METHOD_ERROR = "Please provide either a phone number or email address";
 
 // THE DEFAULT CHIPS
-export const DEFAULT_SERVICE_CHIP_ITEMS: SelectableItem[] = [
+export const DEFAULT_SERVICE_CHIP_ITEMS: ContactCaptureService[] = [
     {
         id: "schedule_visit",
         label: "Schedule Visit",
+        requiresDate: true,
     },
     {
         id: "get_quote",
         label: "Get Quote",
+        requiresDate: false,
     },
     {
         id: "contact_us",
         label: "Contact Us",
+        requiresDate: false,
     },
 ];
 
