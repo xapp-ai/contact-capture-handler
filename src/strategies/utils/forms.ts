@@ -597,29 +597,26 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
         });
     }
 
-    // figure out a preferred time conditional based on the service options
-    let preferredTimeConditional = `!help_type.includes('contact_us')`;
+    // figure out a preferred time conditional based on the service options (or defaults)
+    // chips already contains either props.serviceOptions or DEFAULT_SERVICE_CHIP_ITEMS
+    let preferredTimeConditional = "false";
 
-    // we now loop through our services and build the conditional
-    // these will override the default, it turns into a
-    if (existsAndNotEmpty(props.serviceOptions)) {
-        const servicesRequiringDate = props.serviceOptions.filter((service) => service.requiresDate);
+    const servicesRequiringDate = (chips as ContactCaptureService[]).filter((service) => service.requiresDate);
 
-        if (servicesRequiringDate.length === props.serviceOptions.length) {
-            // All services require a date, always show preferred time
-            preferredTimeConditional = "true";
-        } else if (servicesRequiringDate.length === 0) {
-            // No services require a date, never show preferred time
-            preferredTimeConditional = "false";
-        } else {
-            preferredTimeConditional = servicesRequiringDate
-                .map((service) => {
-                    // Sanitize the chip ID to prevent injection attacks in the conditional
-                    const sanitizedId = sanitizeServiceId(service.id);
-                    return `help_type.includes('${sanitizedId}')`;
-                })
-                .join(" || ");
-        }
+    if (servicesRequiringDate.length === chips.length) {
+        // All services require a date, always show preferred time
+        preferredTimeConditional = "true";
+    } else if (servicesRequiringDate.length === 0) {
+        // No services require a date, never show preferred time
+        preferredTimeConditional = "false";
+    } else {
+        preferredTimeConditional = servicesRequiringDate
+            .map((service) => {
+                // Sanitize the chip ID to prevent injection attacks in the conditional
+                const sanitizedId = sanitizeServiceId(service.id);
+                return `help_type.includes('${sanitizedId}')`;
+            })
+            .join(" || ");
     }
 
     const confirmationFields: FormField[] = [
