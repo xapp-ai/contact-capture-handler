@@ -1876,6 +1876,11 @@ describe(`#${getContactFormFallback.name}()`, () => {
                                     label: "Schedule Maintenance",
                                     requiresDate: true,
                                 },
+                                {
+                                    id: "contact_us",
+                                    label: "Contact Us",
+                                    requiresDate: false,
+                                },
                             ],
                         },
                     },
@@ -1884,7 +1889,7 @@ describe(`#${getContactFormFallback.name}()`, () => {
 
                 expect(form).to.exist;
 
-                const preferredTimeStep = form.steps[2];
+                const preferredTimeStep = form.steps.find(s => s.name === "preferred_time");
                 expect(preferredTimeStep).to.exist;
 
                 // Check that the condition is properly sanitized
@@ -1892,6 +1897,36 @@ describe(`#${getContactFormFallback.name}()`, () => {
                 expect(condition).to.exist;
                 // The single quote should be removed
                 expect(condition).to.equal("help_type.includes('schedulemaintenance')");
+            });
+
+            it("uses 'true' condition when all services require a date", () => {
+                const form = getContactFormFallback(
+                    {
+                        capture: {
+                            data: SIMPLE_BLUEPRINT.data,
+                            serviceOptions: [
+                                {
+                                    id: "schedule-now",
+                                    label: "Schedule Now",
+                                    requiresDate: true,
+                                },
+                                {
+                                    id: "schedule-service",
+                                    label: "Schedule Service",
+                                    requiresDate: true,
+                                },
+                            ],
+                        },
+                    },
+                    { enablePreferredTime: true },
+                );
+
+                expect(form).to.exist;
+
+                const preferredTimeStep = form.steps.find(s => s.name === "preferred_time");
+                expect(preferredTimeStep).to.exist;
+                // Always show preferred time when all services require a date
+                expect(preferredTimeStep.condition).to.equal("true");
             });
 
             it("sanitizes preselected service with special characters", () => {

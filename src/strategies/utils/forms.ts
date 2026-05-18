@@ -20,18 +20,21 @@ export const CONTACT_METHOD_GROUP = "contact_method";
 export const CONTACT_METHOD_ERROR = "Please provide either a phone number or email address";
 
 // THE DEFAULT CHIPS
-export const DEFAULT_SERVICE_CHIP_ITEMS: SelectableItem[] = [
+export const DEFAULT_SERVICE_CHIP_ITEMS: ContactCaptureService[] = [
     {
         id: "schedule_visit",
         label: "Schedule Visit",
+        requiresDate: true,
     },
     {
         id: "get_quote",
         label: "Get Quote",
+        requiresDate: false,
     },
     {
         id: "contact_us",
         label: "Contact Us",
+        requiresDate: false,
     },
 ];
 
@@ -594,25 +597,26 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
         });
     }
 
-    // figure out a preferred time conditional based on the service options
-    let preferredTimeConditional = `!help_type.includes('contact_us')`;
+    // figure out a preferred time conditional based on the service options (or defaults)
+    // chips already contains either props.serviceOptions or DEFAULT_SERVICE_CHIP_ITEMS
+    let preferredTimeConditional = "false";
 
-    // we now loop through our services and build the conditional
-    // these will override the default, it turns into a
-    if (existsAndNotEmpty(props.serviceOptions)) {
-        preferredTimeConditional = props.serviceOptions
-            .filter((service) => service.requiresDate)
-            .map((chip) => {
+    const servicesRequiringDate = (chips as ContactCaptureService[]).filter((service) => service.requiresDate);
+
+    if (servicesRequiringDate.length === chips.length) {
+        // All services require a date, always show preferred time
+        preferredTimeConditional = "true";
+    } else if (servicesRequiringDate.length === 0) {
+        // No services require a date, never show preferred time
+        preferredTimeConditional = "false";
+    } else {
+        preferredTimeConditional = servicesRequiringDate
+            .map((service) => {
                 // Sanitize the chip ID to prevent injection attacks in the conditional
-                const sanitizedId = sanitizeServiceId(chip.id);
+                const sanitizedId = sanitizeServiceId(service.id);
                 return `help_type.includes('${sanitizedId}')`;
             })
             .join(" || ");
-
-        // edge case, if we have an empty string, meaning they didn't want any of the chips to go to preferred time, we just false
-        if (preferredTimeConditional.length === 0) {
-            preferredTimeConditional = "false";
-        }
     }
 
     const confirmationFields: FormField[] = [
