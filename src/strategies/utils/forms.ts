@@ -454,7 +454,7 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
                     label: "Address",
                     format: "ADDRESS",
                     mandatory: dataField.required === true,
-                    mapsBaseUrl: "https://places.xapp.ai",
+                    mapsBaseUrl: "https://api.xapp.ai",
                     maxLength: 500,
                 };
                 // Check for mapsUrlQueryParams on the dataField first, then fall back to capture-level config
