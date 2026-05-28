@@ -1,3 +1,10 @@
+## [1.22.3](https://github.com/xapp-ai/contact-capture-handler/compare/v1.22.2...v1.22.3) (2026-05-28)
+
+
+### Bug Fixes
+
+* update mapsBaseUrl to api.xapp.ai ([#653](https://github.com/xapp-ai/contact-capture-handler/issues/653)) ([a7e718f](https://github.com/xapp-ai/contact-capture-handler/commit/a7e718fc1584c293719951f6ae246f02e5363f4e))
+
 ## [1.22.2](https://github.com/xapp-ai/contact-capture-handler/compare/v1.22.1...v1.22.2) (2026-05-18)
 
 
