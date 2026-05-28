@@ -321,6 +321,7 @@ describe(`#${getFormResponse.name}()`, () => {
                         .fields[3] as FormFieldTextAddressInput;
                     expect(addressField.name).to.equal("address");
                     expect(addressField.mandatory).to.be.true;
+                    expect(addressField.mapsBaseUrl).to.equal("https://api.xapp.ai");
                     expect(addressField.mapsUrlQueryParams).to.deep.equal({ components: "country:us" });
 
                     // check the preferredTime step and check the conditional
