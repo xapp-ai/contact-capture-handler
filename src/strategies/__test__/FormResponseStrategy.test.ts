@@ -6,6 +6,7 @@ import { Content, Context, Handler, IntentRequest } from "stentor-models";
 import { ContextBuilder } from "stentor-context";
 import { IntentRequestBuilder } from "stentor-request";
 
+import * as Constants from "../../constants";
 import type { ContactCaptureData } from "../../data";
 import { ContactCaptureHandler } from "../../handler";
 import { FormResponseStrategy } from "../FormResponseStrategy";
@@ -67,6 +68,58 @@ describe(`${FormResponseStrategy.name}`, () => {
             const display = response.displays && response.displays[0];
             expect(display).to.exist;
             expect(isMultistepForm(display)).to.be.true;
+        });
+    });
+
+    // Regression: on a second request the strategy short-circuits through
+    // addAvailability's else branch where it tries to augment with CRM jobType.
+    // With no crmService configured, that path used to crash on
+    // crmService.getJobType.
+    describe("when continuing a session with a message but no CRM service", () => {
+        beforeEach(() => {
+            handler = new ContactCaptureHandler(PROPS_WITHOUT_CAPTURE);
+            request = new IntentRequestBuilder()
+                .withSlots({})
+                .withIntentId(PROPS_WITHOUT_CAPTURE.intentId)
+                .build();
+            request.isNewSession = false;
+            request.attributes = {
+                // Force the preferred-time form variant where contact_info is
+                // a non-crmSubmit step, so the strategy short-circuits through
+                // addAvailability instead of attempting to send the lead.
+                enablePreferredTime: true,
+                data: { step: "contact_info", form: "booking_preferred_time" },
+            };
+
+            context = new ContextBuilder()
+                .withSessionData({
+                    id: "form-session",
+                    data: {
+                        [Constants.CONTACT_CAPTURE_SLOTS]: {},
+                        [Constants.CONTACT_CAPTURE_LIST]: {
+                            data: [
+                                {
+                                    slotName: "message",
+                                    type: "MESSAGE",
+                                    collectedValue: "Need a quote on a water heater",
+                                },
+                            ],
+                        },
+                    },
+                })
+                .build();
+            // Still intentionally no crmService
+        });
+
+        it("does not throw on the message-augmentation path", async () => {
+            const strategy = new FormResponseStrategy();
+            let threw: Error | undefined;
+            try {
+                await strategy.getResponse(handler, request, context);
+            } catch (e) {
+                threw = e as Error;
+            }
+            expect(threw, threw && threw.stack).to.be.undefined;
         });
     });
 });
