@@ -351,7 +351,7 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
     let CONTACT_FIELDS: FormField[] = [...DEFAULT_CONTACT_FIELDS];
 
     // see if we have any data fields and override the defaults
-    if (existsAndNotEmpty(data.capture.data)) {
+    if (existsAndNotEmpty(data.capture?.data)) {
         // first filter to make sure we only adding ones meant for form
         // and are active
         // IMPORTANT: We must explicitly check for `active === true` because:
@@ -460,7 +460,7 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
                 // Check for mapsUrlQueryParams on the dataField first, then fall back to capture-level config
                 if (dataField.mapsUrlQueryParams) {
                     addressField.mapsUrlQueryParams = dataField.mapsUrlQueryParams;
-                } else if (data.capture.addressAutocompleteParams) {
+                } else if (data.capture?.addressAutocompleteParams) {
                     addressField.mapsUrlQueryParams = data.capture.addressAutocompleteParams;
                 }
                 CONTACT_FIELDS.push(addressField);
@@ -583,7 +583,7 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
     }
 
     // if we have the autocomplete suggestions and the params, append them
-    if (data.capture.addressAutocompleteParams) {
+    if (data.capture?.addressAutocompleteParams) {
         // loop through the fields and find the ADDRESS field
         // and append them only if not already set
         CONTACT_FIELDS.forEach((field) => {

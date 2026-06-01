@@ -13,7 +13,7 @@ import {
 
 import { isFormDateInput, isMultistepForm } from "../../../guards";
 import { getFormResponse, getContactFormFallback, FormResponseProps, DEFAULT_MESSAGE_MAX_LENGTH } from "../forms";
-import { ContactCaptureBlueprint } from "../../../data";
+import { ContactCaptureBlueprint, ContactCaptureData } from "../../../data";
 
 import {
     CUSTOM_FORM,
@@ -641,6 +641,50 @@ describe(`#${getFormResponse.name}()`, () => {
                     });
                 }
             }
+        });
+    });
+    // Reproduces the maga-plumbing handler payload where `capture` is entirely
+    // absent. The form widget should still render the default fallback form
+    // instead of throwing a TypeError reading properties of undefined.
+    describe("when handler data has no capture property", () => {
+        const HANDLER_DATA_WITHOUT_CAPTURE = {
+            inputUnknownStrategy: "REPROMPT" as const,
+            chat: { followUp: " " },
+            // intentionally no capture, no captureLead, no forms,
+            // no CAPTURE_MAIN_FORM, no enableFormScheduling
+        } as unknown as ContactCaptureData;
+
+        it("does not throw when generating the contact-only form", () => {
+            expect(() => getFormResponse(HANDLER_DATA_WITHOUT_CAPTURE, {})).to.not.throw();
+        });
+
+        it("returns the contact_us_only fallback form with default fields", () => {
+            const response = getFormResponse(HANDLER_DATA_WITHOUT_CAPTURE, {});
+
+            const form =
+                response && Array.isArray(response.displays) && response?.displays?.length > 0
+                    ? response.displays[0]
+                    : undefined;
+            expect(form).to.exist;
+            expect(isMultistepForm(form)).to.be.true;
+            if (isMultistepForm(form)) {
+                expect(form.name).to.equal("contact_us_only");
+                expect(form.steps).to.have.length(2);
+                // default name, phone, email, zip, message → 5 fields on the
+                // single step contact-only form (zip is in DEFAULT_CONTACT_FIELDS)
+                const step = form.steps[0];
+                const fieldNames = step.fields.map((f) => f.name);
+                expect(fieldNames).to.include("full_name");
+                expect(fieldNames).to.include("phone");
+                expect(fieldNames).to.include("email");
+                expect(fieldNames).to.include("message");
+            }
+        });
+
+        it("does not throw with enablePreferredTime when capture is missing", () => {
+            expect(() =>
+                getFormResponse(HANDLER_DATA_WITHOUT_CAPTURE, { enablePreferredTime: true }),
+            ).to.not.throw();
         });
     });
 });

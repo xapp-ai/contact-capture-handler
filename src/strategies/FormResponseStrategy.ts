@@ -300,7 +300,7 @@ export class FormResponseStrategy implements ResponseStrategy {
             );
 
             session.set(Constants.CONTACT_CAPTURE_BUSY_DAYS, busyDays);
-        } else {
+        } else if (leadDataList?.data && typeof crmService?.getJobType === "function") {
             // Try to augment if we have a description
             const messageData = leadDataList.data.find((data) => {
                 return data.slotName?.toLowerCase() === "message";
@@ -346,17 +346,20 @@ export class FormResponseStrategy implements ResponseStrategy {
             }
         }
 
-        response.context = {
-            active: [
-                {
-                    name: "BusyDays",
-                    timeToLive: {},
-                    parameters: {
-                        busyDays: formatBusyDays(busyDays),
+        // Skip when busyDays is undefined — formatBusyDays would dereference it.
+        if (busyDays) {
+            response.context = {
+                active: [
+                    {
+                        name: "BusyDays",
+                        timeToLive: {},
+                        parameters: {
+                            busyDays: formatBusyDays(busyDays),
+                        },
                     },
-                },
-            ],
-        };
+                ],
+            };
+        }
 
         return response;
     }
