@@ -1,3 +1,10 @@
+## [1.22.4](https://github.com/xapp-ai/contact-capture-handler/compare/v1.22.3...v1.22.4) (2026-06-01)
+
+
+### Bug Fixes
+
+* guard form-widget strategy against missing capture/availability ([#654](https://github.com/xapp-ai/contact-capture-handler/issues/654)) ([5a3192e](https://github.com/xapp-ai/contact-capture-handler/commit/5a3192e77ad4ba37bd4f727c864c449309c71e78))
+
 ## [1.22.3](https://github.com/xapp-ai/contact-capture-handler/compare/v1.22.2...v1.22.3) (2026-05-28)
 
 
