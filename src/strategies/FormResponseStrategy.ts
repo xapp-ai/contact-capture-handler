@@ -300,7 +300,7 @@ export class FormResponseStrategy implements ResponseStrategy {
             );
 
             session.set(Constants.CONTACT_CAPTURE_BUSY_DAYS, busyDays);
-        } else {
+        } else if (leadDataList?.data) {
             // Try to augment if we have a description
             const messageData = leadDataList.data.find((data) => {
                 return data.slotName?.toLowerCase() === "message";
@@ -346,17 +346,22 @@ export class FormResponseStrategy implements ResponseStrategy {
             }
         }
 
-        response.context = {
-            active: [
-                {
-                    name: "BusyDays",
-                    timeToLive: {},
-                    parameters: {
-                        busyDays: formatBusyDays(busyDays),
+        // Only attach BusyDays context when we actually have availability data.
+        // Without a CRM service or when getAvailability failed, busyDays is
+        // undefined and formatBusyDays would dereference it.
+        if (busyDays) {
+            response.context = {
+                active: [
+                    {
+                        name: "BusyDays",
+                        timeToLive: {},
+                        parameters: {
+                            busyDays: formatBusyDays(busyDays),
+                        },
                     },
-                },
-            ],
-        };
+                ],
+            };
+        }
 
         return response;
     }
