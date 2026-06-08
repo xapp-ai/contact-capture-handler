@@ -8,6 +8,7 @@ import {
     FormDropdownInput,
     FormFieldTextAddressInput,
     FormTextInput,
+    MultistepForm,
     SelectableItem,
 } from "stentor-models";
 
@@ -1675,7 +1676,7 @@ describe(`#${getContactFormFallback.name}()`, () => {
             expect(dateTimeField?.mandatoryError).to.equal("Please select a date");
         });
 
-        it("keeps default behavior when turnOffFirstAvailableDay is false", () => {
+        it("shows preferred_date chip when turnOffFirstAvailableDay is explicitly false (opt-in)", () => {
             const form = getContactFormFallback(
                 {
                     capture: SIMPLE_BLUEPRINT,
@@ -1700,6 +1701,206 @@ describe(`#${getContactFormFallback.name}()`, () => {
             expect(dateTimeField?.mandatory).to.be.undefined;
             expect(dateTimeField?.mandatoryGroup).to.equal("date");
             expect(dateTimeField?.mandatoryError).to.equal("Please select either a date or first available date");
+        });
+    });
+    describe("when turnOffFirstAvailableDay is not set (new default)", () => {
+        const findStep = (form: MultistepForm, name: string) => form.steps.find((s) => s.name === name);
+
+        it("omits preferred_date chip by default (data has no flag)", () => {
+            const form = getContactFormFallback(
+                { capture: SIMPLE_BLUEPRINT },
+                { enablePreferredTime: true },
+            );
+
+            expect(form).to.exist;
+
+            const preferredTimeStep = findStep(form, "preferred_time");
+            expect(preferredTimeStep).to.exist;
+
+            const preferredDateField = preferredTimeStep!.fields.find((field) => field.name === "preferred_date");
+            expect(preferredDateField, "preferred_date chip should be hidden by default").to.be.undefined;
+        });
+
+        it("makes dateTime mandatory without a mandatoryGroup by default", () => {
+            const form = getContactFormFallback(
+                { capture: SIMPLE_BLUEPRINT },
+                { enablePreferredTime: true },
+            );
+
+            const preferredTimeStep = findStep(form, "preferred_time");
+            const dateTimeField = preferredTimeStep!.fields.find((field) => field.name === "dateTime");
+            expect(dateTimeField).to.exist;
+            expect(dateTimeField?.mandatory).to.be.true;
+            expect(dateTimeField?.mandatoryGroup).to.be.undefined;
+            expect(dateTimeField?.mandatoryError).to.equal("Please select a date");
+        });
+
+        it("omits preferred_date chip when data field is explicitly undefined", () => {
+            const form = getContactFormFallback(
+                {
+                    capture: SIMPLE_BLUEPRINT,
+                    turnOffFirstAvailableDay: undefined,
+                },
+                { enablePreferredTime: true },
+            );
+
+            const preferredTimeStep = findStep(form, "preferred_time");
+            const preferredDateField = preferredTimeStep!.fields.find((field) => field.name === "preferred_date");
+            expect(preferredDateField).to.be.undefined;
+        });
+
+        it("omits preferred_date chip when props has no flag and data has no flag", () => {
+            const form = getContactFormFallback(
+                { capture: SIMPLE_BLUEPRINT },
+                { enablePreferredTime: true, turnOffFirstAvailableDay: undefined },
+            );
+
+            const preferredTimeStep = findStep(form, "preferred_time");
+            const preferredDateField = preferredTimeStep!.fields.find((field) => field.name === "preferred_date");
+            expect(preferredDateField).to.be.undefined;
+        });
+
+        it("respects explicit data.turnOffFirstAvailableDay=false even with no props flag (shows chip)", () => {
+            const form = getContactFormFallback(
+                {
+                    capture: SIMPLE_BLUEPRINT,
+                    turnOffFirstAvailableDay: false,
+                },
+                { enablePreferredTime: true },
+            );
+
+            const preferredTimeStep = findStep(form, "preferred_time");
+            const preferredDateField = preferredTimeStep!.fields.find((field) => field.name === "preferred_date");
+            expect(preferredDateField).to.exist;
+            expect(preferredDateField?.type).to.equal("CHIPS");
+        });
+
+        it("respects explicit props.turnOffFirstAvailableDay=false over data.turnOffFirstAvailableDay=true (shows chip)", () => {
+            const form = getContactFormFallback(
+                {
+                    capture: SIMPLE_BLUEPRINT,
+                    turnOffFirstAvailableDay: true,
+                },
+                { enablePreferredTime: true, turnOffFirstAvailableDay: false },
+            );
+
+            const preferredTimeStep = findStep(form, "preferred_time");
+            const preferredDateField = preferredTimeStep!.fields.find((field) => field.name === "preferred_date");
+            expect(preferredDateField, "props.false should override data.true and show chip").to.exist;
+        });
+
+        // Edge case from PR #656 review: an explicit `undefined` on props clobbers
+        // a `false` in data because `...props` spread copies own properties even
+        // when their value is undefined. The merge in getContactFormFallback now
+        // guards against this for turnOffFirstAvailableDay, so data wins.
+        it("ignores explicit props.turnOffFirstAvailableDay=undefined when data.turnOffFirstAvailableDay=false (shows chip)", () => {
+            const form = getContactFormFallback(
+                {
+                    capture: SIMPLE_BLUEPRINT,
+                    turnOffFirstAvailableDay: false,
+                },
+                { enablePreferredTime: true, turnOffFirstAvailableDay: undefined },
+            );
+
+            const preferredTimeStep = findStep(form, "preferred_time");
+            const preferredDateField = preferredTimeStep!.fields.find((field) => field.name === "preferred_date");
+            expect(
+                preferredDateField,
+                "explicit undefined on props must not clobber a boolean from data",
+            ).to.exist;
+        });
+    });
+    describe("when passed showFirstAvailableDay (positively-named alias)", () => {
+        const findStep = (form: MultistepForm, name: string) => form.steps.find((s) => s.name === name);
+
+        it("shows preferred_date chip when showFirstAvailableDay is true", () => {
+            const form = getContactFormFallback(
+                {
+                    capture: SIMPLE_BLUEPRINT,
+                    showFirstAvailableDay: true,
+                },
+                { enablePreferredTime: true },
+            );
+
+            const preferredTimeStep = findStep(form, "preferred_time");
+            const preferredDateField = preferredTimeStep!.fields.find((field) => field.name === "preferred_date");
+            expect(preferredDateField).to.exist;
+            expect(preferredDateField?.type).to.equal("CHIPS");
+
+            const dateTimeField = preferredTimeStep!.fields.find((field) => field.name === "dateTime");
+            expect(dateTimeField?.mandatoryGroup).to.equal("date");
+        });
+
+        it("hides preferred_date chip when showFirstAvailableDay is false", () => {
+            const form = getContactFormFallback(
+                {
+                    capture: SIMPLE_BLUEPRINT,
+                    showFirstAvailableDay: false,
+                },
+                { enablePreferredTime: true },
+            );
+
+            const preferredTimeStep = findStep(form, "preferred_time");
+            const preferredDateField = preferredTimeStep!.fields.find((field) => field.name === "preferred_date");
+            expect(preferredDateField).to.be.undefined;
+
+            const dateTimeField = preferredTimeStep!.fields.find((field) => field.name === "dateTime");
+            expect(dateTimeField?.mandatory).to.be.true;
+            expect(dateTimeField?.mandatoryGroup).to.be.undefined;
+        });
+
+        it("takes precedence over turnOffFirstAvailableDay when both are set", () => {
+            // showFirstAvailableDay=true overrides turnOffFirstAvailableDay=true → chip shown
+            const formA = getContactFormFallback(
+                {
+                    capture: SIMPLE_BLUEPRINT,
+                    showFirstAvailableDay: true,
+                    turnOffFirstAvailableDay: true,
+                },
+                { enablePreferredTime: true },
+            );
+            const stepA = findStep(formA, "preferred_time");
+            expect(stepA!.fields.find((f) => f.name === "preferred_date")).to.exist;
+
+            // showFirstAvailableDay=false overrides turnOffFirstAvailableDay=false → chip hidden
+            const formB = getContactFormFallback(
+                {
+                    capture: SIMPLE_BLUEPRINT,
+                    showFirstAvailableDay: false,
+                    turnOffFirstAvailableDay: false,
+                },
+                { enablePreferredTime: true },
+            );
+            const stepB = findStep(formB, "preferred_time");
+            expect(stepB!.fields.find((f) => f.name === "preferred_date")).to.be.undefined;
+        });
+
+        it("falls back to turnOffFirstAvailableDay when showFirstAvailableDay is unset", () => {
+            const form = getContactFormFallback(
+                {
+                    capture: SIMPLE_BLUEPRINT,
+                    turnOffFirstAvailableDay: false,
+                },
+                { enablePreferredTime: true },
+            );
+
+            const preferredTimeStep = findStep(form, "preferred_time");
+            const preferredDateField = preferredTimeStep!.fields.find((field) => field.name === "preferred_date");
+            expect(preferredDateField).to.exist;
+        });
+
+        it("props.showFirstAvailableDay overrides data.showFirstAvailableDay", () => {
+            const form = getContactFormFallback(
+                {
+                    capture: SIMPLE_BLUEPRINT,
+                    showFirstAvailableDay: true,
+                },
+                { enablePreferredTime: true, showFirstAvailableDay: false },
+            );
+
+            const preferredTimeStep = findStep(form, "preferred_time");
+            const preferredDateField = preferredTimeStep!.fields.find((field) => field.name === "preferred_date");
+            expect(preferredDateField).to.be.undefined;
         });
     });
     describe("when passed preferredTimeOptions", () => {
