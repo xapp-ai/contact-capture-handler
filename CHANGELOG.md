@@ -1,3 +1,19 @@
+# [2.0.0](https://github.com/xapp-ai/contact-capture-handler/compare/v1.22.4...v2.0.0) (2026-06-08)
+
+
+* feat!: hide First Available Date chip by default, add showFirstAvailableDay alias ([#656](https://github.com/xapp-ai/contact-capture-handler/issues/656)) ([021018a](https://github.com/xapp-ai/contact-capture-handler/commit/021018aa4f833221d6dc3f56dfbe757d692028cc))
+
+
+### BREAKING CHANGES
+
+* The default behavior of the 'First Available Date' chip
+is flipped. Handlers that previously omitted turnOffFirstAvailableDay
+relied on the chip being shown; the chip is now hidden by default.
+Handlers that need the chip must opt in with either
+showFirstAvailableDay: true or turnOffFirstAvailableDay: false.
+
+Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>
+
 ## [1.22.4](https://github.com/xapp-ai/contact-capture-handler/compare/v1.22.3...v1.22.4) (2026-06-01)
 
 
