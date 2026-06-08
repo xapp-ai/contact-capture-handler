@@ -173,8 +173,12 @@ export interface FormResponseProps {
      */
     fields?: DataDescriptorBase[];
     /**
-     * When true, removes the 'preferred_date' field from the preferred time form,
-     * removes the mandatoryGroup from the dateTime field, and makes dateTime mandatory.
+     * Controls the 'First Available Date' chip on the preferred time form.
+     *
+     * - undefined (default) or true: chip is hidden; dateTime is mandatory with no mandatoryGroup.
+     * - false: chip is shown; dateTime uses a mandatoryGroup so either a date or the chip is required.
+     *
+     * Existing handlers that do not set this field will get the hidden-by-default behavior.
      */
     turnOffFirstAvailableDay?: boolean;
     /**
@@ -835,9 +839,10 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
         });
     }
 
-    // Add dateTime field
-    if (props.turnOffFirstAvailableDay) {
-        // When turnOffFirstAvailableDay is true, make dateTime mandatory without mandatoryGroup
+    // Add dateTime field.
+    // Default (undefined) and true both HIDE the 'First Available Date' chip.
+    // Only an explicit `false` opts in to show it.
+    if (props.turnOffFirstAvailableDay !== false) {
         preferredTimeFields.push({
             name: "dateTime",
             title: "Preferred date",
@@ -848,7 +853,6 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
             defaultBusyDays: data.availabilitySettings?.defaultBusyDays,
         });
     } else {
-        // Default behavior with mandatoryGroup
         preferredTimeFields.push({
             name: "dateTime",
             title: "Preferred date",
@@ -859,7 +863,6 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
             defaultBusyDays: data.availabilitySettings?.defaultBusyDays,
         });
 
-        // Only add preferred_date field if turnOffFirstAvailableDay is not set
         preferredTimeFields.push({
             name: "preferred_date",
             type: "CHIPS",
