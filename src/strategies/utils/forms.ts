@@ -179,8 +179,21 @@ export interface FormResponseProps {
      * - false: chip is shown; dateTime uses a mandatoryGroup so either a date or the chip is required.
      *
      * Existing handlers that do not set this field will get the hidden-by-default behavior.
+     *
+     * @deprecated Prefer the positively-named {@link showFirstAvailableDay}. When both are set,
+     * `showFirstAvailableDay` wins.
      */
     turnOffFirstAvailableDay?: boolean;
+    /**
+     * Positively-named control for the 'First Available Date' chip on the preferred time form.
+     *
+     * - true: chip is shown; dateTime uses a mandatoryGroup so either a date or the chip is required.
+     * - false: chip is hidden; dateTime is mandatory with no mandatoryGroup.
+     * - undefined (default): fall back to {@link turnOffFirstAvailableDay}, which itself defaults to hidden.
+     *
+     * Preferred over `turnOffFirstAvailableDay` to avoid the double-negative read at call sites.
+     */
+    showFirstAvailableDay?: boolean;
     /**
      * Custom options for the preferred time field. Replaces the default items
      * (First Available Time, Morning, Afternoon) with user-defined options.
@@ -270,6 +283,9 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
         ...(typeof data.turnOffFirstAvailableDay === "boolean" && {
             turnOffFirstAvailableDay: data.turnOffFirstAvailableDay,
         }),
+        ...(typeof data.showFirstAvailableDay === "boolean" && {
+            showFirstAvailableDay: data.showFirstAvailableDay,
+        }),
         ...(existsAndNotEmpty(data.preferredTimeOptions) && { preferredTimeOptions: data.preferredTimeOptions }),
         ...(data.preferredDateConfirmationText && {
             preferredDateConfirmationText: data.preferredDateConfirmationText,
@@ -284,6 +300,17 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
         ...(data.capture?.disclaimer && { disclaimer: data.capture.disclaimer }),
         ...props, // Props override data
     };
+
+    // An explicit `undefined` on props would otherwise clobber a boolean from
+    // data (the spread copies own keys regardless of value). For the
+    // chip-visibility flags this matters more under the new hidden-by-default
+    // semantics, so restore data when props' value is not a boolean.
+    if (typeof props.turnOffFirstAvailableDay !== "boolean" && typeof data.turnOffFirstAvailableDay === "boolean") {
+        mergedProps.turnOffFirstAvailableDay = data.turnOffFirstAvailableDay;
+    }
+    if (typeof props.showFirstAvailableDay !== "boolean" && typeof data.showFirstAvailableDay === "boolean") {
+        mergedProps.showFirstAvailableDay = data.showFirstAvailableDay;
+    }
 
     // Use mergedProps instead of props throughout the rest of the function
     props = mergedProps;
@@ -839,10 +866,15 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
         });
     }
 
-    // Add dateTime field.
-    // Default (undefined) and true both HIDE the 'First Available Date' chip.
-    // Only an explicit `false` opts in to show it.
-    if (props.turnOffFirstAvailableDay !== false) {
+    // Resolve chip visibility. showFirstAvailableDay wins when set;
+    // otherwise fall back to turnOffFirstAvailableDay (legacy, double-negative).
+    // Default is hidden — only an explicit opt-in shows the chip.
+    const showFirstAvailableDayChip =
+        typeof props.showFirstAvailableDay === "boolean"
+            ? props.showFirstAvailableDay
+            : props.turnOffFirstAvailableDay === false;
+
+    if (!showFirstAvailableDayChip) {
         preferredTimeFields.push({
             name: "dateTime",
             title: "Preferred date",

@@ -42,7 +42,7 @@ export interface ContactCaptureService {
     requiresDate?: boolean;
 }
 
-export interface ContactCaptureData extends QuestionAnsweringData, Pick<FormResponseProps, "enablePreferredTime" | "turnOffFirstAvailableDay" | "preferredTimeOptions" | "preferredDateConfirmationText" | "firstPageInputType" | "showFirstPageMessage" | "serviceSelectionTitle" | "preferredTimeNotification"> {
+export interface ContactCaptureData extends QuestionAnsweringData, Pick<FormResponseProps, "enablePreferredTime" | "turnOffFirstAvailableDay" | "showFirstAvailableDay" | "preferredTimeOptions" | "preferredDateConfirmationText" | "firstPageInputType" | "showFirstPageMessage" | "serviceSelectionTitle" | "preferredTimeNotification"> {
     /**
      * It will not capture the lead and instead provide contact information.
      *
