@@ -1,3 +1,10 @@
+# [2.1.0](https://github.com/xapp-ai/contact-capture-handler/compare/v2.0.0...v2.1.0) (2026-07-15)
+
+
+### Features
+
+* **availability:** pass widget availability settings into getJobType; carry forced class on the lead ([#665](https://github.com/xapp-ai/contact-capture-handler/issues/665)) ([ee3d4c6](https://github.com/xapp-ai/contact-capture-handler/commit/ee3d4c653029d4a16f9126bfe7966e779f195ebb)), closes [#663](https://github.com/xapp-ai/contact-capture-handler/issues/663)
+
 # [2.0.0](https://github.com/xapp-ai/contact-capture-handler/compare/v1.22.4...v2.0.0) (2026-06-08)
 
 
