@@ -229,5 +229,21 @@ describe(`${FormResponseStrategy.name}`, () => {
             expect(threw, threw && threw.stack).to.be.undefined;
             expect(context.session.get(Constants.CONTACT_CAPTURE_BUSY_DAYS)).to.not.exist;
         });
+
+        it("does not throw when getJobType rejects, and skips the availability augmentation", async () => {
+            crmService.getJobType.rejects(new Error("classifier down"));
+            context = buildContext(true); // augmentation branch: getJobType is called
+            const strategy = new FormResponseStrategy();
+
+            let threw: Error | undefined;
+            try {
+                await strategy.getResponse(handler, request, context);
+            } catch (e) {
+                threw = e as Error;
+            }
+            expect(threw, threw && threw.stack).to.be.undefined;
+            // getJobType failed, so no jobType-based availability refetch happened.
+            expect(crmService.getAvailability).to.not.have.been.called;
+        });
     });
 });

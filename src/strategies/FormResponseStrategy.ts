@@ -8,6 +8,7 @@ import {
     CrmServiceAvailability,
     CrmServiceAvailabilityOptions,
     CrmServiceAvailabilitySettings,
+    CrmServiceJobType,
     Response,
     Request,
     RequestSlotMap,
@@ -326,7 +327,14 @@ export class FormResponseStrategy implements ResponseStrategy {
 
                     // Pass the in-scope availability settings so forceAvailabilityClass /
                     // jobTypeClasses can influence which class the job resolves to (#663).
-                    const jobType = await crmService.getJobType(description, undefined, settings);
+                    // Guarded like getAvailability below: a classifier failure must not break the
+                    // whole request — we just skip the job-type-based availability refetch.
+                    let jobType: CrmServiceJobType | undefined;
+                    try {
+                        jobType = await crmService.getJobType(description, undefined, settings);
+                    } catch (e) {
+                        log().warn(`getJobType failed, skipping availability augmentation: ${(e as Error).message}`);
+                    }
                     const existingJobType = session.get(Constants.CONTACT_CAPTURE_JOB_TYPE);
 
                     // Only call if the jobType changed (visitor changed the description)
