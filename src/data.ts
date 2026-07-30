@@ -95,7 +95,11 @@ export interface ContactCaptureData extends QuestionAnsweringData, Pick<FormResp
      */
     crmFlags?: object;
     /**
-     * Optional availability settings to be used when calling CRMService.getAvailability()
+     * Optional availability settings used when calling CRMService.getAvailability() and getJobType().
+     *
+     * By the time this handler runs, stentor-api has already deep-merged the app-level availability
+     * settings with this handler's own overrides, so this is the effective, resolved object — a
+     * campaign widget's forceAvailabilityClass / jobTypeClasses layered over the account defaults.
      */
     availabilitySettings?: CrmServiceAvailabilitySettings;
 }

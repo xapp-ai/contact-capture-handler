@@ -8,6 +8,7 @@ import {
     CrmServiceAvailability,
     CrmServiceAvailabilityOptions,
     CrmServiceAvailabilitySettings,
+    CrmServiceJobType,
     Response,
     Request,
     RequestSlotMap,
@@ -230,7 +231,13 @@ export class FormResponseStrategy implements ResponseStrategy {
             externalId: hasSessionId(request) ? request.sessionId : "unknown",
             existingRefId,
             jobTypeId: jobType?.id,
-            avalabilityClassId: jobType?.class,
+            // Fall back to the widget's forced/default class when there is no AI-derived job type,
+            // so a force-classed campaign widget still tags its leads (#663). Note the existing
+            // misspelling of the key — handler.ts reads `extras.avalabilityClassId` verbatim.
+            avalabilityClassId:
+                jobType?.class ??
+                handler.data?.availabilitySettings?.forceAvailabilityClass ??
+                handler.data?.availabilitySettings?.defaultAvailabilityClass,
             crmFlags: handler.data?.crmFlags,
             isAbandoned,
         };
@@ -291,15 +298,19 @@ export class FormResponseStrategy implements ResponseStrategy {
         if (!busyDays && typeof crmService?.getAvailability === "function") {
             const options: CrmServiceAvailabilityOptions = { ...settings };
 
-            busyDays = await crmService.getAvailability(
-                {
-                    start: null,
-                    end: null,
-                },
-                options,
-            );
+            try {
+                busyDays = await crmService.getAvailability(
+                    {
+                        start: null,
+                        end: null,
+                    },
+                    options,
+                );
 
-            session.set(Constants.CONTACT_CAPTURE_BUSY_DAYS, busyDays);
+                session.set(Constants.CONTACT_CAPTURE_BUSY_DAYS, busyDays);
+            } catch (e) {
+                log().warn(`getAvailability failed, continuing without busy days: ${(e as Error).message}`);
+            }
         } else if (leadDataList?.data && typeof crmService?.getJobType === "function") {
             // Try to augment if we have a description
             const messageData = leadDataList.data.find((data) => {
@@ -314,7 +325,16 @@ export class FormResponseStrategy implements ResponseStrategy {
                 if (description !== existingDescription) {
                     session.set(Constants.CONTACT_CAPTURE_DESCRIPTION, description);
 
-                    const jobType = await crmService.getJobType(description);
+                    // Pass the in-scope availability settings so forceAvailabilityClass /
+                    // jobTypeClasses can influence which class the job resolves to (#663).
+                    // Guarded like getAvailability below: a classifier failure must not break the
+                    // whole request — we just skip the job-type-based availability refetch.
+                    let jobType: CrmServiceJobType | undefined;
+                    try {
+                        jobType = await crmService.getJobType(description, undefined, settings);
+                    } catch (e) {
+                        log().warn(`getJobType failed, skipping availability augmentation: ${(e as Error).message}`);
+                    }
                     const existingJobType = session.get(Constants.CONTACT_CAPTURE_JOB_TYPE);
 
                     // Only call if the jobType changed (visitor changed the description)
@@ -332,15 +352,21 @@ export class FormResponseStrategy implements ResponseStrategy {
                             };
                         }
 
-                        busyDays = await crmService.getAvailability(
-                            {
-                                start: null,
-                                end: null,
-                            },
-                            options,
-                        );
+                        try {
+                            busyDays = await crmService.getAvailability(
+                                {
+                                    start: null,
+                                    end: null,
+                                },
+                                options,
+                            );
 
-                        session.set(Constants.CONTACT_CAPTURE_BUSY_DAYS, busyDays);
+                            session.set(Constants.CONTACT_CAPTURE_BUSY_DAYS, busyDays);
+                        } catch (e) {
+                            log().warn(
+                                `getAvailability failed, continuing without busy days: ${(e as Error).message}`,
+                            );
+                        }
                     }
                 }
             }

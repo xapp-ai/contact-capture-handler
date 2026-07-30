@@ -1,8 +1,9 @@
 /*! Copyright (c) 2026, XAPP AI */
 import * as chai from "chai";
+import * as sinon from "sinon";
 import * as sinonChai from "sinon-chai";
 
-import { Content, Context, Handler, IntentRequest } from "stentor-models";
+import { Content, Context, CrmService, Handler, IntentRequest } from "stentor-models";
 import { ContextBuilder } from "stentor-context";
 import { IntentRequestBuilder } from "stentor-request";
 
@@ -120,6 +121,129 @@ describe(`${FormResponseStrategy.name}`, () => {
                 threw = e as Error;
             }
             expect(threw, threw && threw.stack).to.be.undefined;
+        });
+    });
+
+    // #663: the widget's availability settings (forceAvailabilityClass / jobTypeClasses) must reach
+    // the CRM's job-type and availability calls, and a CRM rejection must not throw.
+    describe("when a CRM service is configured and the handler carries availabilitySettings", () => {
+        const settings = {
+            forceAvailabilityClass: "drain-emergency",
+            defaultAvailabilityClass: "standard",
+            jobTypeClasses: [{ jobTypeId: "1043", classId: "drain-emergency" }],
+        };
+
+        let crmService: sinon.SinonStubbedInstance<Partial<CrmService>> & {
+            getJobType: sinon.SinonStub;
+            getAvailability: sinon.SinonStub;
+        };
+
+        // seedBusyDays: when set, the first-time branch of addAvailability is skipped and the
+        // getJobType augmentation branch runs instead (that is where the settings/jobType plumbing
+        // lives). Left unset, addAvailability takes the first-time getAvailability branch.
+        const buildContext = (seedBusyDays: boolean): Context => {
+            const data: Record<string, unknown> = {
+                [Constants.CONTACT_CAPTURE_SLOTS]: {},
+                [Constants.CONTACT_CAPTURE_LIST]: {
+                    data: [
+                        {
+                            slotName: "message",
+                            type: "MESSAGE",
+                            collectedValue: "My drain is backed up",
+                        },
+                    ],
+                },
+            };
+            if (seedBusyDays) {
+                data[Constants.CONTACT_CAPTURE_BUSY_DAYS] = {
+                    range: { start: null, end: null },
+                    unavailabilities: [],
+                };
+            }
+            const c = new ContextBuilder().withSessionData({ id: "form-session", data }).build();
+            // No withServices() on ContextBuilder — inject the stub directly.
+            (c.services as { crmService?: Partial<CrmService> }).crmService = crmService;
+            return c;
+        };
+
+        beforeEach(() => {
+            const props: Handler<Content, ContactCaptureData> = {
+                ...PROPS_WITHOUT_CAPTURE,
+                data: {
+                    ...PROPS_WITHOUT_CAPTURE.data,
+                    availabilitySettings: settings,
+                } as unknown as ContactCaptureData,
+            };
+            handler = new ContactCaptureHandler(props);
+            request = new IntentRequestBuilder()
+                .withSlots({})
+                .withIntentId(props.intentId)
+                .build();
+            request.isNewSession = false;
+            request.attributes = {
+                enablePreferredTime: true,
+                data: { step: "contact_info", form: "booking_preferred_time" },
+            };
+
+            crmService = {
+                getJobType: sinon.stub().resolves({ id: "1043", class: "drain-emergency" }),
+                getAvailability: sinon.stub().resolves({ range: { start: null, end: null }, unavailabilities: [] }),
+            } as never;
+        });
+
+        it("passes the handler's availabilitySettings into getJobType as the 3rd arg", async () => {
+            context = buildContext(true);
+            const strategy = new FormResponseStrategy();
+            await strategy.getResponse(handler, request, context);
+
+            expect(crmService.getJobType).to.have.been.calledOnce;
+            const thirdArg = crmService.getJobType.firstCall.args[2];
+            expect(thirdArg).to.deep.include({
+                forceAvailabilityClass: "drain-emergency",
+                jobTypeClasses: settings.jobTypeClasses,
+            });
+        });
+
+        it("passes availabilitySettings through to getAvailability alongside the jobType", async () => {
+            context = buildContext(true);
+            const strategy = new FormResponseStrategy();
+            await strategy.getResponse(handler, request, context);
+
+            expect(crmService.getAvailability).to.have.been.called;
+            const options = crmService.getAvailability.lastCall.args[1];
+            expect(options).to.include({ forceAvailabilityClass: "drain-emergency" });
+            expect(options.jobType).to.deep.equal({ id: "1043", class: "drain-emergency" });
+        });
+
+        it("does not throw when the first-time getAvailability rejects, and stores no busy days", async () => {
+            crmService.getAvailability.rejects(new Error("CRM down"));
+            context = buildContext(false); // first-time branch: getAvailability called directly
+            const strategy = new FormResponseStrategy();
+
+            let threw: Error | undefined;
+            try {
+                await strategy.getResponse(handler, request, context);
+            } catch (e) {
+                threw = e as Error;
+            }
+            expect(threw, threw && threw.stack).to.be.undefined;
+            expect(context.session.get(Constants.CONTACT_CAPTURE_BUSY_DAYS)).to.not.exist;
+        });
+
+        it("does not throw when getJobType rejects, and skips the availability augmentation", async () => {
+            crmService.getJobType.rejects(new Error("classifier down"));
+            context = buildContext(true); // augmentation branch: getJobType is called
+            const strategy = new FormResponseStrategy();
+
+            let threw: Error | undefined;
+            try {
+                await strategy.getResponse(handler, request, context);
+            } catch (e) {
+                threw = e as Error;
+            }
+            expect(threw, threw && threw.stack).to.be.undefined;
+            // getJobType failed, so no jobType-based availability refetch happened.
+            expect(crmService.getAvailability).to.not.have.been.called;
         });
     });
 });
