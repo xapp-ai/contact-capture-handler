@@ -1,3 +1,10 @@
+## [2.1.1](https://github.com/xapp-ai/contact-capture-handler/compare/v2.1.0...v2.1.1) (2026-08-03)
+
+
+### Bug Fixes
+
+* Add Claude autonomous workflows ([#673](https://github.com/xapp-ai/contact-capture-handler/issues/673)) ([8722cde](https://github.com/xapp-ai/contact-capture-handler/commit/8722cdeeefd2044a9f396212da7fd44ef9e5904f))
+
 # [2.1.0](https://github.com/xapp-ai/contact-capture-handler/compare/v2.0.0...v2.1.0) (2026-07-15)
 
 
