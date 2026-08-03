@@ -24,6 +24,7 @@ import { ContactCaptureHandler } from "../handler";
 
 import { ResponseStrategy } from "./ResponseStrategy";
 import { getFormResponse, getStepFromData } from "./utils/forms";
+import { buildCostGuideConfig, FormResultData } from "./utils/externalBooking";
 
 /**
  * Action response data object
@@ -270,6 +271,30 @@ export class FormResponseStrategy implements ResponseStrategy {
         // context.session.set(Constants.CONTACT_CAPTURE_SENT, leadSendResult.success);
 
         context.session.set(Constants.CONTACT_CAPTURE_EXISTING_REF_ID, leadSendResult.id);
+
+        // External booking handoff: return FORM_STEP_UPDATE with visitor config for the partner widget
+        const externalBooking = handler.data?.externalBooking;
+        if (externalBooking?.enabled && leadSendResult.success) {
+            const formData = request.attributes?.data as FormActionResponseData | undefined;
+            const visitorConfig = buildCostGuideConfig(formData?.result as FormResultData, externalBooking);
+            if (visitorConfig) {
+                const stepName = externalBooking.stepName || "book_appointment";
+                log().info(`External booking handoff: advancing to ${stepName}`);
+                return {
+                    displays: [
+                        {
+                            type: "FORM_STEP_UPDATE",
+                            step: stepName,
+                            externalWidget: {
+                                config: visitorConfig,
+                            },
+                        },
+                    ],
+                };
+            }
+            // Trade unresolvable — fall through to normal (no handoff)
+            log().warn("External booking enabled but trade unresolvable; skipping handoff");
+        }
 
         // form widget - no response
         response = {};

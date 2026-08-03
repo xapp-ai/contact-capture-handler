@@ -102,6 +102,49 @@ export interface ContactCaptureData extends QuestionAnsweringData, Pick<FormResp
      * campaign widget's forceAvailabilityClass / jobTypeClasses layered over the account defaults.
      */
     availabilitySettings?: CrmServiceAvailabilitySettings;
+    /**
+     * Hands the visitor off to a third-party booking widget after the lead is captured.
+     *
+     * When enabled, the form gains a terminal handoff step that mounts the partner's booking widget.
+     * The lead is still submitted exactly once to our system; the partner widget handles its own
+     * submission separately.
+     */
+    externalBooking?: {
+        /**
+         * Whether external booking handoff is enabled.
+         */
+        enabled?: boolean;
+        /**
+         * Provider key. Only "costguide" is supported today.
+         */
+        provider: "costguide";
+        /**
+         * Name of the form step that hosts the handoff widget.
+         * @default "book_appointment"
+         */
+        stepName?: string;
+        /**
+         * Partner-issued advertiser ID.
+         */
+        advertiserId: number;
+        /**
+         * Partner-issued campaign ID.
+         */
+        campaignId: string;
+        /**
+         * Partner-issued campaign key.
+         */
+        campaignKey: string;
+        /**
+         * Maps our collected service/job-type id to the partner's trade string.
+         * @example { "roofing": "Roofing - Asphalt Install or Replace" }
+         */
+        tradeMap?: Record<string, string>;
+        /**
+         * Used when the collected service has no tradeMap entry.
+         */
+        defaultTrade?: string;
+    };
 }
 
 export interface ContactCaptureBlueprint

@@ -15,6 +15,16 @@ import { capitalize, existsAndNotEmpty } from "stentor-utils";
 
 import { ContactCaptureData, ContactCaptureService, DataDescriptorBase } from "../../data";
 import { isFormDateInput } from "../../guards";
+import { buildExternalWidgetStepConfig } from "./externalBooking";
+
+/**
+ * Extension of FormStep with external widget support.
+ * TODO: Migrate these fields to stentor-models once validated.
+ */
+interface ExternalWidgetFormStep extends FormStep {
+    fullBleed?: boolean;
+    externalWidget?: ReturnType<typeof buildExternalWidgetStepConfig>;
+}
 
 export const CONTACT_METHOD_GROUP = "contact_method";
 export const CONTACT_METHOD_ERROR = "Please provide either a phone number or email address";
@@ -1227,6 +1237,45 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
         contactUsForm.steps = CONTACT_ONLY_STEPS;
     }
 
+    // External booking handoff: replace the terminal thank-you step with a handoff step
+    if (data.externalBooking?.enabled) {
+        const stepName = data.externalBooking.stepName || "book_appointment";
+        const externalWidgetConfig = buildExternalWidgetStepConfig(data.externalBooking);
+
+        // Build the handoff step
+        const handoffStep: ExternalWidgetFormStep = {
+            name: stepName,
+            title: "Choose your appointment",
+            fields: [],
+            fullBleed: true,
+            previousAction: "omit",
+            nextAction: "omit",
+            warnBeforeUnload: true,
+            externalWidget: externalWidgetConfig,
+        };
+
+        // Find and replace the terminal thank-you step
+        const lastStepIndex = contactUsForm.steps.length - 1;
+        if (lastStepIndex >= 0) {
+            const lastStep = contactUsForm.steps[lastStepIndex];
+            // Replace thank_you or Thanks step with handoff
+            if (lastStep.name === "thank_you" || lastStep.name === "Thanks") {
+                contactUsForm.steps[lastStepIndex] = handoffStep as FormStep;
+
+                // Update the header to match
+                const headerIndex = contactUsForm.header.findIndex(
+                    (h) => h.step === lastStep.name
+                );
+                if (headerIndex >= 0) {
+                    contactUsForm.header[headerIndex] = {
+                        step: stepName,
+                        label: "Book",
+                    };
+                }
+            }
+        }
+    }
+
     // look at the headers and apply the overrides
     if (existsAndNotEmpty(props.headerOverrides)) {
         // loop through the header and find the step
@@ -1317,6 +1366,21 @@ function getForm(data: ContactCaptureData, props: FormResponseProps): MultistepF
             }
         }
     });
+
+    // External booking for custom forms: fill in externalWidget on matching step
+    if (data.externalBooking?.enabled) {
+        const stepName = data.externalBooking.stepName || "book_appointment";
+        const externalWidgetConfig = buildExternalWidgetStepConfig(data.externalBooking);
+
+        // Find existing step by name and fill in its externalWidget
+        const existingStep = formDeclaration.steps.find((step) => step.name === stepName) as
+            | ExternalWidgetFormStep
+            | undefined;
+        if (existingStep) {
+            existingStep.externalWidget = externalWidgetConfig;
+            existingStep.fullBleed = true;
+        }
+    }
 
     return formDeclaration;
 }
