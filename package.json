@@ -41,7 +41,7 @@
     "dotenv": "16.6.1",
     "eslint": "8.57.1",
     "eslint-plugin-notice": "1.0.0",
-    "mocha": "11.7.6",
+    "mocha": "11.8.0",
     "prettier": "3.9.6",
     "semantic-release": "25.0.8",
     "sinon": "19.0.2",
