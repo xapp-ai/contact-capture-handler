@@ -102,6 +102,55 @@ export interface ContactCaptureData extends QuestionAnsweringData, Pick<FormResp
      * campaign widget's forceAvailabilityClass / jobTypeClasses layered over the account defaults.
      */
     availabilitySettings?: CrmServiceAvailabilitySettings;
+    /**
+     * Hands the visitor off to a third-party booking widget after the lead is captured
+     * (form-widget channel only). The partner widget performs its own booking submission
+     * into the partner's system; we do NOT deliver the lead to the partner and make no
+     * second submission. See #671.
+     */
+    externalBooking?: ExternalBookingData;
+}
+
+/**
+ * Configures a third-party booking-widget handoff. Authored as JSON in Studio, so every
+ * field is documented. Only CostGuide / Contractor Appointments ("costguide") is supported today.
+ */
+export interface ExternalBookingData {
+    /**
+     * Turns the handoff on. When false/unset, form generation and the submit response are
+     * unchanged from a normal contact-capture form.
+     */
+    enabled?: boolean;
+    /**
+     * Provider key. Only "costguide" is supported today.
+     */
+    provider: "costguide";
+    /**
+     * Name of the generated form step that hosts the handoff widget. Defaults to "book_appointment".
+     */
+    stepName?: string;
+    /**
+     * Partner-issued advertiser id.
+     */
+    advertiserId: number;
+    /**
+     * Partner-issued campaign id.
+     */
+    campaignId: string;
+    /**
+     * Partner-issued campaign key.
+     */
+    campaignKey: string;
+    /**
+     * Maps our collected service / job-type id to the partner's trade string,
+     * e.g. { "roofing": "Roofing - Asphalt Install or Replace" }.
+     */
+    tradeMap?: Record<string, string>;
+    /**
+     * Trade used when the collected service has no `tradeMap` entry. When neither a mapped
+     * trade nor this default resolves, the handoff is omitted rather than sent with a bad trade.
+     */
+    defaultTrade?: string;
 }
 
 export interface ContactCaptureBlueprint
