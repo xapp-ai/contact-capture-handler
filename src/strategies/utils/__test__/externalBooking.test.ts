@@ -208,6 +208,7 @@ describe("#buildHandoffStep()", () => {
             campaignKey: "6YGTmNKxtjMDVkWPLwgC",
             hideNoMatch: "yes",
             limit: 1,
+            source: "thankyoupage",
         });
         expect(step.externalWidget.config).to.not.have.property("firstName");
         expect(step.externalWidget.config).to.not.have.property("zipCode");
