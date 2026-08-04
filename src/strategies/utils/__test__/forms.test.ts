@@ -4546,4 +4546,68 @@ describe(`#${getContactFormFallback.name}()`, () => {
             expect(selectionField.items[1].label).to.equal("Electrical");
         });
     });
+
+    describe("'Next' button labels", () => {
+        it("previews the contact info step from the service_request step", () => {
+            const form = getContactFormFallback(
+                { capture: SIMPLE_BLUEPRINT },
+                { enablePreferredTime: true },
+            );
+
+            const step = form.steps.find((s) => s.name === "service_request")!;
+            expect(step.nextLabel).to.equal("Next: Contact Info →");
+        });
+
+        it("previews the preferred date step from contact_info when every service requires a date", () => {
+            const form = getContactFormFallback(
+                {
+                    capture: {
+                        data: SIMPLE_BLUEPRINT.data,
+                        serviceOptions: [
+                            { id: "schedule-now", label: "Schedule Now", requiresDate: true },
+                            { id: "schedule-service", label: "Schedule Service", requiresDate: true },
+                        ],
+                    },
+                },
+                { enablePreferredTime: true },
+            );
+
+            const step = form.steps.find((s) => s.name === "contact_info")!;
+            expect(step.nextLabel).to.equal("Next: Preferred Date →");
+        });
+
+        it("previews the review step from contact_info when no service requires a date", () => {
+            const form = getContactFormFallback(
+                {
+                    capture: {
+                        data: SIMPLE_BLUEPRINT.data,
+                        serviceOptions: [
+                            { id: "schedule_maintenance", label: "Schedule Maintenance", requiresDate: false },
+                            { id: "contact_us", label: "Contact Us", requiresDate: false },
+                        ],
+                    },
+                },
+                { enablePreferredTime: true },
+            );
+
+            const step = form.steps.find((s) => s.name === "contact_info")!;
+            expect(step.nextLabel).to.equal("Next: Review →");
+        });
+
+        it("falls back to the default 'Next' label from contact_info when it depends on the selected service", () => {
+            // DEFAULT_SERVICE_CHIP_ITEMS mixes services that do and don't require a date,
+            // so whether preferred_time shows next depends on the visitor's selection.
+            const form = getContactFormFallback({ capture: SIMPLE_BLUEPRINT }, { enablePreferredTime: true });
+
+            const step = form.steps.find((s) => s.name === "contact_info")!;
+            expect(step.nextLabel).to.be.undefined;
+        });
+
+        it("previews the review step from the preferred_time step", () => {
+            const form = getContactFormFallback({ capture: SIMPLE_BLUEPRINT }, { enablePreferredTime: true });
+
+            const step = form.steps.find((s) => s.name === "preferred_time")!;
+            expect(step.nextLabel).to.equal("Next: Review →");
+        });
+    });
 });
