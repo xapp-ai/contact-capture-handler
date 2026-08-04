@@ -1552,7 +1552,7 @@ __metadata:
     stentor-context: 1.72.4
     stentor-handler: 1.72.4
     stentor-logger: 1.72.4
-    stentor-models: 1.73.0
+    stentor-models: 1.75.0
     stentor-request: 1.72.4
     stentor-response: 1.72.4
     stentor-service-fetch: 1.72.4
@@ -6423,12 +6423,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"stentor-models@npm:1.73.0":
-  version: 1.73.0
-  resolution: "stentor-models@npm:1.73.0"
+"stentor-models@npm:1.75.0":
+  version: 1.75.0
+  resolution: "stentor-models@npm:1.75.0"
   dependencies:
     "@xapp/patterns": 2.0.3
-  checksum: b00fea6d8f3e05b0ae40bbd0afb48b60789c286b47af409585edb233988f875fd49060cffc89f5cda07420cbee53354b09cb95959abb20da511e9469468b1f14
+  checksum: 2bd3ee6940fc4f145fed1801406faa35b5fb9710908056cf83532881707f649730968c8c8c1ed2020d08ea392c3a06c76a25ee5abdf3b0e2e8b45d448027d2c4
   languageName: node
   linkType: hard
 

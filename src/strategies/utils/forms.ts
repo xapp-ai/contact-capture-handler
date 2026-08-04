@@ -15,6 +15,7 @@ import { capitalize, existsAndNotEmpty } from "stentor-utils";
 
 import { ContactCaptureData, ContactCaptureService, DataDescriptorBase } from "../../data";
 import { isFormDateInput } from "../../guards";
+import { applyExternalBookingHandoff } from "./externalBooking";
 
 export const CONTACT_METHOD_GROUP = "contact_method";
 export const CONTACT_METHOD_ERROR = "Please provide either a phone number or email address";
@@ -442,9 +443,9 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
                     maxLength: 50,
                 };
                 CONTACT_FIELDS.push(lastNameField);
-            // Contact fields below default to optional (required === true) unlike name fields
-            // above which default to required (required !== false), since at least one name
-            // field is always enforced separately.
+                // Contact fields below default to optional (required === true) unlike name fields
+                // above which default to required (required !== false), since at least one name
+                // field is always enforced separately.
             } else if (dataField.slotName === "email" || dataField.type === "EMAIL") {
                 const emailField: FormTextInput = {
                     ...field,
@@ -1016,7 +1017,7 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
             crmSubmit: true,
             nextAction: "submit",
             fields: confirmationFields,
-            warnBeforeUnload: true
+            warnBeforeUnload: true,
         },
         {
             name: "thank_you",
@@ -1247,7 +1248,7 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
  * @param props
  * @returns
  */
-function getForm(data: ContactCaptureData, props: FormResponseProps): MultistepForm {
+function getFormBase(data: ContactCaptureData, props: FormResponseProps): MultistepForm {
     // check if scheduling is enabled, otherwise use the fallback form
     if (!data?.enableFormScheduling) {
         // remove this after a couple of releases
@@ -1319,6 +1320,12 @@ function getForm(data: ContactCaptureData, props: FormResponseProps): MultistepF
     });
 
     return formDeclaration;
+}
+
+function getForm(data: ContactCaptureData, props: FormResponseProps): MultistepForm {
+    // Adds the external booking handoff step when enabled; a no-op otherwise (so every
+    // existing form stays byte-identical to today).
+    return applyExternalBookingHandoff(getFormBase(data, props), data?.externalBooking);
 }
 
 export function getFormResponse(data: ContactCaptureData, props: FormResponseProps): Response {

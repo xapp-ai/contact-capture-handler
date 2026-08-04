@@ -9,6 +9,7 @@ import {
     CrmServiceAvailabilityOptions,
     CrmServiceAvailabilitySettings,
     CrmServiceJobType,
+    Display,
     Response,
     Request,
     RequestSlotMap,
@@ -24,6 +25,7 @@ import { ContactCaptureHandler } from "../handler";
 
 import { ResponseStrategy } from "./ResponseStrategy";
 import { getFormResponse, getStepFromData } from "./utils/forms";
+import { buildExternalBookingConfig, DEFAULT_EXTERNAL_BOOKING_STEP_NAME } from "./utils/externalBooking";
 
 /**
  * Action response data object
@@ -162,6 +164,11 @@ export class FormResponseStrategy implements ResponseStrategy {
 
         const isAbandoned = isSessionClosed(request);
 
+        // Whether the just-submitted step is the crm-submitting step; the external-booking
+        // handoff below only fires on that step. (The visitor's data is read from the
+        // session-accumulated `slots`, not this step's payload -- see below.)
+        let isCrmSubmitStep = false;
+
         if (!isAbandoned) {
             // Data will only exist when it is a ChannelActionRequest
             const data: FormActionResponseData = request.attributes?.data as FormActionResponseData;
@@ -179,6 +186,10 @@ export class FormResponseStrategy implements ResponseStrategy {
                 { formName: data?.form, enablePreferredTime, service },
                 data?.step,
             );
+
+            // Carry the crm-submit flag out of this block; the visitor data itself is read from
+            // the accumulated slots after the lead is sent (this step's payload is display-only).
+            isCrmSubmitStep = !!stepFromData?.crmSubmit;
 
             // Send the requested form
             if (data.followupForm) {
@@ -271,8 +282,40 @@ export class FormResponseStrategy implements ResponseStrategy {
 
         context.session.set(Constants.CONTACT_CAPTURE_EXISTING_REF_ID, leadSendResult.id);
 
-        // form widget - no response
+        // form widget - no response, unless we're handing off to an external booking widget.
+        // The lead is already recorded above; this only returns the partner config the widget
+        // mounts its handoff step with. We do NOT deliver the lead to the partner.
         response = {};
+        const externalBooking = handler.data?.externalBooking;
+        if (externalBooking?.enabled && isCrmSubmitStep) {
+            // Build from the SESSION-ACCUMULATED slots -- the same source sendLead() uses above.
+            // The crmSubmit step (confirmation) is display-only, so this step's own payload holds
+            // no contact fields; reading it here would ship an empty handoff config.
+            const accumulated: Record<string, unknown> = {};
+            for (const name of Object.keys(slots || {})) {
+                accumulated[name] = requestSlotValueToString(slots[name]?.value);
+            }
+            // Resolve the trade from the visitor's collected service selection (help_type),
+            // falling back to the initial request attribute if the slot is absent.
+            const collectedService = slots?.help_type
+                ? requestSlotValueToString(slots.help_type.value)
+                : service;
+
+            const config = buildExternalBookingConfig({
+                result: accumulated,
+                service: collectedService,
+                externalBooking,
+            });
+            // No resolvable trade -> omit the handoff and behave exactly as today.
+            if (config) {
+                const stepUpdate = {
+                    type: "FORM_STEP_UPDATE",
+                    step: externalBooking.stepName || DEFAULT_EXTERNAL_BOOKING_STEP_NAME,
+                    externalWidget: { config },
+                } as unknown as Display;
+                response = { displays: [stepUpdate] };
+            }
+        }
         await this.addAvailability(
             response,
             context.services.crmService,
