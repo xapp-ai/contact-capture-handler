@@ -651,6 +651,32 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
             .join(" || ");
     }
 
+    // Label for the contact_info step's "Next" button. The preferred_time step only
+    // reliably follows when every service requires a date; when none do, review is
+    // next. When it's a mix, whether preferred_time shows depends on the service the
+    // visitor picked, so we leave the default "Next" label rather than guess wrong.
+    //
+    // Additionally, when a serviceArea zip check will be inserted, the next step is
+    // no longer guaranteed (visitors outside the service area see the out_of_service_area
+    // interstitial), so we fall back to the default "Next" label in that case too.
+    const hasZipOrAddressField = CONTACT_FIELDS.some((field) => {
+        return (
+            field.name.toLowerCase() === "zip" ||
+            (field.name.toLowerCase() === "address" && (field as FormFieldTextAddressInput).format === "ADDRESS")
+        );
+    });
+    const willInsertServiceAreaCheck = hasZipOrAddressField && existsAndNotEmpty(data?.capture?.serviceArea?.zipCodes);
+
+    let contactInfoNextLabel: string | undefined;
+    if (willInsertServiceAreaCheck) {
+        // Fall back to default "Next" when service area check will be inserted
+        contactInfoNextLabel = undefined;
+    } else if (preferredTimeConditional === "true") {
+        contactInfoNextLabel = "Next: Preferred Date →";
+    } else if (preferredTimeConditional === "false") {
+        contactInfoNextLabel = "Next: Review →";
+    }
+
     const confirmationFields: FormField[] = [
         {
             name: "confirmation_card0",
@@ -995,6 +1021,7 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
         {
             name: "service_request",
             nextAction: "next",
+            nextLabel: "Next: Contact Info →",
             title: props.firstPageInputType?.toLowerCase() === "dropdown" ? serviceSelectionTitle : undefined,
             fields: firstStepFields,
         },
@@ -1003,10 +1030,12 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
             nextAction: "next",
             title: "Contact Information",
             fields: CONTACT_FIELDS,
+            ...(contactInfoNextLabel && { nextLabel: contactInfoNextLabel }),
         },
         {
             name: "preferred_time",
             nextAction: "submit",
+            nextLabel: "Next: Review →",
             condition: preferredTimeConditional,
             fields: preferredTimeFields,
         },
