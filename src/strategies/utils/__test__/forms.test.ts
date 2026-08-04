@@ -683,9 +683,7 @@ describe(`#${getFormResponse.name}()`, () => {
         });
 
         it("does not throw with enablePreferredTime when capture is missing", () => {
-            expect(() =>
-                getFormResponse(HANDLER_DATA_WITHOUT_CAPTURE, { enablePreferredTime: true }),
-            ).to.not.throw();
+            expect(() => getFormResponse(HANDLER_DATA_WITHOUT_CAPTURE, { enablePreferredTime: true })).to.not.throw();
         });
     });
 });
@@ -1520,10 +1518,7 @@ describe(`#${getContactFormFallback.name}()`, () => {
     });
     describe("when checking confirmation fields", () => {
         it("includes zip confirmation card when zip field is present", () => {
-            const form = getContactFormFallback(
-                { capture: SIMPLE_BLUEPRINT },
-                { enablePreferredTime: true },
-            );
+            const form = getContactFormFallback({ capture: SIMPLE_BLUEPRINT }, { enablePreferredTime: true });
 
             expect(form).to.exist;
             expect(form.steps).to.have.length(5);
@@ -1707,10 +1702,7 @@ describe(`#${getContactFormFallback.name}()`, () => {
         const findStep = (form: MultistepForm, name: string) => form.steps.find((s) => s.name === name);
 
         it("omits preferred_date chip by default (data has no flag)", () => {
-            const form = getContactFormFallback(
-                { capture: SIMPLE_BLUEPRINT },
-                { enablePreferredTime: true },
-            );
+            const form = getContactFormFallback({ capture: SIMPLE_BLUEPRINT }, { enablePreferredTime: true });
 
             expect(form).to.exist;
 
@@ -1722,10 +1714,7 @@ describe(`#${getContactFormFallback.name}()`, () => {
         });
 
         it("makes dateTime mandatory without a mandatoryGroup by default", () => {
-            const form = getContactFormFallback(
-                { capture: SIMPLE_BLUEPRINT },
-                { enablePreferredTime: true },
-            );
+            const form = getContactFormFallback({ capture: SIMPLE_BLUEPRINT }, { enablePreferredTime: true });
 
             const preferredTimeStep = findStep(form, "preferred_time");
             const dateTimeField = preferredTimeStep!.fields.find((field) => field.name === "dateTime");
@@ -1804,10 +1793,7 @@ describe(`#${getContactFormFallback.name}()`, () => {
 
             const preferredTimeStep = findStep(form, "preferred_time");
             const preferredDateField = preferredTimeStep!.fields.find((field) => field.name === "preferred_date");
-            expect(
-                preferredDateField,
-                "explicit undefined on props must not clobber a boolean from data",
-            ).to.exist;
+            expect(preferredDateField, "explicit undefined on props must not clobber a boolean from data").to.exist;
         });
     });
     describe("when passed showFirstAvailableDay (positively-named alias)", () => {
@@ -2135,7 +2121,7 @@ describe(`#${getContactFormFallback.name}()`, () => {
 
                 expect(form).to.exist;
 
-                const preferredTimeStep = form.steps.find(s => s.name === "preferred_time");
+                const preferredTimeStep = form.steps.find((s) => s.name === "preferred_time");
                 expect(preferredTimeStep).to.exist;
 
                 // Check that the condition is properly sanitized
@@ -2169,7 +2155,7 @@ describe(`#${getContactFormFallback.name}()`, () => {
 
                 expect(form).to.exist;
 
-                const preferredTimeStep = form.steps.find(s => s.name === "preferred_time");
+                const preferredTimeStep = form.steps.find((s) => s.name === "preferred_time");
                 expect(preferredTimeStep).to.exist;
                 // Always show preferred time when all services require a date
                 expect(preferredTimeStep.condition).to.equal("true");
@@ -3582,10 +3568,7 @@ describe(`#${getContactFormFallback.name}()`, () => {
 
             describe("edge cases", () => {
                 it("allows very small maxLength value", () => {
-                    const form = getContactFormFallback(
-                        { capture: SIMPLE_BLUEPRINT },
-                        { messageMaxLength: 50 },
-                    );
+                    const form = getContactFormFallback({ capture: SIMPLE_BLUEPRINT }, { messageMaxLength: 50 });
 
                     const contactStep = form.steps[0];
                     const messageField = contactStep.fields.find((field) => field.name === "message");
@@ -3596,10 +3579,7 @@ describe(`#${getContactFormFallback.name}()`, () => {
                 });
 
                 it("allows very large maxLength value", () => {
-                    const form = getContactFormFallback(
-                        { capture: SIMPLE_BLUEPRINT },
-                        { messageMaxLength: 10000 },
-                    );
+                    const form = getContactFormFallback({ capture: SIMPLE_BLUEPRINT }, { messageMaxLength: 10000 });
 
                     const contactStep = form.steps[0];
                     const messageField = contactStep.fields.find((field) => field.name === "message");
@@ -3610,10 +3590,7 @@ describe(`#${getContactFormFallback.name}()`, () => {
                 });
 
                 it("uses default when messageMaxLength is undefined in both data and props", () => {
-                    const form = getContactFormFallback(
-                        { capture: SIMPLE_BLUEPRINT },
-                        {},
-                    );
+                    const form = getContactFormFallback({ capture: SIMPLE_BLUEPRINT }, {});
 
                     const contactStep = form.steps[0];
                     const messageField = contactStep.fields.find((field) => field.name === "message");
@@ -4549,10 +4526,7 @@ describe(`#${getContactFormFallback.name}()`, () => {
 
     describe("'Next' button labels", () => {
         it("previews the contact info step from the service_request step", () => {
-            const form = getContactFormFallback(
-                { capture: SIMPLE_BLUEPRINT },
-                { enablePreferredTime: true },
-            );
+            const form = getContactFormFallback({ capture: SIMPLE_BLUEPRINT }, { enablePreferredTime: true });
 
             const step = form.steps.find((s) => s.name === "service_request")!;
             expect(step.nextLabel).to.equal("Next: Contact Info →");
@@ -4608,6 +4582,19 @@ describe(`#${getContactFormFallback.name}()`, () => {
 
             const step = form.steps.find((s) => s.name === "preferred_time")!;
             expect(step.nextLabel).to.equal("Next: Review →");
+        });
+
+        it("falls back to the default 'Next' label from contact_info when a service area check will be inserted", () => {
+            // When serviceArea.zipCodes is configured, an out_of_service_area step gets
+            // inserted after contact_info, so we can't guarantee which step is actually
+            // next (depends on whether the visitor's zip is in the service area).
+            const form = getContactFormFallback(
+                { capture: BLUEPRINT_WITH_SERVICE_AREA_ZIP_CODES, enablePreferredTime: true },
+                {},
+            );
+
+            const step = form.steps.find((s) => s.name === "contact_info")!;
+            expect(step.nextLabel).to.be.undefined;
         });
     });
 });
