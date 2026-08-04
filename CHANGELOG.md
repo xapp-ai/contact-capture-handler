@@ -1,3 +1,10 @@
+# [2.2.0](https://github.com/xapp-ai/contact-capture-handler/compare/v2.1.1...v2.2.0) (2026-08-04)
+
+
+### Features
+
+* external booking handoff (config, handoff step, CostGuide payload) ([#678](https://github.com/xapp-ai/contact-capture-handler/issues/678)) ([c93fd5d](https://github.com/xapp-ai/contact-capture-handler/commit/c93fd5d90e20491ac330182c4305375051c6fc9f)), closes [#671](https://github.com/xapp-ai/contact-capture-handler/issues/671)
+
 ## [2.1.1](https://github.com/xapp-ai/contact-capture-handler/compare/v2.1.0...v2.1.1) (2026-08-03)
 
 
