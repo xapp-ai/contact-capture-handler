@@ -1,3 +1,10 @@
+# [2.3.0](https://github.com/xapp-ai/contact-capture-handler/compare/v2.2.0...v2.3.0) (2026-08-04)
+
+
+### Features
+
+* preview the next step in the default form's Next button ([#680](https://github.com/xapp-ai/contact-capture-handler/issues/680)) ([030916a](https://github.com/xapp-ai/contact-capture-handler/commit/030916aeed671da51ad3a1798470b9d244e9e47e)), closes [#679](https://github.com/xapp-ai/contact-capture-handler/issues/679)
+
 # [2.2.0](https://github.com/xapp-ai/contact-capture-handler/compare/v2.1.1...v2.2.0) (2026-08-04)
 
 
