@@ -164,8 +164,9 @@ export class FormResponseStrategy implements ResponseStrategy {
 
         const isAbandoned = isSessionClosed(request);
 
-        // Carry what the post-submit external-booking handoff needs out of the block below.
-        let collectedResult: object | undefined;
+        // Whether the just-submitted step is the crm-submitting step; the external-booking
+        // handoff below only fires on that step. (The visitor's data is read from the
+        // session-accumulated `slots`, not this step's payload -- see below.)
         let isCrmSubmitStep = false;
 
         if (!isAbandoned) {
@@ -186,8 +187,8 @@ export class FormResponseStrategy implements ResponseStrategy {
                 data?.step,
             );
 
-            // Carry what the post-submit external-booking handoff needs out of this block.
-            collectedResult = data?.result;
+            // Carry the crm-submit flag out of this block; the visitor data itself is read from
+            // the accumulated slots after the lead is sent (this step's payload is display-only).
             isCrmSubmitStep = !!stepFromData?.crmSubmit;
 
             // Send the requested form
@@ -286,10 +287,23 @@ export class FormResponseStrategy implements ResponseStrategy {
         // mounts its handoff step with. We do NOT deliver the lead to the partner.
         response = {};
         const externalBooking = handler.data?.externalBooking;
-        if (externalBooking?.enabled && isCrmSubmitStep && collectedResult) {
+        if (externalBooking?.enabled && isCrmSubmitStep) {
+            // Build from the SESSION-ACCUMULATED slots -- the same source sendLead() uses above.
+            // The crmSubmit step (confirmation) is display-only, so this step's own payload holds
+            // no contact fields; reading it here would ship an empty handoff config.
+            const accumulated: Record<string, unknown> = {};
+            for (const name of Object.keys(slots || {})) {
+                accumulated[name] = requestSlotValueToString(slots[name]?.value);
+            }
+            // Resolve the trade from the visitor's collected service selection (help_type),
+            // falling back to the initial request attribute if the slot is absent.
+            const collectedService = slots?.help_type
+                ? requestSlotValueToString(slots.help_type.value)
+                : service;
+
             const config = buildExternalBookingConfig({
-                result: collectedResult as Record<string, unknown>,
-                service,
+                result: accumulated,
+                service: collectedService,
                 externalBooking,
             });
             // No resolvable trade -> omit the handoff and behave exactly as today.

@@ -246,4 +246,111 @@ describe(`${FormResponseStrategy.name}`, () => {
             expect(crmService.getAvailability).to.not.have.been.called;
         });
     });
+
+    // #671: on the crmSubmit step of an externalBooking-enabled form, the strategy returns a
+    // FORM_STEP_UPDATE carrying the partner config built from the SESSION-ACCUMULATED slots
+    // (not the display-only submit-step payload), and still sends the lead exactly once.
+    describe("external booking handoff on submit", () => {
+        const EXTERNAL_BOOKING = {
+            enabled: true,
+            provider: "costguide" as const,
+            advertiserId: 4944,
+            campaignId: "6a283d45eddcf",
+            campaignKey: "6YGTmNKxtjMDVkWPLwgC",
+            tradeMap: { roofing: "Roofing - Asphalt Install or Replace" },
+        };
+
+        let sendLead: sinon.SinonStub;
+
+        const buildHandler = (externalBooking: unknown): ContactCaptureHandler =>
+            new ContactCaptureHandler({
+                ...PROPS_WITHOUT_CAPTURE,
+                data: {
+                    enableFormScheduling: true,
+                    CAPTURE_MAIN_FORM: "main",
+                    capture: { data: [] },
+                    forms: [
+                        {
+                            type: "FORM",
+                            name: "main",
+                            steps: [
+                                { name: "confirmation", crmSubmit: true, final: true, nextAction: "submit", fields: [] },
+                            ],
+                        },
+                    ],
+                    externalBooking,
+                } as unknown as ContactCaptureData,
+            });
+
+        // Visitor data accumulated across earlier steps and persisted to the session, exactly as
+        // handler.ts assembles it. The confirmation (crmSubmit) step itself is display-only.
+        const buildContext = (): Context =>
+            new ContextBuilder()
+                .withSessionData({
+                    id: "form-session",
+                    data: {
+                        [Constants.CONTACT_CAPTURE_SLOTS]: {
+                            full_name: { name: "full_name", value: "Jane Doe" },
+                            email: { name: "email", value: "jane@example.com" },
+                            phone: { name: "phone", value: "5550000000" },
+                            zip: { name: "zip", value: "17002" },
+                            help_type: { name: "help_type", value: "roofing" },
+                        },
+                        [Constants.CONTACT_CAPTURE_LIST]: { data: [] },
+                    },
+                })
+                .build();
+
+        const buildRequest = (): IntentRequest => {
+            const r = new IntentRequestBuilder().withSlots({}).withIntentId(PROPS_WITHOUT_CAPTURE.intentId).build();
+            r.isNewSession = false;
+            // Display-only submit-step payload: no contact fields here.
+            r.attributes = { data: { step: "confirmation", form: "main", result: {} } };
+            return r;
+        };
+
+        beforeEach(() => {
+            sendLead = sinon.stub(ContactCaptureHandler, "sendLead").resolves({ success: true, id: "lead-123" } as never);
+        });
+
+        afterEach(() => {
+            sendLead.restore();
+        });
+
+        it("returns a FORM_STEP_UPDATE built from accumulated slots, and sends the lead once", async () => {
+            handler = buildHandler(EXTERNAL_BOOKING);
+            context = buildContext();
+            const response = await new FormResponseStrategy().getResponse(handler, buildRequest(), context);
+
+            expect(sendLead).to.have.been.calledOnce;
+            expect(context.session.get(Constants.CONTACT_CAPTURE_EXISTING_REF_ID)).to.equal("lead-123");
+
+            const display = response.displays && (response.displays[0] as Record<string, unknown>);
+            expect(display).to.exist;
+            expect(display?.type).to.equal("FORM_STEP_UPDATE");
+            expect(display?.step).to.equal("book_appointment");
+            const config = (display?.externalWidget as { config: Record<string, unknown> }).config;
+            // Built from accumulated slots, NOT the empty submit-step payload.
+            expect(config).to.deep.include({
+                firstName: "Jane",
+                lastName: "Doe",
+                email: "jane@example.com",
+                phone: "555-000-0000",
+                zipCode: "17002",
+                trade: "Roofing - Asphalt Install or Replace",
+            });
+        });
+
+        it("omits the handoff (no FORM_STEP_UPDATE) when the trade cannot be resolved, but still sends the lead", async () => {
+            handler = buildHandler({ ...EXTERNAL_BOOKING, tradeMap: {}, defaultTrade: undefined });
+            context = buildContext();
+            const response = await new FormResponseStrategy().getResponse(handler, buildRequest(), context);
+
+            expect(sendLead).to.have.been.calledOnce;
+            const hasStepUpdate =
+                Array.isArray(response.displays) &&
+                response.displays.some((d) => (d as Record<string, unknown>).type === "FORM_STEP_UPDATE");
+            expect(hasStepUpdate).to.equal(false);
+        });
+    });
 });

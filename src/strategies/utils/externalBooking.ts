@@ -86,7 +86,9 @@ export function normalizePhone(phone: string): string {
  */
 export function resolveTrade(service: string | undefined, externalBooking: ExternalBookingData): string | undefined {
     const map = externalBooking.tradeMap ?? {};
-    if (service && map[service]) {
+    // hasOwnProperty guard: `service` comes from Studio-authored / request data, so a value like
+    // "constructor" or "__proto__" must not resolve to an inherited Object.prototype member.
+    if (service && Object.prototype.hasOwnProperty.call(map, service) && map[service]) {
         return map[service];
     }
     return externalBooking.defaultTrade;

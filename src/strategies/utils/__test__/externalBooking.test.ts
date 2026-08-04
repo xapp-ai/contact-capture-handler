@@ -107,6 +107,13 @@ describe("#resolveTrade()", () => {
         expect(resolveTrade("gutters", { ...BASE_BOOKING, defaultTrade: undefined })).to.equal(undefined);
         expect(resolveTrade(undefined, { ...BASE_BOOKING, tradeMap: {}, defaultTrade: undefined })).to.equal(undefined);
     });
+
+    it("does not resolve inherited Object.prototype members (prototype-safe lookup)", () => {
+        const booking: ExternalBookingData = { ...BASE_BOOKING, tradeMap: {}, defaultTrade: undefined };
+        expect(resolveTrade("constructor", booking)).to.equal(undefined);
+        expect(resolveTrade("toString", booking)).to.equal(undefined);
+        expect(resolveTrade("__proto__", booking)).to.equal(undefined);
+    });
 });
 
 describe("#buildExternalBookingConfig()", () => {
