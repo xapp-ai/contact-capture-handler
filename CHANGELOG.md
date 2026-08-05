@@ -1,3 +1,10 @@
+# [2.4.0](https://github.com/xapp-ai/contact-capture-handler/compare/v2.3.1...v2.4.0) (2026-08-05)
+
+
+### Features
+
+* always send source "thankyoupage" in the CostGuide handoff config ([#681](https://github.com/xapp-ai/contact-capture-handler/issues/681)) ([a585499](https://github.com/xapp-ai/contact-capture-handler/commit/a585499fd1c51540fe80e3f3102526d725c57279))
+
 ## [2.3.1](https://github.com/xapp-ai/contact-capture-handler/compare/v2.3.0...v2.3.1) (2026-08-05)
 
 
