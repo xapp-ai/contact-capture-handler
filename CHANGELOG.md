@@ -1,3 +1,10 @@
+## [2.3.1](https://github.com/xapp-ai/contact-capture-handler/compare/v2.3.0...v2.3.1) (2026-08-05)
+
+
+### Bug Fixes
+
+* **ci:** make autonomous [@claude](https://github.com/claude) workflows parseable and efficient ([#682](https://github.com/xapp-ai/contact-capture-handler/issues/682)) ([68b7d5d](https://github.com/xapp-ai/contact-capture-handler/commit/68b7d5d92d6db10e77ce139684b9bba526ef7994))
+
 # [2.3.0](https://github.com/xapp-ai/contact-capture-handler/compare/v2.2.0...v2.3.0) (2026-08-04)
 
 
