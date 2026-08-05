@@ -1,3 +1,10 @@
+## [2.4.1](https://github.com/xapp-ai/contact-capture-handler/compare/v2.4.0...v2.4.1) (2026-08-05)
+
+
+### Bug Fixes
+
+* **ci:** trigger auto-pr on edited comments, not just created ([#684](https://github.com/xapp-ai/contact-capture-handler/issues/684)) ([f6126f8](https://github.com/xapp-ai/contact-capture-handler/commit/f6126f87a969d9596e1beed7c1c229e01abcbde0))
+
 # [2.4.0](https://github.com/xapp-ai/contact-capture-handler/compare/v2.3.1...v2.4.0) (2026-08-05)
 
 
