@@ -1,3 +1,10 @@
+## [2.4.2](https://github.com/xapp-ai/contact-capture-handler/compare/v2.4.1...v2.4.2) (2026-08-05)
+
+
+### Bug Fixes
+
+* **ci:** grant contents:read so auto-pr can check out the repo ([#685](https://github.com/xapp-ai/contact-capture-handler/issues/685)) ([fbba88b](https://github.com/xapp-ai/contact-capture-handler/commit/fbba88b77bbeb5eecfb3439b693ff2d18d2808c0))
+
 ## [2.4.1](https://github.com/xapp-ai/contact-capture-handler/compare/v2.4.0...v2.4.1) (2026-08-05)
 
 
