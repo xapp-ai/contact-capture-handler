@@ -74,7 +74,7 @@ jobs:
 
       - name: Checkout repository
         if: steps.retry.outputs.should_retry == 'true'
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: ${{ steps.pr.outputs.branch }}
           fetch-depth: 0
