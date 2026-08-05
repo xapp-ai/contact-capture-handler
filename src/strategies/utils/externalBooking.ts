@@ -187,6 +187,9 @@ export function buildStaticExternalWidget(
             campaignKey: externalBooking.campaignKey,
             hideNoMatch: "yes",
             limit: 1,
+            // Fixed attribution value CostGuide asked us to always send (identifies the
+            // thank-you-page handoff on their side); saves per-advertiser config for them.
+            source: "thankyoupage",
         },
     };
 }
