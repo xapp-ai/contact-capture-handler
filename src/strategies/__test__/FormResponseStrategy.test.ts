@@ -460,6 +460,58 @@ describe(`${FormResponseStrategy.name}`, () => {
             expect(extras.isAbandoned).to.equal(false);
         });
 
+        // These values are persisted on the lead and forwarded to CRMs, and they come
+        // straight from a browser. Only bounded scalars are worth carrying -- the widget
+        // never sends anything else.
+        it("drops non-scalar values rather than forwarding them to the CRM", async () => {
+            const request = buildRequest({
+                extras: {
+                    eventId: "evt-abc-123",
+                    nested: { deeply: { nope: true } },
+                    list: [1, 2, 3],
+                    fn: "ok-string",
+                    count: 42,
+                    flag: false,
+                },
+            });
+
+            await new FormResponseStrategy().getResponse(buildHandler(), request, buildContext());
+
+            const extras = sentExtras();
+            expect(extras.eventId).to.equal("evt-abc-123");
+            expect(extras.fn).to.equal("ok-string");
+            expect(extras.count).to.equal(42);
+            expect(extras.flag).to.equal(false);
+            expect(extras).to.not.have.property("nested");
+            expect(extras).to.not.have.property("list");
+        });
+
+        it("truncates an over-long value", async () => {
+            const request = buildRequest({ extras: { eventId: "x".repeat(5000) } });
+
+            await new FormResponseStrategy().getResponse(buildHandler(), request, buildContext());
+
+            const eventId = sentExtras().eventId as string;
+            expect(eventId.length).to.be.lessThan(5000);
+        });
+
+        it("caps how many client-supplied keys are carried", async () => {
+            const many: Record<string, unknown> = {};
+            for (let i = 0; i < 200; i++) {
+                many[`key_${i}`] = `value_${i}`;
+            }
+
+            const request = buildRequest({ extras: many });
+
+            await new FormResponseStrategy().getResponse(buildHandler(), request, buildContext());
+
+            const extras = sentExtras();
+            const carried = Object.keys(extras).filter((k) => k.startsWith("key_"));
+            expect(carried.length).to.be.lessThan(200);
+            // The server-derived keys are untouched by the cap.
+            expect(extras).to.have.property("externalId", request.sessionId);
+        });
+
         it("still sends the lead when the payload has no extras at all", async () => {
             const request = buildRequest({});
 
