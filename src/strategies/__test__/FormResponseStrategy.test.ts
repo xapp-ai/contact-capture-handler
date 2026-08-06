@@ -353,4 +353,177 @@ describe(`${FormResponseStrategy.name}`, () => {
             expect(hasStepUpdate).to.equal(false);
         });
     });
+
+    // #687: the form widget sends a per-submission `eventId` in the FORM_SUBMIT payload's
+    // `extras`, stable across a retry of that submission. It is the only field on this path
+    // that can identify a duplicate lead, and it was being dropped: FormActionResponseData
+    // did not declare `extras`, and the extras bag is otherwise built only from top-level
+    // request.attributes.
+    describe("extras from the FORM_SUBMIT payload", () => {
+        let sendLead: sinon.SinonStub;
+
+        const buildHandler = (): ContactCaptureHandler =>
+            new ContactCaptureHandler({
+                ...PROPS_WITHOUT_CAPTURE,
+                data: {
+                    enableFormScheduling: true,
+                    CAPTURE_MAIN_FORM: "main",
+                    capture: { data: [] },
+                    forms: [
+                        {
+                            type: "FORM",
+                            name: "main",
+                            steps: [
+                                { name: "confirmation", crmSubmit: true, final: true, nextAction: "submit", fields: [] },
+                            ],
+                        },
+                    ],
+                } as unknown as ContactCaptureData,
+            });
+
+        const buildContext = (): Context =>
+            new ContextBuilder()
+                .withSessionData({
+                    id: "form-session",
+                    data: {
+                        [Constants.CONTACT_CAPTURE_SLOTS]: {
+                            full_name: { name: "full_name", value: "Jane Doe" },
+                            email: { name: "email", value: "jane@example.com" },
+                        },
+                        [Constants.CONTACT_CAPTURE_LIST]: { data: [] },
+                    },
+                })
+                .build();
+
+        const buildRequest = (data: Record<string, unknown>): IntentRequest => {
+            const r = new IntentRequestBuilder().withSlots({}).withIntentId(PROPS_WITHOUT_CAPTURE.intentId).build();
+            r.isNewSession = false;
+            r.attributes = { data: { step: "confirmation", form: "main", result: {}, ...data } };
+            return r;
+        };
+
+        const sentExtras = (): Record<string, unknown> => sendLead.firstCall.args[1] as Record<string, unknown>;
+
+        beforeEach(() => {
+            sendLead = sinon
+                .stub(ContactCaptureHandler, "sendLead")
+                .resolves({ success: true, id: "lead-123" } as never);
+        });
+
+        afterEach(() => {
+            sendLead.restore();
+        });
+
+        it("passes the submission eventId through to the lead extras", async () => {
+            const request = buildRequest({ extras: { eventId: "evt-abc-123" } });
+
+            await new FormResponseStrategy().getResponse(buildHandler(), request, buildContext());
+
+            expect(sendLead).to.have.been.calledOnce;
+            expect(sentExtras().eventId).to.equal("evt-abc-123");
+        });
+
+        it("passes through other client-supplied extras alongside it", async () => {
+            const request = buildRequest({
+                extras: { eventId: "evt-abc-123", fbp: "fb.1.123.456", fbc: "fb.1.123.789" },
+            });
+
+            await new FormResponseStrategy().getResponse(buildHandler(), request, buildContext());
+
+            expect(sentExtras()).to.deep.include({
+                eventId: "evt-abc-123",
+                fbp: "fb.1.123.456",
+                fbc: "fb.1.123.789",
+            });
+        });
+
+        // The bag carries values we derive server-side. A client must not be able to
+        // overwrite them by naming its own key the same thing.
+        it("keeps locally-derived values when the client sends a colliding key", async () => {
+            const request = buildRequest({
+                extras: {
+                    eventId: "evt-abc-123",
+                    source: "spoofed-source",
+                    externalId: "spoofed-session",
+                    crmFlags: { spoofed: true },
+                    isAbandoned: true,
+                },
+            });
+
+            await new FormResponseStrategy().getResponse(buildHandler(), request, buildContext());
+
+            const extras = sentExtras();
+            expect(extras.eventId).to.equal("evt-abc-123");
+            expect(extras.source).to.not.equal("spoofed-source");
+            expect(extras.externalId).to.not.equal("spoofed-session");
+            expect(extras.crmFlags).to.not.deep.equal({ spoofed: true });
+            expect(extras.isAbandoned).to.equal(false);
+        });
+
+        // These values are persisted on the lead and forwarded to CRMs, and they come
+        // straight from a browser. Only bounded scalars are worth carrying -- the widget
+        // never sends anything else.
+        it("drops non-scalar values rather than forwarding them to the CRM", async () => {
+            const request = buildRequest({
+                extras: {
+                    eventId: "evt-abc-123",
+                    nested: { deeply: { nope: true } },
+                    list: [1, 2, 3],
+                    fn: "ok-string",
+                    count: 42,
+                    flag: false,
+                },
+            });
+
+            await new FormResponseStrategy().getResponse(buildHandler(), request, buildContext());
+
+            const extras = sentExtras();
+            expect(extras.eventId).to.equal("evt-abc-123");
+            expect(extras.fn).to.equal("ok-string");
+            expect(extras.count).to.equal(42);
+            expect(extras.flag).to.equal(false);
+            expect(extras).to.not.have.property("nested");
+            expect(extras).to.not.have.property("list");
+        });
+
+        it("truncates an over-long value", async () => {
+            const request = buildRequest({ extras: { eventId: "x".repeat(5000) } });
+
+            await new FormResponseStrategy().getResponse(buildHandler(), request, buildContext());
+
+            const eventId = sentExtras().eventId as string;
+            expect(eventId.length).to.be.lessThan(5000);
+        });
+
+        it("caps how many client-supplied keys are carried", async () => {
+            const many: Record<string, unknown> = {};
+            for (let i = 0; i < 200; i++) {
+                many[`key_${i}`] = `value_${i}`;
+            }
+
+            const request = buildRequest({ extras: many });
+
+            await new FormResponseStrategy().getResponse(buildHandler(), request, buildContext());
+
+            const extras = sentExtras();
+            const carried = Object.keys(extras).filter((k) => k.startsWith("key_"));
+            expect(carried.length).to.be.lessThan(200);
+            // The server-derived keys are untouched by the cap.
+            expect(extras).to.have.property("externalId", request.sessionId);
+        });
+
+        it("still sends the lead when the payload has no extras at all", async () => {
+            const request = buildRequest({});
+
+            await new FormResponseStrategy().getResponse(buildHandler(), request, buildContext());
+
+            expect(sendLead).to.have.been.calledOnce;
+            const extras = sentExtras();
+            expect(extras).to.exist;
+            expect(extras.eventId).to.be.undefined;
+            // The locally-derived keys are still there. externalId is the *request's*
+            // session id, which is what identifies the visitor's conversation.
+            expect(extras).to.have.property("externalId", request.sessionId);
+        });
+    });
 });

@@ -43,6 +43,62 @@ export interface FormActionResponseData {
 
     // When we need to respond with another (usually dynamic) form to continue
     followupForm?: string;
+
+    /**
+     * Client-supplied values carried alongside the submission, merged into the lead's
+     * extras bag. Notably `eventId`: a per-submission id the form widget mints once and
+     * resends unchanged on every retry of that submission, which makes it the only field
+     * on this path able to identify a duplicate lead (#687).
+     *
+     * Untrusted. Merged *under* the values derived server-side, so a client cannot
+     * overwrite `source`, `externalId`, `crmFlags` and friends by naming a key the same.
+     */
+    extras?: Record<string, unknown>;
+}
+
+/**
+ * Caps on what a browser can push into the lead's extras. Generous next to what the
+ * widget actually sends (a handful of short strings: eventId, fbp, fbc).
+ */
+const MAX_SUBMITTED_EXTRAS_KEYS = 25;
+const MAX_SUBMITTED_EXTRAS_VALUE_LENGTH = 1024;
+
+/**
+ * Narrows the client-supplied `extras` of a FORM_SUBMIT down to bounded scalars.
+ *
+ * These values are persisted on the lead and forwarded to CRM integrations, and they
+ * arrive from a browser -- so nested objects, arrays and unbounded strings have no
+ * business travelling any further. Everything the widget legitimately sends is a short
+ * string, so anything else is either a mistake or an attack.
+ */
+function sanitizeSubmittedExtras(submitted: unknown): Record<string, unknown> {
+    if (!submitted || typeof submitted !== "object" || Array.isArray(submitted)) {
+        return {};
+    }
+
+    const sanitized: Record<string, unknown> = {};
+    let dropped = 0;
+
+    for (const [key, value] of Object.entries(submitted as Record<string, unknown>)) {
+        if (Object.keys(sanitized).length >= MAX_SUBMITTED_EXTRAS_KEYS) {
+            dropped++;
+            continue;
+        }
+
+        if (typeof value === "string") {
+            sanitized[key] = value.slice(0, MAX_SUBMITTED_EXTRAS_VALUE_LENGTH);
+        } else if (typeof value === "number" || typeof value === "boolean") {
+            sanitized[key] = value;
+        } else {
+            dropped++;
+        }
+    }
+
+    if (dropped > 0) {
+        log().warn(`Dropped ${dropped} unsupported value(s) from the submitted form extras`);
+    }
+
+    return sanitized;
 }
 
 function leadSummary(slots: RequestSlotMap, leadDataList: CaptureRuntimeData): string {
@@ -233,7 +289,17 @@ export class FormResponseStrategy implements ResponseStrategy {
         // Send the lead if we got here
 
         const url: string = request.attributes?.currentUrl as string;
+        // Re-read rather than reusing the `data` const above, which is block-scoped to the
+        // !isAbandoned branch. An abandoned session may or may not carry a payload, hence
+        // the optional chaining.
+        const submitted = request.attributes?.data as FormActionResponseData | undefined;
         const extras = {
+            // Client-supplied extras go in FIRST so every server-derived value below wins
+            // on a key collision -- these arrive from the browser and are not trusted.
+            // This is what carries the widget's per-submission `eventId` through to the
+            // lead, the id a duplicate can be recognised by (#687). Nothing consumes it
+            // yet; stentor-api does that.
+            ...sanitizeSubmittedExtras(submitted?.extras),
             // this is a duplicate of source on ExternalLead
             // leaving as is for now
             source: url || "unknown",
