@@ -1545,7 +1545,7 @@ __metadata:
     eslint-plugin-notice: 1.0.0
     mocha: 11.8.0
     prettier: 3.9.6
-    semantic-release: 25.0.8
+    semantic-release: 25.0.9
     sinon: 19.0.2
     sinon-chai: 3.7.0
     stentor-constants: 1.72.4
@@ -5937,9 +5937,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"semantic-release@npm:25.0.8":
-  version: 25.0.8
-  resolution: "semantic-release@npm:25.0.8"
+"semantic-release@npm:25.0.9":
+  version: 25.0.9
+  resolution: "semantic-release@npm:25.0.9"
   dependencies:
     "@semantic-release/commit-analyzer": ^13.0.1
     "@semantic-release/error": ^4.0.0
@@ -5971,7 +5971,7 @@ __metadata:
     yargs: ^18.0.0
   bin:
     semantic-release: bin/semantic-release.js
-  checksum: 7fbd1e09eda86e8258b6b3c98b0d56d351ffbf257a5be2291de021d3d7f0ead81d486642bda564eadd360af4f0b7464cdd5a0112b0a67e286926b384550c0989
+  checksum: 50c0e7f91f6b906ff9228bb87de0c2f070634f7d1b38b43d44089af2e19195454d63a18ce909dfe8faed103f972adc72587d434362f56a571e5ed45c6e77a618
   languageName: node
   linkType: hard
 
