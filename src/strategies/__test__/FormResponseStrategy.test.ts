@@ -353,4 +353,125 @@ describe(`${FormResponseStrategy.name}`, () => {
             expect(hasStepUpdate).to.equal(false);
         });
     });
+
+    // #687: the form widget sends a per-submission `eventId` in the FORM_SUBMIT payload's
+    // `extras`, stable across a retry of that submission. It is the only field on this path
+    // that can identify a duplicate lead, and it was being dropped: FormActionResponseData
+    // did not declare `extras`, and the extras bag is otherwise built only from top-level
+    // request.attributes.
+    describe("extras from the FORM_SUBMIT payload", () => {
+        let sendLead: sinon.SinonStub;
+
+        const buildHandler = (): ContactCaptureHandler =>
+            new ContactCaptureHandler({
+                ...PROPS_WITHOUT_CAPTURE,
+                data: {
+                    enableFormScheduling: true,
+                    CAPTURE_MAIN_FORM: "main",
+                    capture: { data: [] },
+                    forms: [
+                        {
+                            type: "FORM",
+                            name: "main",
+                            steps: [
+                                { name: "confirmation", crmSubmit: true, final: true, nextAction: "submit", fields: [] },
+                            ],
+                        },
+                    ],
+                } as unknown as ContactCaptureData,
+            });
+
+        const buildContext = (): Context =>
+            new ContextBuilder()
+                .withSessionData({
+                    id: "form-session",
+                    data: {
+                        [Constants.CONTACT_CAPTURE_SLOTS]: {
+                            full_name: { name: "full_name", value: "Jane Doe" },
+                            email: { name: "email", value: "jane@example.com" },
+                        },
+                        [Constants.CONTACT_CAPTURE_LIST]: { data: [] },
+                    },
+                })
+                .build();
+
+        const buildRequest = (data: Record<string, unknown>): IntentRequest => {
+            const r = new IntentRequestBuilder().withSlots({}).withIntentId(PROPS_WITHOUT_CAPTURE.intentId).build();
+            r.isNewSession = false;
+            r.attributes = { data: { step: "confirmation", form: "main", result: {}, ...data } };
+            return r;
+        };
+
+        const sentExtras = (): Record<string, unknown> => sendLead.firstCall.args[1] as Record<string, unknown>;
+
+        beforeEach(() => {
+            sendLead = sinon
+                .stub(ContactCaptureHandler, "sendLead")
+                .resolves({ success: true, id: "lead-123" } as never);
+        });
+
+        afterEach(() => {
+            sendLead.restore();
+        });
+
+        it("passes the submission eventId through to the lead extras", async () => {
+            const request = buildRequest({ extras: { eventId: "evt-abc-123" } });
+
+            await new FormResponseStrategy().getResponse(buildHandler(), request, buildContext());
+
+            expect(sendLead).to.have.been.calledOnce;
+            expect(sentExtras().eventId).to.equal("evt-abc-123");
+        });
+
+        it("passes through other client-supplied extras alongside it", async () => {
+            const request = buildRequest({
+                extras: { eventId: "evt-abc-123", fbp: "fb.1.123.456", fbc: "fb.1.123.789" },
+            });
+
+            await new FormResponseStrategy().getResponse(buildHandler(), request, buildContext());
+
+            expect(sentExtras()).to.deep.include({
+                eventId: "evt-abc-123",
+                fbp: "fb.1.123.456",
+                fbc: "fb.1.123.789",
+            });
+        });
+
+        // The bag carries values we derive server-side. A client must not be able to
+        // overwrite them by naming its own key the same thing.
+        it("keeps locally-derived values when the client sends a colliding key", async () => {
+            const request = buildRequest({
+                extras: {
+                    eventId: "evt-abc-123",
+                    source: "spoofed-source",
+                    externalId: "spoofed-session",
+                    crmFlags: { spoofed: true },
+                    isAbandoned: true,
+                },
+            });
+
+            await new FormResponseStrategy().getResponse(buildHandler(), request, buildContext());
+
+            const extras = sentExtras();
+            expect(extras.eventId).to.equal("evt-abc-123");
+            expect(extras.source).to.not.equal("spoofed-source");
+            expect(extras.externalId).to.not.equal("spoofed-session");
+            expect(extras.crmFlags).to.not.deep.equal({ spoofed: true });
+            expect(extras.isAbandoned).to.equal(false);
+        });
+
+        it("still sends the lead when the payload has no extras at all", async () => {
+            const request = buildRequest({});
+
+            await new FormResponseStrategy().getResponse(buildHandler(), request, buildContext());
+
+            expect(sendLead).to.have.been.calledOnce;
+            const extras = sentExtras();
+            expect(extras).to.exist;
+            expect(extras.eventId).to.be.undefined;
+            // The locally-derived keys are still there. externalId is the *request's*
+            // session id, which is what identifies the visitor's conversation.
+            expect(extras).to.have.property("externalId", request.sessionId);
+        });
+    });
 });
