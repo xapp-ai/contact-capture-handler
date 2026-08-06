@@ -1,3 +1,10 @@
+## [2.4.4](https://github.com/xapp-ai/contact-capture-handler/compare/v2.4.3...v2.4.4) (2026-08-06)
+
+
+### Bug Fixes
+
+* **ci:** pass workflow expressions through env to stop shell injection ([#689](https://github.com/xapp-ai/contact-capture-handler/issues/689)) ([0ca8536](https://github.com/xapp-ai/contact-capture-handler/commit/0ca8536a5a4ed7e76c36de5ece6c8144fc4ed2f6))
+
 ## [2.4.3](https://github.com/xapp-ai/contact-capture-handler/compare/v2.4.2...v2.4.3) (2026-08-06)
 
 
