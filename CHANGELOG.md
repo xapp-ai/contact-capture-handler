@@ -1,3 +1,10 @@
+## [2.4.3](https://github.com/xapp-ai/contact-capture-handler/compare/v2.4.2...v2.4.3) (2026-08-06)
+
+
+### Bug Fixes
+
+* carry the form submission's extras through to the lead ([#688](https://github.com/xapp-ai/contact-capture-handler/issues/688)) ([04b64e7](https://github.com/xapp-ai/contact-capture-handler/commit/04b64e77ab2e855430929b86cbfb68e093e757db)), closes [XappMedia/chat-widget#1540](https://github.com/XappMedia/chat-widget/issues/1540) [#5703](https://github.com/xapp-ai/contact-capture-handler/issues/5703) [#5704](https://github.com/xapp-ai/contact-capture-handler/issues/5704) [#687](https://github.com/xapp-ai/contact-capture-handler/issues/687)
+
 ## [2.4.2](https://github.com/xapp-ai/contact-capture-handler/compare/v2.4.1...v2.4.2) (2026-08-05)
 
 
