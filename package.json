@@ -20,6 +20,10 @@
   "engines": {
     "node": "^12 || ^14 || ^16 || ^18 || ^20 || ^22 || ^24"
   },
+  "resolutions": {
+    "xmldoc": "2.0.3",
+    "sanitize-html": "2.17.0"
+  },
   "devDependencies": {
     "@semantic-release/changelog": "7.0.0",
     "@semantic-release/commit-analyzer": "13.0.1",
@@ -29,6 +33,7 @@
     "@types/chai": "5.2.3",
     "@types/mocha": "10.0.10",
     "@types/node": "24.13.3",
+    "@types/sax": "1.2.7",
     "@types/sinon": "17.0.4",
     "@types/sinon-chai": "3.2.12",
     "@types/sparkpost": "^2.1.8",
