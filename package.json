@@ -20,6 +20,10 @@
   "engines": {
     "node": "^12 || ^14 || ^16 || ^18 || ^20 || ^22 || ^24"
   },
+  "resolutions": {
+    "xmldoc": "2.0.3",
+    "sanitize-html": "2.17.0"
+  },
   "devDependencies": {
     "@semantic-release/changelog": "7.0.0",
     "@semantic-release/commit-analyzer": "13.0.1",
@@ -29,6 +33,7 @@
     "@types/chai": "5.2.3",
     "@types/mocha": "10.0.10",
     "@types/node": "24.13.3",
+    "@types/sax": "1.2.7",
     "@types/sinon": "17.0.4",
     "@types/sinon-chai": "3.2.12",
     "@types/sparkpost": "^2.1.8",
@@ -46,15 +51,15 @@
     "semantic-release": "25.0.9",
     "sinon": "19.0.2",
     "sinon-chai": "3.7.0",
-    "stentor-constants": "1.72.4",
-    "stentor-context": "1.72.4",
-    "stentor-handler": "1.72.4",
-    "stentor-logger": "1.72.4",
-    "stentor-models": "1.75.0",
-    "stentor-request": "1.72.4",
-    "stentor-response": "1.72.4",
-    "stentor-service-fetch": "1.72.4",
-    "stentor-utils": "1.72.4",
+    "stentor-constants": "1.74.2",
+    "stentor-context": "1.74.4",
+    "stentor-handler": "1.74.4",
+    "stentor-logger": "1.74.4",
+    "stentor-models": "1.76.0",
+    "stentor-request": "1.74.4",
+    "stentor-response": "1.74.4",
+    "stentor-service-fetch": "1.74.2",
+    "stentor-utils": "1.75.0",
     "ts-node": "10.9.2",
     "typescript": "5.9.3"
   },
