@@ -22,7 +22,7 @@
   },
   "resolutions": {
     "xmldoc": "2.0.3",
-    "sanitize-html": "2.17.0"
+    "sanitize-html": "2.17.6"
   },
   "devDependencies": {
     "@semantic-release/changelog": "7.0.0",
