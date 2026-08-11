@@ -131,10 +131,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@conventional-changelog/template@npm:^1.2.1":
-  version: 1.2.1
-  resolution: "@conventional-changelog/template@npm:1.2.1"
-  checksum: be65738f81cb232a794fc0ab2bbe9af2e32896e0c731fe8bdf8a2ab8dabdcc2645937d1025d6f7ad8878c6a51be1da9cab71e287ac476b8e07fb0b8cb7811425
+"@conventional-changelog/template@npm:^1.3.0":
+  version: 1.3.0
+  resolution: "@conventional-changelog/template@npm:1.3.0"
+  checksum: 9b5b98fcd53de971bcdb882c67c44ce785843e49ef22ada8ac078e5e82eca273e013cdf27be5763d274c0fd3e45e63c6f2fb2b18155a0f0939eded4af759ea10
   languageName: node
   linkType: hard
 
@@ -1551,7 +1551,7 @@ __metadata:
     "@xapp/config": 0.3.0
     "@xapp/question-answering-handler": 2.5.22
     chai: 4.5.0
-    conventional-changelog-conventionalcommits: 10.2.1
+    conventional-changelog-conventionalcommits: 10.3.0
     dotenv: 16.6.1
     eslint: 8.57.1
     eslint-plugin-notice: 1.0.0
@@ -2289,12 +2289,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"conventional-changelog-conventionalcommits@npm:10.2.1":
-  version: 10.2.1
-  resolution: "conventional-changelog-conventionalcommits@npm:10.2.1"
+"conventional-changelog-conventionalcommits@npm:10.3.0":
+  version: 10.3.0
+  resolution: "conventional-changelog-conventionalcommits@npm:10.3.0"
   dependencies:
-    "@conventional-changelog/template": ^1.2.1
-  checksum: 6cce61a4c0eb4c4d5966bc1de5b6af3d62d94d0cdadd5b34b80d84fc374cdeff0e001308298d4ef1a2fa5a9849b42b0e404199bfb88760ce0bfdf874778b3908
+    "@conventional-changelog/template": ^1.3.0
+  checksum: 6b44febeb9da5c2f161f59236dd09e3395cad89887bcc531aedd2fbe3e99614ae32ddfc80449f1e46d5ba31ad4c11df8682941f53f153309fd10c11c01286acb
   languageName: node
   linkType: hard
 
