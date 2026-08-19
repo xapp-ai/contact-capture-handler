@@ -916,6 +916,9 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
             title: "Preferred date & time",
             type: "DATETIME",
             schedule: props.preferredTimeSchedule,
+            // The review step reads #{preferred_date}, which the DATE field used to supply and
+            // this field supplies now. Pin the name rather than leaning on the widget default.
+            dateFieldName: "preferred_date",
             mandatory: true,
             mandatoryError: "Please select a date and time",
         });

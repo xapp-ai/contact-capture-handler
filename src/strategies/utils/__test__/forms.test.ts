@@ -2109,6 +2109,62 @@ describe(`#${getContactFormFallback.name}()`, () => {
             expect(dateTimeField.schedule).to.deep.equal(SCHEDULE);
         });
 
+        it("pins dateFieldName to preferred_date so the review step conditions still resolve", () => {
+            const form = getContactFormFallback(
+                {
+                    capture: SIMPLE_BLUEPRINT,
+                    preferredTimeSchedule: SCHEDULE,
+                },
+                { enablePreferredTime: true },
+            );
+
+            const dateTimeField = form.steps[2].fields.find(
+                (field) => field.type === "DATETIME",
+            ) as FormDateTimeInput;
+            // The confirmation step below reads #{preferred_date}; the DATETIME field is what
+            // supplies it now, so the name is pinned rather than left to the widget default.
+            expect(dateTimeField.dateFieldName).to.equal("preferred_date");
+        });
+
+        it("keeps the review step date & time confirmation cards on the schedule branch", () => {
+            const form = getContactFormFallback(
+                {
+                    capture: SIMPLE_BLUEPRINT,
+                    preferredTimeSchedule: SCHEDULE,
+                },
+                { enablePreferredTime: true },
+            );
+
+            const confirmationStep = form.steps[3];
+            expect(confirmationStep.name).to.equal("confirmation");
+
+            // preferred_date and preferred_time are both submitted by the DATETIME field, so the
+            // card that renders "#{preferred_date}, #{preferred_time}" is the one that fires.
+            const dateWithTime = confirmationStep.fields.find(
+                (field) => field.name === "confirmation_card1_display_preferred_date_with_preferred_time",
+            ) as FormCardInput;
+            expect(dateWithTime).to.exist;
+            expect(dateWithTime.condition).to.equal("!!preferred_date && preferred_time?.length > 0");
+            expect(dateWithTime.text).to.equal("#{preferred_date}, #{preferred_time}");
+
+            // the "or" card only fires when a DATE field also contributed one, which never
+            // happens on this branch
+            const orCard = confirmationStep.fields.find(
+                (field) => field.name === "confirmation_card1_display_date_or_display",
+            ) as FormCardInput;
+            expect(orCard).to.exist;
+            expect(orCard.condition).to.equal("!!dateTime && !!preferred_date && preferred_time?.length > 0");
+
+            // the review-step "someone will contact you to confirm" message still fires
+            const confirmationMessage = confirmationStep.fields.find(
+                (field) => field.name === "preferred_time_confirmation_message",
+            ) as FormCardInput;
+            expect(confirmationMessage).to.exist;
+            expect(confirmationMessage.condition).to.equal(
+                "(!!dateTime || !!preferred_date) && preferred_time?.length > 0",
+            );
+        });
+
         it("ignores showFirstAvailableDay on the schedule branch", () => {
             const form = getContactFormFallback(
                 {
