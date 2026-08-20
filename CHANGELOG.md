@@ -1,3 +1,10 @@
+# [2.5.0](https://github.com/xapp-ai/contact-capture-handler/compare/v2.4.4...v2.5.0) (2026-08-19)
+
+
+### Features
+
+* emit DATETIME field when a preferred-time schedule is configured ([#701](https://github.com/xapp-ai/contact-capture-handler/issues/701)) ([7cacd6e](https://github.com/xapp-ai/contact-capture-handler/commit/7cacd6e94e821ede41a3e44095d656212d32dbf3)), closes [#700](https://github.com/xapp-ai/contact-capture-handler/issues/700)
+
 ## [2.4.4](https://github.com/xapp-ai/contact-capture-handler/compare/v2.4.3...v2.4.4) (2026-08-06)
 
 

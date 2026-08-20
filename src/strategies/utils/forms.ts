@@ -10,6 +10,7 @@ import type {
     MultistepForm,
     Response,
     SelectableItem,
+    TimeSlotSchedule,
 } from "stentor-models";
 import { capitalize, existsAndNotEmpty } from "stentor-utils";
 
@@ -201,6 +202,17 @@ export interface FormResponseProps {
      */
     preferredTimeOptions?: SelectableItem[];
     /**
+     * Schedule describing which appointment times the preferred time step offers.
+     *
+     * When set, the preferred time step swaps the `preferred_time` chips and the separate
+     * preferred date field for a single `DATETIME` field, also named `preferred_time`, that
+     * carries this schedule so the widget can generate the slots client side.
+     *
+     * Mutually exclusive with {@link preferredTimeOptions} — when both are supplied the schedule
+     * wins and the options are ignored.
+     */
+    preferredTimeSchedule?: TimeSlotSchedule;
+    /**
      * Custom confirmation text for the preferred date/time selection.
      * If provided, replaces the default text shown in the preferred_time_confirmation_message field.
      */
@@ -288,6 +300,7 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
             showFirstAvailableDay: data.showFirstAvailableDay,
         }),
         ...(existsAndNotEmpty(data.preferredTimeOptions) && { preferredTimeOptions: data.preferredTimeOptions }),
+        ...(data.preferredTimeSchedule && { preferredTimeSchedule: data.preferredTimeSchedule }),
         ...(data.preferredDateConfirmationText && {
             preferredDateConfirmationText: data.preferredDateConfirmationText,
         }),
@@ -893,92 +906,110 @@ export function getContactFormFallback(data: ContactCaptureData, props: FormResp
         });
     }
 
-    // Resolve chip visibility. showFirstAvailableDay wins when set;
-    // otherwise fall back to turnOffFirstAvailableDay (legacy, double-negative).
-    // Default is hidden — only an explicit opt-in shows the chip.
-    const showFirstAvailableDayChip =
-        typeof props.showFirstAvailableDay === "boolean"
-            ? props.showFirstAvailableDay
-            : props.turnOffFirstAvailableDay === false;
-
-    if (!showFirstAvailableDayChip) {
+    if (props.preferredTimeSchedule) {
+        // A schedule offers discrete slots, so a single DATETIME field owns both the date and the
+        // time. The DATE field, the "First Available Date" chips, the "Preferred Time" header card
+        // and the "we will confirm the time with you" disclaimer all belong to the chips
+        // experience and would be wrong next to a slot picker.
         preferredTimeFields.push({
-            name: "dateTime",
-            title: "Preferred date",
-            type: "DATE",
+            name: "preferred_time",
+            title: "Preferred date & time",
+            type: "DATETIME",
+            schedule: props.preferredTimeSchedule,
+            // The review step reads #{preferred_date}, which the DATE field used to supply and
+            // this field supplies now. Pin the name rather than leaning on the widget default.
+            dateFieldName: "preferred_date",
             mandatory: true,
-            mandatoryError: "Please select a date",
-            // pass through busy day information
-            defaultBusyDays: data.availabilitySettings?.defaultBusyDays,
+            mandatoryError: "Please select a date and time",
         });
     } else {
+        // Resolve chip visibility. showFirstAvailableDay wins when set;
+        // otherwise fall back to turnOffFirstAvailableDay (legacy, double-negative).
+        // Default is hidden — only an explicit opt-in shows the chip.
+        const showFirstAvailableDayChip =
+            typeof props.showFirstAvailableDay === "boolean"
+                ? props.showFirstAvailableDay
+                : props.turnOffFirstAvailableDay === false;
+
+        if (!showFirstAvailableDayChip) {
+            preferredTimeFields.push({
+                name: "dateTime",
+                title: "Preferred date",
+                type: "DATE",
+                mandatory: true,
+                mandatoryError: "Please select a date",
+                // pass through busy day information
+                defaultBusyDays: data.availabilitySettings?.defaultBusyDays,
+            });
+        } else {
+            preferredTimeFields.push({
+                name: "dateTime",
+                title: "Preferred date",
+                type: "DATE",
+                mandatoryGroup: "date",
+                mandatoryError: "Please select either a date or first available date",
+                // pass through busy day information
+                defaultBusyDays: data.availabilitySettings?.defaultBusyDays,
+            });
+
+            preferredTimeFields.push({
+                name: "preferred_date",
+                type: "CHIPS",
+                label: "Preferred Date",
+                style: {
+                    fontWeight: "bold",
+                },
+                items: [
+                    {
+                        id: "first_available",
+                        label: "First Available Date",
+                    },
+                ],
+                mandatoryGroup: "date",
+                mandatoryError: "Please select either a date or first available date",
+            });
+        }
+
+        // Add time preference card
         preferredTimeFields.push({
-            name: "dateTime",
-            title: "Preferred date",
-            type: "DATE",
-            mandatoryGroup: "date",
-            mandatoryError: "Please select either a date or first available date",
-            // pass through busy day information
-            defaultBusyDays: data.availabilitySettings?.defaultBusyDays,
+            name: "card_time_preference",
+            variant: "body1",
+            style: {
+                marginTop: "10px",
+                fontWeight: "bold",
+            },
+            text: "Preferred Time",
+            type: "CARD",
         });
 
+        // Add preferred_time field with custom or default items
+        const preferredTimeItems = existsAndNotEmpty(props.preferredTimeOptions)
+            ? props.preferredTimeOptions
+            : DEFAULT_PREFERRED_TIME_ITEMS;
+
         preferredTimeFields.push({
-            name: "preferred_date",
+            name: "preferred_time",
             type: "CHIPS",
-            label: "Preferred Date",
+            label: "Preferred Time",
             style: {
                 fontWeight: "bold",
             },
-            items: [
-                {
-                    id: "first_available",
-                    label: "First Available Date",
-                },
-            ],
-            mandatoryGroup: "date",
-            mandatoryError: "Please select either a date or first available date",
+            items: preferredTimeItems,
+            mandatory: true,
+            radio: true,
+        });
+
+        // Add note card
+        preferredTimeFields.push({
+            name: "time_request_note_card",
+            text: "These are only date and time preferences. Someone will confirm the date & time with you.",
+            style: {
+                fontStyle: "italic",
+            },
+            title: "Card",
+            type: "CARD",
         });
     }
-
-    // Add time preference card
-    preferredTimeFields.push({
-        name: "card_time_preference",
-        variant: "body1",
-        style: {
-            marginTop: "10px",
-            fontWeight: "bold",
-        },
-        text: "Preferred Time",
-        type: "CARD",
-    });
-
-    // Add preferred_time field with custom or default items
-    const preferredTimeItems = existsAndNotEmpty(props.preferredTimeOptions)
-        ? props.preferredTimeOptions
-        : DEFAULT_PREFERRED_TIME_ITEMS;
-
-    preferredTimeFields.push({
-        name: "preferred_time",
-        type: "CHIPS",
-        label: "Preferred Time",
-        style: {
-            fontWeight: "bold",
-        },
-        items: preferredTimeItems,
-        mandatory: true,
-        radio: true,
-    });
-
-    // Add note card
-    preferredTimeFields.push({
-        name: "time_request_note_card",
-        text: "These are only date and time preferences. Someone will confirm the date & time with you.",
-        style: {
-            fontStyle: "italic",
-        },
-        title: "Card",
-        type: "CARD",
-    });
 
     // Build the service selection field based on firstPageInputType
     const serviceSelectionTitle = props.serviceSelectionTitle || "What can we help you with?";
