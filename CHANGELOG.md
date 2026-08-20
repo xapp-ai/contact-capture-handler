@@ -1,3 +1,10 @@
+# [2.6.0](https://github.com/xapp-ai/contact-capture-handler/compare/v2.5.0...v2.6.0) (2026-08-20)
+
+
+### Features
+
+* classify the CostGuide trade with an LLM instead of a hand-kept map ([#703](https://github.com/xapp-ai/contact-capture-handler/issues/703)) ([88caba8](https://github.com/xapp-ai/contact-capture-handler/commit/88caba8e85be1a48d60e3c442bd241fd333b2739)), closes [stentor-core#5328](https://github.com/stentor-core/issues/5328) [xapp-ai/contact-capture-handler#695](https://github.com/xapp-ai/contact-capture-handler/issues/695)
+
 # [2.5.0](https://github.com/xapp-ai/contact-capture-handler/compare/v2.4.4...v2.5.0) (2026-08-19)
 
 
