@@ -232,6 +232,37 @@ describe("#resolveBookingTrade()", () => {
             expect(llm.prompts).to.have.length(0);
         });
 
+        it("never widens to the full taxonomy when an allow list was configured but none of it validated", async () => {
+            // The failure this guards: an operator who tried to RESTRICT the contractor to roofing,
+            // and fumbled the string, would otherwise get the opposite of what they asked for --
+            // all 117 trades on the table, indistinguishable from having configured nothing.
+            const llm = stubLLM(answer(TERMITE, 0.99));
+
+            const result = await resolveBookingTrade({
+                externalBooking: { ...BASE, allowedTrades: ["Roofing - Asphalt  Install or Replace"] },
+                description: "I have termites in my attic",
+                llmService: llm,
+            });
+
+            expect(llm.prompts).to.have.length(0);
+            expect(result.trade).to.equal(undefined);
+            expect(result.method).to.equal("omitted");
+        });
+
+        it("falls back to the default when an allow list was configured but none of it validated", async () => {
+            const llm = stubLLM(answer(TERMITE, 0.99));
+
+            const result = await resolveBookingTrade({
+                externalBooking: { ...BASE, allowedTrades: ["Rooofing - Typo"], defaultTrade: ROOFING },
+                description: "I have termites in my attic",
+                llmService: llm,
+            });
+
+            expect(llm.prompts).to.have.length(0);
+            expect(result.trade).to.equal(ROOFING);
+            expect(result.method).to.equal("default");
+        });
+
         it("does not send a defaultTrade that is not a real trade", async () => {
             const result = await resolveBookingTrade({
                 externalBooking: { ...BASE, defaultTrade: "Roofing - Thatch" },

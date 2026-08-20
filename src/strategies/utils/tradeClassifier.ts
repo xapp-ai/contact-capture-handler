@@ -139,6 +139,7 @@ export async function resolveBookingTrade(params: ResolveBookingTradeParams): Pr
 
     // Operator-authored, so validate rather than trust: an entry that is not a real CostGuide
     // trade can never be matched by classification and must not reach the payload.
+    const configuredAllowList = (externalBooking.allowedTrades ?? []).length > 0;
     const allowed: string[] = [];
     for (const entry of externalBooking.allowedTrades ?? []) {
         const canonical = canonicalTrade(entry);
@@ -165,7 +166,15 @@ export async function resolveBookingTrade(params: ResolveBookingTradeParams): Pr
 
     // Nothing narrows the taxonomy, but the contractor told us what they do. Classifying against
     // all 117 trades here could hand a roofer a pest-control booking; their default is safer.
-    if (allowed.length === 0 && fallbackTrade) {
+    //
+    // `configuredAllowList` covers the nastier case: an operator DID restrict the contractor and
+    // every entry failed to validate (a typo, a stale trade name). Falling through would then hand
+    // the classifier all 117 trades -- turning an attempt to restrict into the exact opposite, and
+    // indistinguishable from having configured nothing at all.
+    if (allowed.length === 0 && (fallbackTrade || configuredAllowList)) {
+        if (configuredAllowList) {
+            log().warn("No allowedTrades entry validated; not classifying against the full taxonomy");
+        }
         return useFallback();
     }
 
