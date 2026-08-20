@@ -257,7 +257,9 @@ describe(`${FormResponseStrategy.name}`, () => {
             advertiserId: 4944,
             campaignId: "6a283d45eddcf",
             campaignKey: "6YGTmNKxtjMDVkWPLwgC",
-            tradeMap: { roofing: "Roofing - Asphalt Install or Replace" },
+            // Single-trade contractor: resolves without a model call, so this stays a test of the
+            // strategy's wiring rather than of the classifier (which has its own suite).
+            allowedTrades: ["Roofing - Asphalt Install or Replace"],
         };
 
         let sendLead: sinon.SinonStub;
@@ -342,7 +344,7 @@ describe(`${FormResponseStrategy.name}`, () => {
         });
 
         it("omits the handoff (no FORM_STEP_UPDATE) when the trade cannot be resolved, but still sends the lead", async () => {
-            handler = buildHandler({ ...EXTERNAL_BOOKING, tradeMap: {}, defaultTrade: undefined });
+            handler = buildHandler({ ...EXTERNAL_BOOKING, allowedTrades: [], defaultTrade: undefined });
             context = buildContext();
             const response = await new FormResponseStrategy().getResponse(handler, buildRequest(), context);
 
@@ -351,6 +353,42 @@ describe(`${FormResponseStrategy.name}`, () => {
                 Array.isArray(response.displays) &&
                 response.displays.some((d) => (d as Record<string, unknown>).type === "FORM_STEP_UPDATE");
             expect(hasStepUpdate).to.equal(false);
+        });
+
+        // Mis-classification is a when, not an if. Without provenance on the lead the only
+        // signal is a customer complaint; with it we can count how often and see why.
+        describe("trade provenance on the lead", () => {
+            const extrasFromSendLead = (): Record<string, unknown> =>
+                sendLead.getCall(0).args[1] as Record<string, unknown>;
+
+            it("records the resolved trade and how it resolved", async () => {
+                handler = buildHandler(EXTERNAL_BOOKING);
+                context = buildContext();
+                await new FormResponseStrategy().getResponse(handler, buildRequest(), context);
+
+                expect(extrasFromSendLead()).to.deep.include({
+                    externalBookingTrade: "Roofing - Asphalt Install or Replace",
+                    externalBookingTradeResolution: "single-trade",
+                });
+            });
+
+            it("records the omitted case too, rather than leaving it invisible", async () => {
+                handler = buildHandler({ ...EXTERNAL_BOOKING, allowedTrades: [], defaultTrade: undefined });
+                context = buildContext();
+                await new FormResponseStrategy().getResponse(handler, buildRequest(), context);
+
+                const extras = extrasFromSendLead();
+                expect(extras.externalBookingTradeResolution).to.equal("omitted");
+                expect(extras.externalBookingTrade).to.equal(undefined);
+            });
+
+            it("leaves an app with no externalBooking entirely untouched", async () => {
+                handler = buildHandler(undefined);
+                context = buildContext();
+                await new FormResponseStrategy().getResponse(handler, buildRequest(), context);
+
+                expect(extrasFromSendLead()).to.not.have.property("externalBookingTradeResolution");
+            });
         });
     });
 

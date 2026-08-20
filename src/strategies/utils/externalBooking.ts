@@ -80,38 +80,27 @@ export function normalizePhone(phone: string): string {
     return phone;
 }
 
-/**
- * Resolves the partner trade string: `tradeMap[service]` ?? `defaultTrade`. Returns
- * undefined when neither resolves -- the caller omits the handoff rather than send a bad trade.
- */
-export function resolveTrade(service: string | undefined, externalBooking: ExternalBookingData): string | undefined {
-    const map = externalBooking.tradeMap ?? {};
-    // hasOwnProperty guard: `service` comes from Studio-authored / request data, so a value like
-    // "constructor" or "__proto__" must not resolve to an inherited Object.prototype member.
-    if (service && Object.prototype.hasOwnProperty.call(map, service) && map[service]) {
-        return map[service];
-    }
-    return externalBooking.defaultTrade;
-}
-
 export interface BuildExternalBookingConfigParams {
     /** The collected form attributes (`FormActionResponseData.result`). */
     result: Record<string, unknown>;
-    /** The collected service / job-type id used to resolve the trade. */
-    service?: string;
+    /**
+     * The already-resolved partner trade. Resolution happens at capture time, before the lead is
+     * sent, so its provenance can be recorded on the lead -- see `resolveBookingTrade`. Undefined
+     * means it did not resolve, and the handoff is omitted.
+     */
+    trade?: string;
     externalBooking: ExternalBookingData;
 }
 
 /**
  * Builds the config the widget merges over the handoff step's static config. Returns
- * undefined when the trade cannot be resolved, signalling the caller to omit the handoff.
+ * undefined when there is no trade, signalling the caller to omit the handoff.
  */
 export function buildExternalBookingConfig(
     params: BuildExternalBookingConfigParams,
 ): Record<string, string | number> | undefined {
-    const { result, service, externalBooking } = params;
+    const { result, trade, externalBooking } = params;
 
-    const trade = resolveTrade(service, externalBooking);
     if (!trade) {
         return undefined;
     }

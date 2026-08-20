@@ -12,7 +12,6 @@ import {
     splitName,
     extractZip,
     normalizePhone,
-    resolveTrade,
 } from "../externalBooking";
 
 const expect = chai.expect;
@@ -23,10 +22,7 @@ const BASE_BOOKING: ExternalBookingData = {
     advertiserId: 4944,
     campaignId: "6a283d45eddcf",
     campaignKey: "6YGTmNKxtjMDVkWPLwgC",
-    tradeMap: {
-        roofing: "Roofing - Asphalt Install or Replace",
-        windows: "Windows - Replace 6-9 Windows",
-    },
+    allowedTrades: ["Roofing - Asphalt Install or Replace", "Windows - Replace 6-9 Windows"],
     defaultTrade: "Bathroom - Bathtub or Shower Updates",
 };
 
@@ -94,28 +90,6 @@ describe("#normalizePhone()", () => {
     });
 });
 
-describe("#resolveTrade()", () => {
-    it("resolves from the tradeMap", () => {
-        expect(resolveTrade("roofing", BASE_BOOKING)).to.equal("Roofing - Asphalt Install or Replace");
-    });
-
-    it("falls back to defaultTrade when the service has no mapping", () => {
-        expect(resolveTrade("gutters", BASE_BOOKING)).to.equal("Bathroom - Bathtub or Shower Updates");
-    });
-
-    it("returns undefined when neither a mapped trade nor a default resolves", () => {
-        expect(resolveTrade("gutters", { ...BASE_BOOKING, defaultTrade: undefined })).to.equal(undefined);
-        expect(resolveTrade(undefined, { ...BASE_BOOKING, tradeMap: {}, defaultTrade: undefined })).to.equal(undefined);
-    });
-
-    it("does not resolve inherited Object.prototype members (prototype-safe lookup)", () => {
-        const booking: ExternalBookingData = { ...BASE_BOOKING, tradeMap: {}, defaultTrade: undefined };
-        expect(resolveTrade("constructor", booking)).to.equal(undefined);
-        expect(resolveTrade("toString", booking)).to.equal(undefined);
-        expect(resolveTrade("__proto__", booking)).to.equal(undefined);
-    });
-});
-
 describe("#buildExternalBookingConfig()", () => {
     it("maps collected data + partner ids into the merge config", () => {
         const config = buildExternalBookingConfig({
@@ -126,7 +100,7 @@ describe("#buildExternalBookingConfig()", () => {
                 email: "jane@example.com",
                 phone: "5550000000",
             },
-            service: "roofing",
+            trade: "Roofing - Asphalt Install or Replace",
             externalBooking: BASE_BOOKING,
         });
 
@@ -144,11 +118,11 @@ describe("#buildExternalBookingConfig()", () => {
         });
     });
 
-    it("returns undefined when the trade cannot be resolved (so the handoff is omitted)", () => {
+    it("returns undefined when no trade resolved (so the handoff is omitted)", () => {
         const config = buildExternalBookingConfig({
             result: { full_name: "Jane Doe", zip: "17002" },
-            service: "gutters",
-            externalBooking: { ...BASE_BOOKING, defaultTrade: undefined },
+            trade: undefined,
+            externalBooking: BASE_BOOKING,
         });
         expect(config).to.equal(undefined);
     });
@@ -156,7 +130,7 @@ describe("#buildExternalBookingConfig()", () => {
     it("omits fields that were not collected (except the always-present partner ids and trade)", () => {
         const config = buildExternalBookingConfig({
             result: { full_name: "Cher" },
-            service: "windows",
+            trade: "Windows - Replace 6-9 Windows",
             externalBooking: BASE_BOOKING,
         });
         expect(config).to.deep.equal({
