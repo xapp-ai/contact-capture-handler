@@ -6,3 +6,4 @@ export * from "./ResponseStrategy";
 export * from "./ResponseStrategySelector";
 
 export * from "./utils/forms";
+export * from "./utils/tradeClassifier";

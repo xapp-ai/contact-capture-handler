@@ -26,6 +26,7 @@ import { ContactCaptureHandler } from "../handler";
 import { ResponseStrategy } from "./ResponseStrategy";
 import { getFormResponse, getStepFromData } from "./utils/forms";
 import { buildExternalBookingConfig, DEFAULT_EXTERNAL_BOOKING_STEP_NAME } from "./utils/externalBooking";
+import { resolveBookingTrade, TradeResolution } from "./utils/tradeClassifier";
 
 /**
  * Action response data object
@@ -288,6 +289,25 @@ export class FormResponseStrategy implements ResponseStrategy {
 
         // Send the lead if we got here
 
+        const externalBooking = handler.data?.externalBooking;
+
+        // Resolve the partner trade BEFORE the lead is sent, so how it resolved is recorded on the
+        // lead itself rather than being invisible. Mis-classification is a when, not an if, and
+        // this is the difference between "a customer complained" and "we can see it happened".
+        let tradeResolution: TradeResolution | undefined;
+        if (externalBooking?.enabled && isCrmSubmitStep) {
+            const messageSlot = slots?.message ? requestSlotValueToString(slots.message.value) : undefined;
+            const helpType = slots?.help_type ? requestSlotValueToString(slots.help_type.value) : service;
+
+            tradeResolution = await resolveBookingTrade({
+                externalBooking,
+                description: messageSlot,
+                chips: helpType ? [helpType] : [],
+                llmService: context.services.llmService,
+            });
+            log().info(`CostGuide trade resolved as "${tradeResolution.trade}" (${tradeResolution.method})`);
+        }
+
         const url: string = request.attributes?.currentUrl as string;
         // Re-read rather than reusing the `data` const above, which is block-scoped to the
         // !isAbandoned branch. An abandoned session may or may not carry a payload, hence
@@ -317,6 +337,16 @@ export class FormResponseStrategy implements ResponseStrategy {
                 handler.data?.availabilitySettings?.defaultAvailabilityClass,
             crmFlags: handler.data?.crmFlags,
             isAbandoned,
+            // Flat rather than nested: the leads index is queried on flat keys, and an
+            // "omitted" row is exactly the one we will want to count later.
+            ...(tradeResolution
+                ? {
+                      externalBookingTrade: tradeResolution.trade,
+                      externalBookingTradeResolution: tradeResolution.method,
+                      externalBookingTradeConfidence: tradeResolution.confidence,
+                      externalBookingTradeReasoning: tradeResolution.reasoning,
+                  }
+                : {}),
         };
 
         // In case of a form, there is no transcript. The data is the "transcript".
@@ -352,7 +382,6 @@ export class FormResponseStrategy implements ResponseStrategy {
         // The lead is already recorded above; this only returns the partner config the widget
         // mounts its handoff step with. We do NOT deliver the lead to the partner.
         response = {};
-        const externalBooking = handler.data?.externalBooking;
         if (externalBooking?.enabled && isCrmSubmitStep) {
             // Build from the SESSION-ACCUMULATED slots -- the same source sendLead() uses above.
             // The crmSubmit step (confirmation) is display-only, so this step's own payload holds
@@ -361,15 +390,10 @@ export class FormResponseStrategy implements ResponseStrategy {
             for (const name of Object.keys(slots || {})) {
                 accumulated[name] = requestSlotValueToString(slots[name]?.value);
             }
-            // Resolve the trade from the visitor's collected service selection (help_type),
-            // falling back to the initial request attribute if the slot is absent.
-            const collectedService = slots?.help_type
-                ? requestSlotValueToString(slots.help_type.value)
-                : service;
 
             const config = buildExternalBookingConfig({
                 result: accumulated,
-                service: collectedService,
+                trade: tradeResolution?.trade,
                 externalBooking,
             });
             // No resolvable trade -> omit the handoff and behave exactly as today.

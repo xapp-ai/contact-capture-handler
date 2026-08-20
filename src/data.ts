@@ -142,13 +142,19 @@ export interface ExternalBookingData {
      */
     campaignKey: string;
     /**
-     * Maps our collected service / job-type id to the partner's trade string,
-     * e.g. { "roofing": "Roofing - Asphalt Install or Replace" }.
+     * The partner trades this contractor accepts, from `COSTGUIDE_TRADES`. Constrains
+     * classification: with an allow list, a roofer can never be handed a pest-control booking.
+     *
+     * Exactly one entry means there is nothing to decide and no classification is attempted.
+     * Entries that are not real CostGuide trades are ignored.
      */
-    tradeMap?: Record<string, string>;
+    allowedTrades?: string[];
     /**
-     * Trade used when the collected service has no `tradeMap` entry. When neither a mapped
-     * trade nor this default resolves, the handoff is omitted rather than sent with a bad trade.
+     * Trade used when classification does not land -- no allow list to classify within, low
+     * confidence, or the classifier was unavailable. When neither a classified trade nor this
+     * default resolves, the handoff is omitted rather than sent with a bad trade.
+     *
+     * Must itself be a real CostGuide trade; anything else is ignored.
      */
     defaultTrade?: string;
 }
