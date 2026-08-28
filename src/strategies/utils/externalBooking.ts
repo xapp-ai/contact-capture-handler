@@ -51,14 +51,14 @@ export function splitName(result: Record<string, unknown>): { firstName: string;
 }
 
 /**
- * Resolves the zip: `zip` ?? `zip_code` ?? the first 5-digit zip found in `address`.
+ * Resolves the zip: `zip` ?? `zip_code` ?? the LAST 5-digit run in `address`.
  */
 export function extractZip(result: Record<string, unknown>): string | undefined {
     const explicit = str(result.zip) ?? str(result.zip_code);
     if (explicit) {
         return explicit;
     }
-    const address = str(result.address);
+    const address = str(result.address)?.trim();
     if (!address) {
         return undefined;
     }
@@ -79,10 +79,15 @@ export function extractZip(result: Record<string, unknown>): string | undefined 
         return undefined;
     }
 
-    // A single match at the very start of the string is the house number of an address that
-    // carries no zip at all. Sending it would look exactly like a correct booking in the wrong
-    // county; sending nothing fails visibly instead.
-    if (last.index === 0) {
+    // A match at the very start that is followed by more address text is the house number of an
+    // address carrying no zip at all. Sending it would look exactly like a correct booking in the
+    // wrong county; sending nothing fails visibly instead.
+    //
+    // The "followed by more text" half matters: ADDRESS is free text -- `validators.ts` passes it
+    // through untouched and nothing forces an autocomplete selection -- so a visitor may type only
+    // their zip into it. That match is also at index 0, and dropping it would omit `zipCode` and
+    // give CostGuide the same blank widget this whole function exists to avoid.
+    if (last.index === 0 && last[0].length < address.length) {
         return undefined;
     }
 

@@ -87,6 +87,16 @@ describe("#extractZip()", () => {
         expect(extractZip({})).to.equal(undefined);
     });
 
+    it("returns a bare zip typed into the address box", () => {
+        // ADDRESS is free text -- validators.ts passes it through untouched and nothing forces an
+        // autocomplete selection -- so a visitor typing only their zip there is realistic. That
+        // match also sits at index 0, and dropping it would omit zipCode and give CostGuide the
+        // same blank widget this fix exists to prevent.
+        expect(extractZip({ address: "20120" })).to.equal("20120");
+        expect(extractZip({ address: "  20120  " })).to.equal("20120");
+        expect(extractZip({ address: "20120-1234" })).to.equal("20120");
+    });
+
     it("returns undefined rather than passing a lone street number off as a zip", () => {
         // A wrong zip is worse than none: CostGuide would match a contractor in the wrong part of
         // the country and the booking would look fine. No zip at least fails visibly.
