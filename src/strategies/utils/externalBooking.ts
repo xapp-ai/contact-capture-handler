@@ -51,21 +51,47 @@ export function splitName(result: Record<string, unknown>): { firstName: string;
 }
 
 /**
- * Resolves the zip: `zip` ?? `zip_code` ?? the first 5-digit zip found in `address`.
+ * Resolves the zip: `zip` ?? `zip_code` ?? the LAST 5-digit run in `address`.
  */
 export function extractZip(result: Record<string, unknown>): string | undefined {
     const explicit = str(result.zip) ?? str(result.zip_code);
     if (explicit) {
         return explicit;
     }
-    const address = str(result.address);
-    if (address) {
-        const match = address.match(/\b(\d{5})(?:-\d{4})?\b/);
-        if (match) {
-            return match[1];
-        }
+    const address = str(result.address)?.trim();
+    if (!address) {
+        return undefined;
     }
-    return undefined;
+
+    // The LAST five-digit run, not the first. US addresses put the zip at the end and the house
+    // number at the start, and a five-digit house number is common -- "15603 Jillians Forest Way,
+    // Centreville, VA 20120, USA" sent CostGuide 15603, which is a real zip 250 miles away. They
+    // match the contractor on zip and run with hideNoMatch, so their widget rendered nothing and
+    // it read as our handoff failing.
+    const pattern = /\b(\d{5})(?:-\d{4})?\b/g;
+    let last: RegExpExecArray | undefined;
+    let match: RegExpExecArray | null;
+    while ((match = pattern.exec(address)) !== null) {
+        last = match;
+    }
+
+    if (!last) {
+        return undefined;
+    }
+
+    // A match at the very start that is followed by more address text is the house number of an
+    // address carrying no zip at all. Sending it would look exactly like a correct booking in the
+    // wrong county; sending nothing fails visibly instead.
+    //
+    // The "followed by more text" half matters: ADDRESS is free text -- `validators.ts` passes it
+    // through untouched and nothing forces an autocomplete selection -- so a visitor may type only
+    // their zip into it. That match is also at index 0, and dropping it would omit `zipCode` and
+    // give CostGuide the same blank widget this whole function exists to avoid.
+    if (last.index === 0 && last[0].length < address.length) {
+        return undefined;
+    }
+
+    return last[1];
 }
 
 /**
