@@ -68,9 +68,29 @@ describe("#extractZip()", () => {
         expect(extractZip({ address: "123 Any St, PA 17002-1234" })).to.equal("17002");
     });
 
+    it("takes the zip, not a five-digit street number", () => {
+        // The first live CostGuide handoff sent zipCode 15603 -- the house number -- for
+        // "15603 Jillians Forest Way, Centreville, VA 20120, USA". CostGuide matches the
+        // contractor on zip and runs with hideNoMatch, so their widget rendered nothing and it
+        // read as our handoff being broken. Every fixture here had a 3-digit street number.
+        expect(extractZip({ address: "15603 Jillians Forest Way, Centreville, VA 20120, USA" }))
+            .to.equal("20120");
+    });
+
+    it("takes the zip when a five-digit street number is followed by a ZIP+4", () => {
+        expect(extractZip({ address: "15603 Jillians Forest Way, Centreville, VA 20120-1234" }))
+            .to.equal("20120");
+    });
+
     it("returns undefined when no zip can be found", () => {
         expect(extractZip({ address: "123 Any Street" })).to.equal(undefined);
         expect(extractZip({})).to.equal(undefined);
+    });
+
+    it("returns undefined rather than passing a lone street number off as a zip", () => {
+        // A wrong zip is worse than none: CostGuide would match a contractor in the wrong part of
+        // the country and the booking would look fine. No zip at least fails visibly.
+        expect(extractZip({ address: "15603 Jillians Forest Way" })).to.equal(undefined);
     });
 });
 

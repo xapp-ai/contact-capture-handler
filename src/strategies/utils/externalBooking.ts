@@ -59,13 +59,34 @@ export function extractZip(result: Record<string, unknown>): string | undefined 
         return explicit;
     }
     const address = str(result.address);
-    if (address) {
-        const match = address.match(/\b(\d{5})(?:-\d{4})?\b/);
-        if (match) {
-            return match[1];
-        }
+    if (!address) {
+        return undefined;
     }
-    return undefined;
+
+    // The LAST five-digit run, not the first. US addresses put the zip at the end and the house
+    // number at the start, and a five-digit house number is common -- "15603 Jillians Forest Way,
+    // Centreville, VA 20120, USA" sent CostGuide 15603, which is a real zip 250 miles away. They
+    // match the contractor on zip and run with hideNoMatch, so their widget rendered nothing and
+    // it read as our handoff failing.
+    const pattern = /\b(\d{5})(?:-\d{4})?\b/g;
+    let last: RegExpExecArray | undefined;
+    let match: RegExpExecArray | null;
+    while ((match = pattern.exec(address)) !== null) {
+        last = match;
+    }
+
+    if (!last) {
+        return undefined;
+    }
+
+    // A single match at the very start of the string is the house number of an address that
+    // carries no zip at all. Sending it would look exactly like a correct booking in the wrong
+    // county; sending nothing fails visibly instead.
+    if (last.index === 0) {
+        return undefined;
+    }
+
+    return last[1];
 }
 
 /**
