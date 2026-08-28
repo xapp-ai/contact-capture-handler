@@ -1,3 +1,10 @@
+## [2.7.1](https://github.com/xapp-ai/contact-capture-handler/compare/v2.7.0...v2.7.1) (2026-08-28)
+
+
+### Bug Fixes
+
+* take the zip from the end of an address, not the first five digits ([#707](https://github.com/xapp-ai/contact-capture-handler/issues/707)) ([e6b26bc](https://github.com/xapp-ai/contact-capture-handler/commit/e6b26bc971277035e837b2e3c9d71130c008d93c))
+
 # [2.7.0](https://github.com/xapp-ai/contact-capture-handler/compare/v2.6.0...v2.7.0) (2026-08-28)
 
 
