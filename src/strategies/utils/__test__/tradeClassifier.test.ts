@@ -301,6 +301,32 @@ describe("#resolveBookingTrade()", () => {
             expect(result.method).to.equal("classified");
         });
 
+
+        it("tells the model the list is category representatives, not literal job descriptions", async () => {
+            // CostGuide's own guidance (Vito, 2026-08-14): "for a contractor who takes roofing leads
+            // and windows leads, mapping every roofing related lead to 'Roofing - Asphalt Install or
+            // Replace' and every windows lead to 'Windows - Replace 6-9 Windows' should be just
+            // fine; no need to get more granular."
+            //
+            // Without saying so, the model reads the entries literally and refuses the match: on
+            // 2026-08-28 "I want a standing seam metal roof installed" came back as a no-match
+            // against a list whose only roofing entry was the asphalt one -- dropping a roofing
+            // lead a roofer wants. Reserve null for work no listed trade covers at all.
+            const llm = stubLLM(answer(ROOFING, 0.9));
+
+            await resolveBookingTrade({
+                externalBooking: { ...BASE, allowedTrades: [ROOFING, BATHROOM] },
+                description: "standing seam metal roof",
+                llmService: llm,
+            });
+
+            const system = (llm.prompts[0] as Prompt & { messages: { role: string; content: string }[] })
+                .messages.filter((m) => m.role === "system").map((m) => m.content).join(" ").toLowerCase();
+
+            expect(system).to.contain("categor");
+            expect(system).to.match(/material|quantity|granular/);
+        });
+
         it("treats an explicit no-match as a no-match, not as a zero-confidence answer", async () => {
             // guessJobTypes returned { confidence: 0, id: default } and callers read the id without
             // reading the confidence, silently marking real leads dead. Keep the outcomes distinct.
@@ -312,8 +338,66 @@ describe("#resolveBookingTrade()", () => {
                 llmService: llm,
             });
 
-            expect(result.method).to.equal("default");
+            expect(result.method).to.equal("no-match");
             expect(result.confidence).to.equal(undefined);
+        });
+
+        it("omits rather than defaulting when no listed trade fits the enquiry", async () => {
+            // Measured against the real model 2026-08-28: "My furnace stopped working and the house
+            // is freezing" against a roofing/windows/siding/bath contractor came back as a no-match
+            // and the ladder posted it as "Roofing - Asphalt Install or Replace". A furnace enquiry
+            // handed to a roofer as a roofing lead is worse for them than no lead at all, so the
+            // model saying "none of these" has to beat the operator's default.
+            const llm = stubLLM(answer(null, 0.95, "the enquiry is about heating, not any listed trade"));
+
+            const result = await resolveBookingTrade({
+                externalBooking: { ...BASE, allowedTrades: [ROOFING, BATHROOM], defaultTrade: ROOFING },
+                description: "my furnace stopped working and the house is freezing",
+                llmService: llm,
+            });
+
+            expect(result.method).to.equal("no-match");
+            expect(result.trade).to.equal(undefined);
+        });
+
+        it("keeps the model's reasoning on a no-match, so a dropped handoff is diagnosable", async () => {
+            const llm = stubLLM(answer(null, 0.9, "heating work, none of the listed trades cover it"));
+
+            const result = await resolveBookingTrade({
+                externalBooking: { ...BASE, allowedTrades: [ROOFING, BATHROOM], defaultTrade: ROOFING },
+                description: "my furnace stopped working",
+                llmService: llm,
+            });
+
+            expect(result.reasoning).to.equal("heating work, none of the listed trades cover it");
+        });
+
+        it("still defaults when the model names a trade outside the list, which is not the same signal", async () => {
+            // A value that is not on the list is the model paraphrasing or inventing, not the model
+            // reporting that nothing fits. The enquiry may well be in scope, so the default stands.
+            const llm = stubLLM(answer("Roofing - Asphalt", 0.95));
+
+            const result = await resolveBookingTrade({
+                externalBooking: { ...BASE, allowedTrades: [ROOFING, BATHROOM], defaultTrade: ROOFING },
+                description: "my roof is leaking",
+                llmService: llm,
+            });
+
+            expect(result.method).to.equal("default");
+            expect(result.trade).to.equal(ROOFING);
+        });
+
+        it("still defaults on a low-confidence match, since the enquiry did fit something", async () => {
+            const llm = stubLLM(answer(BATHROOM, TRADE_CONFIDENCE_THRESHOLD - 0.01));
+
+            const result = await resolveBookingTrade({
+                externalBooking: { ...BASE, allowedTrades: [ROOFING, BATHROOM], defaultTrade: ROOFING },
+                description: "something about the bathroom maybe",
+                llmService: llm,
+            });
+
+            expect(result.method).to.equal("default");
+            expect(result.trade).to.equal(ROOFING);
         });
     });
 
