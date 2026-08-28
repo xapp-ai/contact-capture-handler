@@ -23,6 +23,12 @@ export type TradeResolutionMethod =
     | "classified"
     /** Configured fallback: classification did not land, or was never attempted. */
     | "default"
+    /**
+     * The model read the enquiry and reported that none of the accepted trades fit it. The handoff
+     * is dropped: this is a statement about the enquiry, not a failure to classify, so it outranks
+     * `defaultTrade`.
+     */
+    | "no-match"
     /** Nothing resolved. The caller omits the handoff rather than send a bad trade. */
     | "omitted";
 
@@ -32,7 +38,10 @@ export interface TradeResolution {
     readonly method: TradeResolutionMethod;
     /** Only set for `classified` -- an unclassified outcome has no confidence to report. */
     readonly confidence?: number;
-    /** Only set for `classified` -- the model's stated reasoning, for after-the-fact review. */
+    /**
+     * The model's stated reasoning, for after-the-fact review. Set for `classified` and for
+     * `no-match` -- a dropped handoff is the outcome most in need of an explanation.
+     */
     readonly reasoning?: string;
 }
 
@@ -52,13 +61,28 @@ export const TRADE_CLASSIFIER_MODEL = "us.anthropic.claude-haiku-4-5-20251001-v1
  */
 export const TRADE_CLASSIFIER_TIMEOUT_MS = 4000;
 
+/**
+ * The list entries are deliberately coarse. CostGuide's own guidance (Vito Sauro, 2026-08-14) is to
+ * map a contractor's whole category onto one representative entry -- every roofing lead to
+ * "Roofing - Asphalt Install or Replace", every windows lead to "Windows - Replace 6-9 Windows" --
+ * rather than picking the granular trade that literally describes the job.
+ *
+ * The model has to be told, or it reads the entries literally and refuses. Measured 2026-08-28
+ * against a roofing/windows/siding/bath list: "I want a standing seam metal roof installed" came
+ * back null, dropping a roofing lead a roofer wants. Reserve null for work that no listed trade
+ * covers at all -- a furnace, a gutter clean -- which is what it is for.
+ */
 const SYSTEM_PROMPT =
     "You match a home-services enquiry to one trade from a fixed list. " +
     "Reply with JSON only: {\"trade\": <exact string from the list, or null>, " +
     "\"confidence\": <0 to 1>, \"reasoning\": <one short sentence>}. " +
     "The trade MUST be copied character-for-character from the list. " +
-    "If no listed trade genuinely fits the enquiry, return null for trade -- " +
-    "a wrong match is much worse than no match.";
+    "Treat each list entry as standing for its whole category of work, not as a literal job " +
+    "description: match on the category -- roofing, windows, siding, bathroom -- and ignore any " +
+    "mismatch in material, quantity or granular job type. A metal roof still matches an asphalt " +
+    "roofing entry; two windows still match a 6-9 windows entry. " +
+    "Return null for trade ONLY when the enquiry is work that no listed category covers at all, " +
+    "or when there is nothing in it to go on -- a wrong category is much worse than no match.";
 
 interface ClassifierAnswer {
     readonly trade?: string;
@@ -129,8 +153,9 @@ export interface ResolveBookingTradeParams {
  * 1. exactly one allowed trade -> use it, no model call
  * 2. no allow list but a default -> use the default, no model call
  * 3. classify, constrained to the accepted list, at or above the confidence threshold
- * 4. `defaultTrade`
- * 5. nothing -> omit the handoff
+ * 4. the model says nothing on the list fits -> omit, without consulting `defaultTrade`
+ * 5. `defaultTrade`
+ * 6. nothing -> omit the handoff
  *
  * Never throws: a classifier failure degrades down the ladder rather than failing the submit.
  */
@@ -205,8 +230,24 @@ export async function resolveBookingTrade(params: ResolveBookingTradeParams): Pr
         return useFallback();
     }
 
-    // The model can return a string that was never in the list -- its own confidence is no
-    // evidence that it was. Match first, believe second.
+    // The prompt asks for null when nothing on the list genuinely fits, and the model uses it.
+    // That is a finding about the enquiry rather than a failed classification, so it must not fall
+    // through to `defaultTrade`: posting "my furnace stopped working" to a roofer as
+    // "Roofing - Asphalt Install or Replace" hands them a lead that is worse than no lead, and the
+    // mislabelling is invisible once it has left us. Measured against the real model on
+    // 2026-08-28, this is also what an enquiry too vague to place looks like -- "I'd like a quote"
+    // returns null too, and guessing a trade for it is the same mistake.
+    if (answer.trade === null || answer.trade === undefined) {
+        log().info("Trade classifier found no listed trade that fits the enquiry; omitting the handoff");
+        return {
+            method: "no-match",
+            reasoning: typeof answer.reasoning === "string" ? answer.reasoning : undefined,
+        };
+    }
+
+    // A value that IS present but not on the list is the model paraphrasing or inventing, not
+    // reporting an absence -- its own confidence is no evidence it was on the list. The enquiry may
+    // well be in scope, so this one still earns the default. Match first, believe second.
     const matched = matchWithin(answer.trade, candidates);
     if (!matched) {
         if (answer.trade) {
