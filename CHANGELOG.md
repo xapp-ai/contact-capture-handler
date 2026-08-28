@@ -1,3 +1,10 @@
+# [2.7.0](https://github.com/xapp-ai/contact-capture-handler/compare/v2.6.0...v2.7.0) (2026-08-28)
+
+
+### Features
+
+* omit the handoff when no listed trade fits, instead of defaulting ([#706](https://github.com/xapp-ai/contact-capture-handler/issues/706)) ([d400057](https://github.com/xapp-ai/contact-capture-handler/commit/d400057b50655b2cadb2c1a69910462997debfb0))
+
 # [2.6.0](https://github.com/xapp-ai/contact-capture-handler/compare/v2.5.0...v2.6.0) (2026-08-20)
 
 
