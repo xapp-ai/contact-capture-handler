@@ -21,7 +21,7 @@
     "node": "^12 || ^14 || ^16 || ^18 || ^20 || ^22 || ^24"
   },
   "resolutions": {
-    "xmldoc": "2.0.3",
+    "xmldoc": "3.0.0",
     "sanitize-html": "2.17.0"
   },
   "devDependencies": {
