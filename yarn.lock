@@ -5864,7 +5864,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"sax@npm:^1.4.3":
+"sax@npm:^1.6.0":
   version: 1.6.1
   resolution: "sax@npm:1.6.1"
   checksum: be78ded08c77db1644a8d32c93266615f51b925c8b6b6f3f689aed10eae57f307f8fbd7bcbf502041903edcfec17ea7d07c7bb4960e076faa92fc6773b621f2a
@@ -7210,12 +7210,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"xmldoc@npm:2.0.3":
-  version: 2.0.3
-  resolution: "xmldoc@npm:2.0.3"
+"xmldoc@npm:3.0.0":
+  version: 3.0.0
+  resolution: "xmldoc@npm:3.0.0"
   dependencies:
-    sax: ^1.4.3
-  checksum: ec18790717b6eeba3dc5f16f20d09d264292bdca3a9b58b656d2800c8a1c8f59971f7a5919dc7008a05f8c0471eed8de1b87ccde144265dfd7ec77c01c3815ed
+    sax: ^1.6.0
+  checksum: 7a66e037ed4d93a91c1337495b5fc780930cc294320bd4119137d10e8e3154f8842bf2290aab43261e045d4386c0ef8f36a8f762da56b89c1dc3df6e9078e25f
   languageName: node
   linkType: hard
 
