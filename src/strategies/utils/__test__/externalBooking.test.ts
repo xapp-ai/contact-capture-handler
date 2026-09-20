@@ -148,13 +148,53 @@ describe("#buildExternalBookingConfig()", () => {
         });
     });
 
-    it("returns undefined when no trade resolved (so the handoff is omitted)", () => {
+    it("still hands over what we know when no trade resolved, omitting only the trade", () => {
+        // Not resolving a trade is a reason to withhold THE TRADE, not the five fields we are
+        // certain about. Returning undefined dropped the whole config, so the partner's widget
+        // mounted with nothing and asked the homeowner for their zip, name, address, email and
+        // phone over again -- everything they had just given us. Observed on erie-home-6181:
+        // every "no-match" submit sent the visitor back to CostGuide's own first step.
+        const config = buildExternalBookingConfig({
+            result: { full_name: "Jane Doe", zip: "17002", email: "jane@example.com" },
+            trade: undefined,
+            externalBooking: BASE_BOOKING,
+        });
+
+        expect(config).to.deep.equal({
+            firstName: "Jane",
+            lastName: "Doe",
+            zipCode: "17002",
+            email: "jane@example.com",
+            advertiserId: 4944,
+            campaignId: "6a283d45eddcf",
+            campaignKey: "6YGTmNKxtjMDVkWPLwgC",
+        });
+    });
+
+    it("sends no trade key at all rather than an empty one when none resolved", () => {
+        // The partner drops its own "what kind of work" step when `trade` is present
+        // (`(n.estimateAction() || n.fullTrade()) && d("estimateAction")`). An empty or null
+        // trade would satisfy that and skip the one question we actually need them to ask.
         const config = buildExternalBookingConfig({
             result: { full_name: "Jane Doe", zip: "17002" },
             trade: undefined,
             externalBooking: BASE_BOOKING,
         });
-        expect(config).to.equal(undefined);
+
+        expect(config).to.not.have.property("trade");
+    });
+
+    it("never substitutes defaultTrade for a trade the classifier could not resolve", () => {
+        // Deliberate: posting "my furnace stopped working" to a roofer as roofing is worse than
+        // not naming a trade. The fallback belongs to the timeout and low-confidence paths in
+        // tradeClassifier, not to a no-match.
+        const config = buildExternalBookingConfig({
+            result: { full_name: "Jane Doe", zip: "17002" },
+            trade: undefined,
+            externalBooking: { ...BASE_BOOKING, defaultTrade: "Roofing - Repair" },
+        });
+
+        expect(config).to.not.have.property("trade");
     });
 
     it("omits fields that were not collected (except the always-present partner ids and trade)", () => {

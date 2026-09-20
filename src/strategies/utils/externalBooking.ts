@@ -127,20 +127,30 @@ export function buildExternalBookingConfig(
 ): Record<string, string | number> | undefined {
     const { result, trade, externalBooking } = params;
 
-    if (!trade) {
-        return undefined;
-    }
-
     const { firstName, lastName } = splitName(result);
 
     const config: Record<string, string | number> = {
         firstName,
         lastName,
-        trade,
         advertiserId: externalBooking.advertiserId,
         campaignId: externalBooking.campaignId,
         campaignKey: externalBooking.campaignKey,
     };
+
+    // An unresolved trade withholds the TRADE, not the visitor. This used to `return undefined`,
+    // which dropped the whole config -- so the partner's widget mounted with nothing and asked
+    // the homeowner for their zip, name, address, email and phone all over again, every one of
+    // which they had just typed into our form. The partner keeps its own "what kind of work"
+    // step whenever `trade` is absent, so leaving the key off asks them the single question we
+    // genuinely cannot answer and nothing else.
+    //
+    // Deliberately NOT `externalBooking.defaultTrade`: posting "my furnace stopped working" to a
+    // roofer as roofing is worse than naming no trade. That fallback belongs to the timeout and
+    // low-confidence paths in tradeClassifier, which are a model that failed, not a model that
+    // read the message and said none of these fit.
+    if (trade) {
+        config.trade = trade;
+    }
 
     const address = str(result.address);
     if (address) {

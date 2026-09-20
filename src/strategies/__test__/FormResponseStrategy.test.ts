@@ -343,16 +343,25 @@ describe(`${FormResponseStrategy.name}`, () => {
             });
         });
 
-        it("omits the handoff (no FORM_STEP_UPDATE) when the trade cannot be resolved, but still sends the lead", async () => {
+        it("still sends the handoff when the trade cannot be resolved, carrying the visitor but no trade", async () => {
+            // It used to omit the FORM_STEP_UPDATE entirely, which left the partner widget with
+            // only the static advertiser config -- so it restarted its own flow and asked the
+            // homeowner for the zip, name, address, email and phone they had just given us.
             handler = buildHandler({ ...EXTERNAL_BOOKING, allowedTrades: [], defaultTrade: undefined });
             context = buildContext();
             const response = await new FormResponseStrategy().getResponse(handler, buildRequest(), context);
 
             expect(sendLead).to.have.been.calledOnce;
-            const hasStepUpdate =
-                Array.isArray(response.displays) &&
-                response.displays.some((d) => (d as Record<string, unknown>).type === "FORM_STEP_UPDATE");
-            expect(hasStepUpdate).to.equal(false);
+            const stepUpdate = (response.displays || []).find(
+                (d) => (d as Record<string, unknown>).type === "FORM_STEP_UPDATE",
+            ) as { externalWidget?: { config?: Record<string, unknown> } } | undefined;
+
+            expect(stepUpdate, "the handoff should still be offered").to.not.equal(undefined);
+            const config = stepUpdate?.externalWidget?.config ?? {};
+            expect(config).to.not.have.property("trade");
+            expect(config.advertiserId).to.equal(EXTERNAL_BOOKING.advertiserId);
+            // The point of the change: the visitor's own details still travel.
+            expect(config).to.have.property("firstName");
         });
 
         // Mis-classification is a when, not an if. Without provenance on the lead the only
