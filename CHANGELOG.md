@@ -1,3 +1,10 @@
+## [2.7.2](https://github.com/xapp-ai/contact-capture-handler/compare/v2.7.1...v2.7.2) (2026-09-20)
+
+
+### Bug Fixes
+
+* keep the visitor's details in the handoff when no trade resolves ([#715](https://github.com/xapp-ai/contact-capture-handler/issues/715)) ([d5ea053](https://github.com/xapp-ai/contact-capture-handler/commit/d5ea05350655f2db9ca2761b1bb552914274b829))
+
 ## [2.7.1](https://github.com/xapp-ai/contact-capture-handler/compare/v2.7.0...v2.7.1) (2026-08-28)
 
 
