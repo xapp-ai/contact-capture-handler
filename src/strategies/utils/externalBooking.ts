@@ -112,19 +112,25 @@ export interface BuildExternalBookingConfigParams {
     /**
      * The already-resolved partner trade. Resolution happens at capture time, before the lead is
      * sent, so its provenance can be recorded on the lead -- see `resolveBookingTrade`. Undefined
-     * means it did not resolve, and the handoff is omitted.
+     * means it did not resolve, in which case the `trade` key is left off the config and the
+     * partner asks the visitor what kind of work it is. The handoff is still offered, and still
+     * carries everything else we collected.
      */
     trade?: string;
     externalBooking: ExternalBookingData;
 }
 
 /**
- * Builds the config the widget merges over the handoff step's static config. Returns
- * undefined when there is no trade, signalling the caller to omit the handoff.
+ * Builds the config the widget merges over the handoff step's static config.
+ *
+ * Always returns a config. It used to return undefined when the trade had not resolved, which
+ * omitted the handoff entirely and sent the visitor back to the partner's own first step to
+ * re-enter the zip, name, address, email and phone they had just given us. Do not put that
+ * guard back: an unresolved trade withholds the trade, not the visitor.
  */
 export function buildExternalBookingConfig(
     params: BuildExternalBookingConfigParams,
-): Record<string, string | number> | undefined {
+): Record<string, string | number> {
     const { result, trade, externalBooking } = params;
 
     const { firstName, lastName } = splitName(result);

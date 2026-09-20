@@ -396,16 +396,14 @@ export class FormResponseStrategy implements ResponseStrategy {
                 trade: tradeResolution?.trade,
                 externalBooking,
             });
-            // Always present now: the config carries the visitor's details whether or not a
+            // The config is always built now -- the visitor's details travel whether or not a
             // trade resolved, and only the trade key drops out when it did not.
-            if (config) {
-                const stepUpdate = {
-                    type: "FORM_STEP_UPDATE",
-                    step: externalBooking.stepName || DEFAULT_EXTERNAL_BOOKING_STEP_NAME,
-                    externalWidget: { config },
-                } as unknown as Display;
-                response = { displays: [stepUpdate] };
-            }
+            const stepUpdate = {
+                type: "FORM_STEP_UPDATE",
+                step: externalBooking.stepName || DEFAULT_EXTERNAL_BOOKING_STEP_NAME,
+                externalWidget: { config },
+            } as unknown as Display;
+            response = { displays: [stepUpdate] };
         }
         await this.addAvailability(
             response,
