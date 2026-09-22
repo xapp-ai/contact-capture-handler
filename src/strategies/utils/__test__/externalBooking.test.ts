@@ -252,10 +252,23 @@ describe("#buildHandoffStep()", () => {
             campaignKey: "6YGTmNKxtjMDVkWPLwgC",
             hideNoMatch: "yes",
             limit: 1,
+            showLeadBuyers: "yes",
             source: "thankyoupage",
         });
         expect(step.externalWidget.config).to.not.have.property("firstName");
         expect(step.externalWidget.config).to.not.have.property("zipCode");
+    });
+
+    it("asks CostGuide to show the lead-buyer consent box", () => {
+        // A real lead on 2026-09-22 came back non-distributable: the TrustedForm recording
+        // showed the homeowner never saw the consent box that carries the "request estimate"
+        // control, so there was no consent to pass a lead on. CostGuide (Vito Sauro) said
+        // passing advertiserId alone should have displayed it but showLeadBuyers forces it,
+        // and that it does not change how many contractors are shown.
+        const step = buildHandoffStep(BASE_BOOKING);
+
+        expect(step.externalWidget.config.showLeadBuyers).to.equal("yes");
+        expect(step.externalWidget.config.limit).to.equal(1);
     });
 
     it("honors a custom stepName", () => {
