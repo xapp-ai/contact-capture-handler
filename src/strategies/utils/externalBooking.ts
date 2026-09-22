@@ -218,6 +218,13 @@ export function buildStaticExternalWidget(
             campaignKey: externalBooking.campaignKey,
             hideNoMatch: "yes",
             limit: 1,
+            // Forces CostGuide to render the lead-buyer consent box, which carries the
+            // "request estimate" control. A real lead on 2026-09-22 came back
+            // non-distributable: the TrustedForm recording showed the homeowner never saw it,
+            // so no consent was captured and the lead could not be passed on. CostGuide
+            // (Vito Sauro) said advertiserId alone should have shown it and this forces it,
+            // and that it does not change how many contractors are displayed.
+            showLeadBuyers: "yes",
             // Fixed attribution value CostGuide asked us to always send (identifies the
             // thank-you-page handoff on their side); saves per-advertiser config for them.
             source: "thankyoupage",
