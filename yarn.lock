@@ -1552,7 +1552,7 @@ __metadata:
     "@xapp/question-answering-handler": 2.5.22
     chai: 4.5.0
     conventional-changelog-conventionalcommits: 10.4.0
-    dotenv: 16.6.1
+    dotenv: 18.0.2
     eslint: 8.57.1
     eslint-plugin-notice: 1.0.0
     mocha: 11.8.0
@@ -2582,10 +2582,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"dotenv@npm:16.6.1":
-  version: 16.6.1
-  resolution: "dotenv@npm:16.6.1"
-  checksum: e8bd63c9a37f57934f7938a9cf35de698097fadf980cb6edb61d33b3e424ceccfe4d10f37130b904a973b9038627c2646a3365a904b4406514ea94d7f1816b69
+"dotenv@npm:18.0.2":
+  version: 18.0.2
+  resolution: "dotenv@npm:18.0.2"
+  bin:
+    dotenv: dist/index.cjs
+  checksum: d7ce0333a23cfc66a805600eb7bad3e98ed746091cb490d195069c6e7f2979026735924e4f3150cde16a772dfbc53cedb3381bee45dd0ab05205593c2fbeab56
   languageName: node
   linkType: hard
 
