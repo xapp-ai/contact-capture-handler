@@ -1,3 +1,10 @@
+## [2.7.3](https://github.com/xapp-ai/contact-capture-handler/compare/v2.7.2...v2.7.3) (2026-09-22)
+
+
+### Bug Fixes
+
+* force CostGuide to show the lead-buyer consent box ([#719](https://github.com/xapp-ai/contact-capture-handler/issues/719)) ([64c2d7b](https://github.com/xapp-ai/contact-capture-handler/commit/64c2d7ba01bbe893a0b3cf87daeb96dac9cac758))
+
 ## [2.7.2](https://github.com/xapp-ai/contact-capture-handler/compare/v2.7.1...v2.7.2) (2026-09-20)
 
 
