@@ -5,6 +5,7 @@ import { MultistepForm } from "stentor-models";
 
 import { ExternalBookingData } from "../../../data";
 import {
+    toCategoryTrade,
     applyExternalBookingHandoff,
     buildExternalBookingConfig,
     buildHandoffStep,
@@ -25,6 +26,52 @@ const BASE_BOOKING: ExternalBookingData = {
     allowedTrades: ["Roofing - Asphalt Install or Replace", "Windows - Replace 6-9 Windows"],
     defaultTrade: "Bathroom - Bathtub or Shower Updates",
 };
+
+describe("#toCategoryTrade()", () => {
+    // Why this exists: a real Erie Home lead on 2026-09-22 posted with trade
+    // "Roofing - Repair". Erie holds no roofing-repair contract, so CostGuide's form could not
+    // find a contract matching that trade for that advertiser and rendered nothing -- which
+    // read as our handoff being broken. CostGuide (Vito Sauro) asked that every trade in a
+    // category be sent as that category's single canonical trade.
+    it("sends any roofing trade as the canonical roofing trade", () => {
+        expect(toCategoryTrade("Roofing - Repair")).to.equal("Roofing - Asphalt Install or Replace");
+    });
+
+    it("sends any windows trade as the canonical windows trade", () => {
+        expect(toCategoryTrade("Windows - Replace 1 Window")).to.equal("Windows - Replace 6-9 Windows");
+        expect(toCategoryTrade("Windows - Glass Repair")).to.equal("Windows - Replace 6-9 Windows");
+    });
+
+    it("categorises by the leading word, not the part before the dash", () => {
+        // "Windows Repair - Service Call" splits on the dash as "Windows Repair", which matches
+        // no category; it is still a windows trade.
+        expect(toCategoryTrade("Windows Repair - Service Call")).to.equal("Windows - Replace 6-9 Windows");
+    });
+
+    it("sends any siding or bathroom trade as its canonical trade", () => {
+        expect(toCategoryTrade("Siding - Fiber Cement")).to.equal("Siding - Vinyl Install or Replace");
+        expect(toCategoryTrade("Bathroom - Remodel")).to.equal("Bathroom - Bathtub or Shower Updates");
+    });
+
+    it("leaves the canonical trade itself alone", () => {
+        expect(toCategoryTrade("Roofing - Asphalt Install or Replace")).to.equal("Roofing - Asphalt Install or Replace");
+    });
+
+    it("ignores case and surrounding whitespace", () => {
+        expect(toCategoryTrade("  roofing - repair ")).to.equal("Roofing - Asphalt Install or Replace");
+    });
+
+    it("passes a category we were given no mapping for through untouched", () => {
+        // Only the four categories CostGuide listed are mapped. Rewriting a doors or gutters
+        // trade to something we invented would be a guess at which contract they hold.
+        expect(toCategoryTrade("Doors - Exterior Door Install or Replace"))
+            .to.equal("Doors - Exterior Door Install or Replace");
+    });
+
+    it("passes an empty or missing trade through", () => {
+        expect(toCategoryTrade(undefined)).to.equal(undefined);
+    });
+});
 
 describe("#splitName()", () => {
     it("splits full_name on the first whitespace", () => {
@@ -234,6 +281,28 @@ const generatedForm = (): MultistepForm =>
             { name: "thank_you", previousAction: "omit", nextAction: "omit", fields: [{ name: "ty", type: "CARD" }] },
         ],
     });
+
+describe("#buildExternalBookingConfig() trade category", () => {
+    it("posts the category's canonical trade, not the trade the form resolved", () => {
+        const config = buildExternalBookingConfig({
+            result: { full_name: "Jane Doe", phone: "5551234567" },
+            trade: "Roofing - Repair",
+            externalBooking: BASE_BOOKING,
+        });
+
+        expect(config.trade).to.equal("Roofing - Asphalt Install or Replace");
+    });
+
+    it("leaves a trade in a category CostGuide gave no mapping for as it is", () => {
+        const config = buildExternalBookingConfig({
+            result: { full_name: "Jane Doe" },
+            trade: "Doors - Exterior Door Install or Replace",
+            externalBooking: BASE_BOOKING,
+        });
+
+        expect(config.trade).to.equal("Doors - Exterior Door Install or Replace");
+    });
+});
 
 describe("#buildHandoffStep()", () => {
     it("is a terminal, full-bleed step with no per-visitor data in the static config", () => {
