@@ -350,6 +350,15 @@ function lastSubmitIndex(steps: FormStep[]): number {
  * - Otherwise: the last data-collecting step becomes a crm-submitting final step, any trailing
  *   terminal acknowledgement is dropped, and the handoff is appended as the new terminal step.
  */
+/** Appends the fallback step, unless the form already carries it (the handoff is re-applied). */
+function withFallbackStep(form: MultistepForm): MultistepForm {
+    const steps = form.steps || [];
+    if (steps.some((step) => step.name === EXTERNAL_BOOKING_FALLBACK_STEP_NAME)) {
+        return form;
+    }
+    return { ...form, steps: [...steps, buildFallbackStep()] };
+}
+
 export function applyExternalBookingHandoff(
     form: MultistepForm,
     externalBooking?: ExternalBookingData,
@@ -385,13 +394,4 @@ export function applyExternalBookingHandoff(
         ...form,
         steps: [...steps.slice(0, submitIndex + 1), buildHandoffStep(externalBooking)],
     });
-}
-
-/** Appends the fallback step, unless the form already carries it (the handoff is re-applied). */
-function withFallbackStep(form: MultistepForm): MultistepForm {
-    const steps = form.steps || [];
-    if (steps.some((step) => step.name === EXTERNAL_BOOKING_FALLBACK_STEP_NAME)) {
-        return form;
-    }
-    return { ...form, steps: [...steps, buildFallbackStep()] };
 }
