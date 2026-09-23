@@ -1,3 +1,10 @@
+# [2.8.0](https://github.com/xapp-ai/contact-capture-handler/compare/v2.7.3...v2.8.0) (2026-09-23)
+
+
+### Features
+
+* send CostGuide the canonical trade for the category ([#720](https://github.com/xapp-ai/contact-capture-handler/issues/720)) ([9ecef03](https://github.com/xapp-ai/contact-capture-handler/commit/9ecef03964f8ca92cb024a1ea159639c8fe02b8e))
+
 ## [2.7.3](https://github.com/xapp-ai/contact-capture-handler/compare/v2.7.2...v2.7.3) (2026-09-22)
 
 
