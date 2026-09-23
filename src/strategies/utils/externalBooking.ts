@@ -106,6 +106,36 @@ export function normalizePhone(phone: string): string {
     return phone;
 }
 
+/**
+ * The one trade CostGuide wants every trade in a category sent as.
+ *
+ * Their form matches the posted trade against the contracts the advertiser holds, so a trade
+ * they hold no contract for finds nothing and the form renders empty. A real Erie Home lead on
+ * 2026-09-22 posted "Roofing - Repair"; Erie takes no roofing repair, so the handoff came up
+ * blank and the lead was not distributable. CostGuide (Vito Sauro) asked for this mapping, and
+ * gave these four categories -- anything else is passed through untouched rather than guessed at.
+ */
+const CATEGORY_TRADES: Record<string, string> = {
+    roofing: "Roofing - Asphalt Install or Replace",
+    windows: "Windows - Replace 6-9 Windows",
+    siding: "Siding - Vinyl Install or Replace",
+    bathroom: "Bathroom - Bathtub or Shower Updates",
+};
+
+/**
+ * Maps a trade to its category's canonical trade, or returns it unchanged.
+ *
+ * Categorised on the LEADING WORD, not the part before the dash: "Windows Repair - Service Call"
+ * is a windows trade, and splitting on the dash gives "Windows Repair", which matches nothing.
+ */
+export function toCategoryTrade(trade: string | undefined): string | undefined {
+    if (!trade) {
+        return trade;
+    }
+    const category = trade.trim().toLowerCase().split(/[\s-]+/)[0];
+    return CATEGORY_TRADES[category] ?? trade;
+}
+
 export interface BuildExternalBookingConfigParams {
     /** The collected form attributes (`FormActionResponseData.result`). */
     result: Record<string, unknown>;
@@ -155,7 +185,10 @@ export function buildExternalBookingConfig(
     // low-confidence paths in tradeClassifier, which are a model that failed, not a model that
     // read the message and said none of these fit.
     if (trade) {
-        config.trade = trade;
+        // The category's canonical trade, not the one we resolved: CostGuide matches the posted
+        // trade against the contracts this advertiser holds. The lead itself keeps the real
+        // trade -- only what we hand the partner is widened.
+        config.trade = toCategoryTrade(trade);
     }
 
     const address = str(result.address);
