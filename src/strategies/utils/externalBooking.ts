@@ -217,6 +217,17 @@ export function buildExternalBookingConfig(
 export const DEFAULT_EXTERNAL_BOOKING_STEP_NAME = "book_appointment";
 
 /**
+ * Name of the step a homeowner lands on when the partner form has nothing to show them.
+ *
+ * Without it the widget falls back to its own inline message -- "we couldn't load the booking
+ * form, please try again later" -- which is wrong twice over: their details ARE captured, and
+ * nothing failed. A request the advertiser holds no contract for is a normal outcome, not an
+ * error: Erie Home takes full roof installs and replacements only, so every repair enquiry
+ * reaches this step by design.
+ */
+export const EXTERNAL_BOOKING_FALLBACK_STEP_NAME = "booking_request_received";
+
+/**
  * CostGuide / Contractor Appointments embed constants. `provider: "costguide"` is the only
  * supported provider, so these are fixed here rather than authored in Studio -- the widget
  * treats `externalWidget.config` as an opaque bag and holds no CostGuide-specific keys.
@@ -277,8 +288,41 @@ export function buildHandoffStep(externalBooking: ExternalBookingData): FormStep
         previousAction: "omit",
         nextAction: "omit",
         warnBeforeUnload: true,
-        externalWidget: buildStaticExternalWidget(externalBooking),
+        externalWidget: {
+            ...buildStaticExternalWidget(externalBooking),
+            fallbackStep: EXTERNAL_BOOKING_FALLBACK_STEP_NAME,
+        },
     };
+}
+
+/**
+ * The step shown when the partner cannot offer appointments for this request.
+ *
+ * Terminal by design: there is nothing further to ask, and sending them back into a partner
+ * form that just told us it has nothing would be a loop.
+ */
+export function buildFallbackStep(): FormStep {
+    return {
+        name: EXTERNAL_BOOKING_FALLBACK_STEP_NAME,
+        title: "Request received",
+        previousAction: "omit",
+        nextAction: "omit",
+        fields: [
+            {
+                name: "booking_fallback_heading",
+                type: "CARD",
+                variant: "h6",
+                style: { fontStyle: "normal", fontWeight: "bold" },
+                text: "Thanks -- we have received your request",
+            },
+            {
+                name: "booking_fallback_body",
+                type: "CARD",
+                variant: "body1",
+                text: "We could not offer you an appointment time online for this particular request, but your details are with us and someone will be in touch shortly to help.",
+            },
+        ],
+    } as FormStep;
 }
 
 /** Index of the step to submit the lead from: last crmSubmit step, else last step with fields. */
@@ -319,14 +363,17 @@ export function applyExternalBookingHandoff(
 
     const existing = steps.find((step) => step.name === stepName);
     if (existing) {
-        (existing as FormStepExternalWidget).externalWidget = buildStaticExternalWidget(externalBooking);
+        (existing as FormStepExternalWidget).externalWidget = {
+            ...buildStaticExternalWidget(externalBooking),
+            fallbackStep: EXTERNAL_BOOKING_FALLBACK_STEP_NAME,
+        };
         existing.fullBleed = true;
-        return form;
+        return withFallbackStep(form);
     }
 
     const submitIndex = lastSubmitIndex(steps);
     if (submitIndex === -1) {
-        return { ...form, steps: [...steps, buildHandoffStep(externalBooking)] };
+        return withFallbackStep({ ...form, steps: [...steps, buildHandoffStep(externalBooking)] });
     }
 
     const submitStep = steps[submitIndex];
@@ -334,5 +381,17 @@ export function applyExternalBookingHandoff(
     submitStep.final = true;
     submitStep.nextAction = "submit";
 
-    return { ...form, steps: [...steps.slice(0, submitIndex + 1), buildHandoffStep(externalBooking)] };
+    return withFallbackStep({
+        ...form,
+        steps: [...steps.slice(0, submitIndex + 1), buildHandoffStep(externalBooking)],
+    });
+}
+
+/** Appends the fallback step, unless the form already carries it (the handoff is re-applied). */
+function withFallbackStep(form: MultistepForm): MultistepForm {
+    const steps = form.steps || [];
+    if (steps.some((step) => step.name === EXTERNAL_BOOKING_FALLBACK_STEP_NAME)) {
+        return form;
+    }
+    return { ...form, steps: [...steps, buildFallbackStep()] };
 }

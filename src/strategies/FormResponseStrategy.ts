@@ -25,7 +25,7 @@ import { ContactCaptureHandler } from "../handler";
 
 import { ResponseStrategy } from "./ResponseStrategy";
 import { getFormResponse, getStepFromData } from "./utils/forms";
-import { buildExternalBookingConfig, DEFAULT_EXTERNAL_BOOKING_STEP_NAME } from "./utils/externalBooking";
+import { buildExternalBookingConfig, DEFAULT_EXTERNAL_BOOKING_STEP_NAME, toCategoryTrade } from "./utils/externalBooking";
 import { resolveBookingTrade, TradeResolution } from "./utils/tradeClassifier";
 
 /**
@@ -342,6 +342,11 @@ export class FormResponseStrategy implements ResponseStrategy {
             ...(tradeResolution
                 ? {
                       externalBookingTrade: tradeResolution.trade,
+                      // What the partner is actually handed, which is the category's canonical
+                      // trade rather than the one above. Recorded because the two differ: asked
+                      // "what did we send for this lead?", the only other answer is to ask
+                      // CostGuide.
+                      externalBookingTradePosted: toCategoryTrade(tradeResolution.trade),
                       externalBookingTradeResolution: tradeResolution.method,
                       externalBookingTradeConfidence: tradeResolution.confidence,
                       externalBookingTradeReasoning: tradeResolution.reasoning,

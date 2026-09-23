@@ -381,6 +381,24 @@ describe(`${FormResponseStrategy.name}`, () => {
                 });
             });
 
+            // The lead keeps the trade we resolved; the partner is handed the category's
+            // canonical trade. Without recording the second one there is no way to answer
+            // "what did we actually send for this lead?" except by asking CostGuide.
+            it("records what was posted to the partner, not just what was resolved", async () => {
+                handler = buildHandler({
+                    ...EXTERNAL_BOOKING,
+                    allowedTrades: ["Roofing - Repair"],
+                    defaultTrade: "Roofing - Repair",
+                });
+                context = buildContext();
+                await new FormResponseStrategy().getResponse(handler, buildRequest(), context);
+
+                expect(extrasFromSendLead()).to.deep.include({
+                    externalBookingTrade: "Roofing - Repair",
+                    externalBookingTradePosted: "Roofing - Asphalt Install or Replace",
+                });
+            });
+
             it("records the omitted case too, rather than leaving it invisible", async () => {
                 handler = buildHandler({ ...EXTERNAL_BOOKING, allowedTrades: [], defaultTrade: undefined });
                 context = buildContext();
@@ -389,6 +407,7 @@ describe(`${FormResponseStrategy.name}`, () => {
                 const extras = extrasFromSendLead();
                 expect(extras.externalBookingTradeResolution).to.equal("omitted");
                 expect(extras.externalBookingTrade).to.equal(undefined);
+                expect(extras.externalBookingTradePosted).to.equal(undefined);
             });
 
             it("leaves an app with no externalBooking entirely untouched", async () => {

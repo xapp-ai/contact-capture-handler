@@ -6,6 +6,7 @@ import { MultistepForm } from "stentor-models";
 import { ExternalBookingData } from "../../../data";
 import {
     toCategoryTrade,
+    EXTERNAL_BOOKING_FALLBACK_STEP_NAME,
     applyExternalBookingHandoff,
     buildExternalBookingConfig,
     buildHandoffStep,
@@ -366,6 +367,7 @@ describe("#applyExternalBookingHandoff()", () => {
             "contact_info",
             "confirmation",
             DEFAULT_EXTERNAL_BOOKING_STEP_NAME,
+            EXTERNAL_BOOKING_FALLBACK_STEP_NAME,
         ]);
         const submit = result.steps.find((s) => s.name === "confirmation");
         expect(submit?.crmSubmit).to.equal(true);
@@ -388,9 +390,60 @@ describe("#applyExternalBookingHandoff()", () => {
             ],
         });
         const result = applyExternalBookingHandoff(custom, BASE_BOOKING);
-        expect(result.steps).to.have.length(2);
+        // The handoff step is filled in place rather than duplicated; the fallback step the
+        // widget lands on when the partner has nothing to show is added alongside it.
+        expect(result.steps.map((step) => step.name)).to.deep.equal([
+            "contact_info",
+            "book_appointment",
+            EXTERNAL_BOOKING_FALLBACK_STEP_NAME,
+        ]);
         const handoff = result.steps.find((s) => s.name === "book_appointment");
         expect(handoff?.fullBleed).to.equal(true);
         expect((handoff as never as { externalWidget?: unknown }).externalWidget).to.exist;
+    });
+});
+
+describe("no-match fallback step", () => {
+    // A homeowner whose request does not match a contract used to be left looking at
+    // "we couldn't load the booking form, please try again later" -- which is both wrong (we
+    // have their details) and alarming. It is not an edge case either: Erie Home only takes
+    // full roof installs and replacements, so every repair enquiry lands here by design.
+    it("gives the handoff a fallback step to land on", () => {
+        const step = buildHandoffStep(BASE_BOOKING);
+
+        expect(step.externalWidget.fallbackStep).to.equal(EXTERNAL_BOOKING_FALLBACK_STEP_NAME);
+    });
+
+    it("adds the fallback step to the form, after the handoff", () => {
+        const form = applyExternalBookingHandoff(generatedForm(), BASE_BOOKING);
+        const names = form.steps.map((s) => s.name);
+
+        expect(names[names.length - 1]).to.equal(EXTERNAL_BOOKING_FALLBACK_STEP_NAME);
+        expect(names[names.length - 2]).to.equal(DEFAULT_EXTERNAL_BOOKING_STEP_NAME);
+    });
+
+    it("tells the homeowner their request was received rather than that something failed", () => {
+        const form = applyExternalBookingHandoff(generatedForm(), BASE_BOOKING);
+        const fallback = form.steps.find((s) => s.name === EXTERNAL_BOOKING_FALLBACK_STEP_NAME);
+        const text = (fallback.fields || []).map((f) => (f as { text?: string }).text || "").join(" ");
+
+        expect(text.toLowerCase()).to.contain("received");
+        expect(text.toLowerCase()).to.not.contain("sorry");
+        expect(text.toLowerCase()).to.not.contain("try again");
+    });
+
+    it("is terminal: no way forward and no way back into the partner form", () => {
+        const form = applyExternalBookingHandoff(generatedForm(), BASE_BOOKING);
+        const fallback = form.steps.find((s) => s.name === EXTERNAL_BOOKING_FALLBACK_STEP_NAME);
+
+        expect(fallback.previousAction).to.equal("omit");
+        expect(fallback.nextAction).to.equal("omit");
+    });
+
+    it("does not add a second fallback step when the handoff is re-applied", () => {
+        const once = applyExternalBookingHandoff(generatedForm(), BASE_BOOKING);
+        const twice = applyExternalBookingHandoff(once, BASE_BOOKING);
+
+        expect(twice.steps.filter((s) => s.name === EXTERNAL_BOOKING_FALLBACK_STEP_NAME)).to.have.length(1);
     });
 });
