@@ -78,7 +78,10 @@ function parseAnswer(text: string): ClassifierAnswer | undefined {
 }
 
 function buildPrompt(description: string, chips: string[]): CompletionPrompt {
-    const enquiry = [`Message: ${description}`, chips.length > 0 ? `Selected: ${chips.join(", ")}` : undefined]
+    const enquiry = [
+        description ? `Message: ${description}` : undefined,
+        chips.length > 0 ? `Selected: ${chips.join(", ")}` : undefined,
+    ]
         .filter((line): line is string => !!line)
         .join("\n");
 
@@ -113,7 +116,11 @@ export interface ClassifyEnquiryParams {
  */
 export async function classifyEnquiry(params: ClassifyEnquiryParams): Promise<EnquiryResolution> {
     const description = (params.description || "").trim();
-    if (!description || !params.llmService) {
+    const chips = params.chips || [];
+    // Chips count as something to read. The message field can be hidden or optional and the
+    // chips are operator-configurable, so a homeowner can submit by picking "Cancel my
+    // appointment" and typing nothing -- which is precisely the submission to divert.
+    if ((!description && chips.length === 0) || !params.llmService) {
         return { type: "booking" };
     }
 
@@ -121,7 +128,7 @@ export async function classifyEnquiry(params: ClassifyEnquiryParams): Promise<En
     try {
         const timeout = new Promise<undefined>((resolve) => setTimeout(() => resolve(undefined), timeoutMs));
         const response = await Promise.race([
-            params.llmService.generate(buildPrompt(description, params.chips || [])),
+            params.llmService.generate(buildPrompt(description, chips)),
             timeout,
         ]);
         if (!response) {

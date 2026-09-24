@@ -62,10 +62,32 @@ describe("#classifyEnquiry()", () => {
         expect(result.type).to.equal("booking");
     });
 
-    it("does not call the model when there is no message to read", async () => {
+    // A homeowner can submit with a chip and no message at all: the message field can be
+    // hidden or optional, and the chips are operator-configurable -- an operator can offer
+    // "Cancel my appointment" as a chip. Skipping classification there sends exactly the
+    // submission this exists to divert straight into the partner's booking form.
+    it("classifies a chips-only submission", async () => {
+        const llm = stubLLM(answer("cancellation"));
+
+        const result = await classifyEnquiry({ chips: ["Cancel my appointment"], llmService: llm });
+
+        expect(result.type).to.equal("cancellation");
+        expect(llm.prompts).to.have.length(1);
+    });
+
+    it("sends the chips to the model when there is no message", async () => {
+        const llm = stubLLM(answer("cancellation"));
+
+        await classifyEnquiry({ chips: ["Cancel my appointment"], llmService: llm });
+
+        const prompt = llm.prompts[0] as Prompt & { messages: { content: string }[] };
+        expect(prompt.messages.map((m) => m.content).join("\n")).to.contain("Cancel my appointment");
+    });
+
+    it("does not call the model when there is neither a message nor a chip", async () => {
         const llm = stubLLM(answer("spam"));
 
-        const result = await classifyEnquiry({ description: "   ", llmService: llm });
+        const result = await classifyEnquiry({ description: "   ", chips: [], llmService: llm });
 
         expect(result.type).to.equal("booking");
         expect(llm.prompts).to.have.length(0);
