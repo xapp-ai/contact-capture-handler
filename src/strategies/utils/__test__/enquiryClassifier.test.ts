@@ -137,6 +137,16 @@ describe("#isUnsupportedEnquiry()", () => {
         expect(isUnsupportedEnquiry("cancellation", { types: [" Cancellation "] })).to.equal(true);
     });
 
+    // A typo used to disable diverting in silence: types: ["canceled"] matched nothing, so
+    // cancellations sailed through to the partner -- the incident this exists to prevent,
+    // reintroduced by a config typo with no signal anywhere.
+    // The invalid entry is also reported through log().warn, as allowedTrades does -- not
+    // asserted here, since that tests the logger rather than this.
+    it("ignores an entry that is not an enquiry type, and keeps the valid ones", () => {
+        expect(isUnsupportedEnquiry("spam", { types: ["canceled", "spam"] })).to.equal(true);
+        expect(isUnsupportedEnquiry("cancellation", { types: ["canceled", "spam"] })).to.equal(false);
+    });
+
     it("never diverts a booking, whatever is configured", () => {
         expect(isUnsupportedEnquiry("booking", { types: ["booking", "spam"] })).to.equal(false);
     });

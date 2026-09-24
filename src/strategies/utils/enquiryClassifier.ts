@@ -166,6 +166,30 @@ export function isUnsupportedEnquiry(type: EnquiryType, config: UnsupportedEnqui
         return false;
     }
     const configured = config?.types;
-    const types = configured ? configured.map((value) => value.trim().toLowerCase()) : DEFAULT_UNSUPPORTED_ENQUIRY_TYPES;
+    if (!configured) {
+        return DEFAULT_UNSUPPORTED_ENQUIRY_TYPES.indexOf(type) !== -1;
+    }
+
+    // Validated and said out loud, as allowedTrades is. An entry that is not an enquiry type --
+    // "canceled" for "cancellation" -- used to match nothing and disable diverting in silence,
+    // which is the incident this exists to prevent, reintroduced by a typo.
+    const types: EnquiryType[] = [];
+    const unknown: string[] = [];
+    for (const value of configured) {
+        const normalised = value.trim().toLowerCase();
+        const known = ENQUIRY_TYPES.find((candidate) => candidate === normalised);
+        if (known) {
+            types.push(known);
+        } else {
+            unknown.push(value);
+        }
+    }
+    if (unknown.length > 0) {
+        log().warn(
+            `Ignoring unsupportedEnquiry.types entr${unknown.length === 1 ? "y" : "ies"} that ` +
+                `${unknown.length === 1 ? "is" : "are"} not an enquiry type: ${unknown.join(", ")}. ` +
+                `Valid values: ${ENQUIRY_TYPES.join(", ")}.`,
+        );
+    }
     return types.indexOf(type) !== -1;
 }
