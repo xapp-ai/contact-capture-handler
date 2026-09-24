@@ -31,7 +31,12 @@ import {
     handoffStepName,
     toCategoryTrade,
 } from "./utils/externalBooking";
-import { classifyEnquiry, EnquiryResolution, isUnsupportedEnquiry } from "./utils/enquiryClassifier";
+import {
+    canDivertEnquiry,
+    classifyEnquiry,
+    EnquiryResolution,
+    isUnsupportedEnquiry,
+} from "./utils/enquiryClassifier";
 import { resolveBookingTrade, TradeResolution } from "./utils/tradeClassifier";
 
 /**
@@ -315,11 +320,15 @@ export class FormResponseStrategy implements ResponseStrategy {
                     chips: helpType ? [helpType] : [],
                     llmService: context.services.llmService,
                 }),
-                classifyEnquiry({
-                    description: messageSlot,
-                    chips: helpType ? [helpType] : [],
-                    llmService: context.services.llmService,
-                }),
+                // Skipped outright where the app has opted out of diverting: the answer could
+                // not change anything, and this is a model call the visitor waits for.
+                canDivertEnquiry(externalBooking.unsupportedEnquiry)
+                    ? classifyEnquiry({
+                          description: messageSlot,
+                          chips: helpType ? [helpType] : [],
+                          llmService: context.services.llmService,
+                      })
+                    : Promise.resolve({ type: "booking" as const }),
             ]);
             tradeResolution = trade;
             enquiryResolution = enquiry;

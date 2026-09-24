@@ -3,7 +3,12 @@ import * as chai from "chai";
 
 import { LLMService, LLMServiceResponse, Prompt } from "stentor-models";
 
-import { classifyEnquiry, DEFAULT_UNSUPPORTED_ENQUIRY_TYPES, isUnsupportedEnquiry } from "../enquiryClassifier";
+import {
+    canDivertEnquiry,
+    classifyEnquiry,
+    DEFAULT_UNSUPPORTED_ENQUIRY_TYPES,
+    isUnsupportedEnquiry,
+} from "../enquiryClassifier";
 
 const expect = chai.expect;
 
@@ -134,5 +139,21 @@ describe("#isUnsupportedEnquiry()", () => {
 
     it("never diverts a booking, whatever is configured", () => {
         expect(isUnsupportedEnquiry("booking", { types: ["booking", "spam"] })).to.equal(false);
+    });
+});
+
+describe("#canDivertEnquiry()", () => {
+    // The classifier is a model call on the critical path. An app that has opted out of
+    // diverting can never use the answer, so it should not wait for one -- and for a
+    // single-trade advertiser the trade classifier makes no call either, so that submit goes
+    // back to zero model calls.
+    it("is false when an app has explicitly opted out", () => {
+        expect(canDivertEnquiry({ types: [] })).to.equal(false);
+    });
+
+    it("is true by default, and for a configured list", () => {
+        expect(canDivertEnquiry(undefined)).to.equal(true);
+        expect(canDivertEnquiry({})).to.equal(true);
+        expect(canDivertEnquiry({ types: ["spam"] })).to.equal(true);
     });
 });

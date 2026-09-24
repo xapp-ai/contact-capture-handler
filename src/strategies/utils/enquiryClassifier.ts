@@ -147,6 +147,18 @@ export async function classifyEnquiry(params: ClassifyEnquiryParams): Promise<En
     }
 }
 
+/**
+ * Whether diverting is possible at all for this app.
+ *
+ * An empty `types` is a deliberate "send everything through", and the classifier is a model call
+ * on the critical path -- so there is no reason to make the visitor wait for an answer that
+ * cannot change anything. For a single-trade advertiser, whose trade classifier makes no call
+ * either, this returns the submit to zero model calls.
+ */
+export function canDivertEnquiry(config: UnsupportedEnquiryConfig | undefined): boolean {
+    return !(config?.types && config.types.length === 0);
+}
+
 /** Whether this enquiry should be kept away from the partner, per the app's configuration. */
 export function isUnsupportedEnquiry(type: EnquiryType, config: UnsupportedEnquiryConfig | undefined): boolean {
     // A booking is never diverted, whatever an app configures -- that is the case the handoff exists for.
