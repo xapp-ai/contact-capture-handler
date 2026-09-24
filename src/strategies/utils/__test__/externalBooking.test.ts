@@ -500,3 +500,42 @@ describe("unsupported-enquiry step", () => {
         expect((step as { externalWidget?: unknown }).externalWidget).to.equal(undefined);
     });
 });
+
+describe("reserved step names", () => {
+    // stepName is free-form, so nothing stopped an app naming the handoff after one of the
+    // steps it falls back to. The name check then matched the HANDOFF step, the message step
+    // was never appended, and fallbackStep pointed at the handoff itself -- so a no-match sent
+    // the homeowner back to the widget that just told us it had nothing, which is exactly the
+    // UX this was written to fix.
+    for (const reserved of [EXTERNAL_BOOKING_FALLBACK_STEP_NAME, EXTERNAL_BOOKING_UNSUPPORTED_STEP_NAME]) {
+        it(`ignores a configured stepName of "${reserved}" and keeps the default`, () => {
+            const form = applyExternalBookingHandoff(generatedForm(), { ...BASE_BOOKING, stepName: reserved });
+            const names = form.steps.map((s) => s.name);
+
+            expect(names).to.contain(DEFAULT_EXTERNAL_BOOKING_STEP_NAME);
+            expect(names).to.contain(EXTERNAL_BOOKING_FALLBACK_STEP_NAME);
+            expect(names).to.contain(EXTERNAL_BOOKING_UNSUPPORTED_STEP_NAME);
+            // One step per name: the handoff did not take a message step's place.
+            expect(new Set(names).size).to.equal(names.length);
+        });
+    }
+
+    it("never points a handoff at itself", () => {
+        const form = applyExternalBookingHandoff(generatedForm(), {
+            ...BASE_BOOKING,
+            stepName: EXTERNAL_BOOKING_FALLBACK_STEP_NAME,
+        });
+        const handoff = form.steps.find((s) => (s as { externalWidget?: unknown }).externalWidget);
+
+        expect((handoff as never as { externalWidget: { fallbackStep: string } }).externalWidget.fallbackStep).to.equal(
+            EXTERNAL_BOOKING_FALLBACK_STEP_NAME,
+        );
+        expect(handoff.name).to.not.equal(EXTERNAL_BOOKING_FALLBACK_STEP_NAME);
+    });
+
+    it("still honours an ordinary custom stepName", () => {
+        const form = applyExternalBookingHandoff(generatedForm(), { ...BASE_BOOKING, stepName: "book_it" });
+
+        expect(form.steps.map((s) => s.name)).to.contain("book_it");
+    });
+});

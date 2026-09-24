@@ -377,6 +377,19 @@ describe(`${FormResponseStrategy.name}`, () => {
             expect(config).to.have.property("firstName");
         });
 
+        it("points the step update at the same step the form actually carries", async () => {
+            // stepName is free-form and a reserved name is refused when the form is built, so
+            // the submit response has to refuse it the same way or it aims the widget at a step
+            // that is not there.
+            handler = buildHandler({ ...EXTERNAL_BOOKING, stepName: "booking_request_received" });
+            context = buildContext();
+
+            const response = await new FormResponseStrategy().getResponse(handler, buildRequest(), context);
+
+            const display = response.displays && (response.displays[0] as Record<string, unknown>);
+            expect(display?.step).to.equal("book_appointment");
+        });
+
         describe("enquiries the partner cannot handle", () => {
             const stepUpdateFrom = (response: { displays?: unknown[] }): Record<string, unknown> =>
                 (response.displays || [])[0] as Record<string, unknown>;

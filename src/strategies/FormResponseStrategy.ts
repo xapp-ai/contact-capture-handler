@@ -27,8 +27,8 @@ import { ResponseStrategy } from "./ResponseStrategy";
 import { getFormResponse, getStepFromData } from "./utils/forms";
 import {
     buildExternalBookingConfig,
-    DEFAULT_EXTERNAL_BOOKING_STEP_NAME,
     EXTERNAL_BOOKING_UNSUPPORTED_STEP_NAME,
+    handoffStepName,
     toCategoryTrade,
 } from "./utils/externalBooking";
 import { classifyEnquiry, EnquiryResolution, isUnsupportedEnquiry } from "./utils/enquiryClassifier";
@@ -450,7 +450,7 @@ export class FormResponseStrategy implements ResponseStrategy {
                 // trade resolved, and only the trade key drops out when it did not.
                 const stepUpdate = {
                     type: "FORM_STEP_UPDATE",
-                    step: externalBooking.stepName || DEFAULT_EXTERNAL_BOOKING_STEP_NAME,
+                    step: handoffStepName(externalBooking),
                     externalWidget: { config },
                 } as unknown as Display;
                 response = { displays: [stepUpdate] };

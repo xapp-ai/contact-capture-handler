@@ -237,6 +237,12 @@ export const EXTERNAL_BOOKING_FALLBACK_STEP_NAME = "booking_request_received";
  */
 export const EXTERNAL_BOOKING_UNSUPPORTED_STEP_NAME = "booking_not_supported";
 
+/** Step names the handoff may not take: they belong to the steps it falls back to. */
+const RESERVED_STEP_NAMES: readonly string[] = [
+    EXTERNAL_BOOKING_FALLBACK_STEP_NAME,
+    EXTERNAL_BOOKING_UNSUPPORTED_STEP_NAME,
+];
+
 /** Wording for that step. Every part is configurable per app; these are the neutral defaults. */
 export interface UnsupportedStepCopy {
     readonly title?: string;
@@ -304,7 +310,7 @@ export function buildStaticExternalWidget(
  */
 export function buildHandoffStep(externalBooking: ExternalBookingData): FormStepExternalWidget {
     return {
-        name: externalBooking.stepName || DEFAULT_EXTERNAL_BOOKING_STEP_NAME,
+        name: handoffStepName(externalBooking),
         title: "Choose your appointment",
         fields: [],
         fullBleed: true,
@@ -405,6 +411,22 @@ export function buildUnsupportedStep(copy: UnsupportedStepCopy = {}): FormStep {
     } as FormStep;
 }
 
+/**
+ * The name the handoff step takes, refusing the two names the steps it falls back to own.
+ *
+ * `stepName` is free-form. Configured as one of those, the handoff took that step's place: the
+ * "already appended?" check matched the HANDOFF, the message step was never added, and the
+ * handoff's own `fallbackStep` pointed at itself -- so a no-match returned the homeowner to the
+ * widget that had just said it had nothing, which is the behaviour this exists to remove.
+ */
+export function handoffStepName(externalBooking: ExternalBookingData): string {
+    const configured = externalBooking.stepName;
+    if (!configured || RESERVED_STEP_NAMES.indexOf(configured) !== -1) {
+        return DEFAULT_EXTERNAL_BOOKING_STEP_NAME;
+    }
+    return configured;
+}
+
 /** Appends the fallback step, unless the form already carries it (the handoff is re-applied). */
 function withFallbackStep(form: MultistepForm): MultistepForm {
     const steps = form.steps || [];
@@ -431,7 +453,7 @@ export function applyExternalBookingHandoff(
         return form;
     }
 
-    const stepName = externalBooking.stepName || DEFAULT_EXTERNAL_BOOKING_STEP_NAME;
+    const stepName = handoffStepName(externalBooking);
     const steps: FormStep[] = form.steps || [];
 
     const existing = steps.find((step) => step.name === stepName);
