@@ -306,6 +306,22 @@ export function buildStaticExternalWidget(
 }
 
 /**
+ * The name the handoff step takes, refusing the two names the steps it falls back to own.
+ *
+ * `stepName` is free-form. Configured as one of those, the handoff took that step's place: the
+ * "already appended?" check matched the HANDOFF, the message step was never added, and the
+ * handoff's own `fallbackStep` pointed at itself -- so a no-match returned the homeowner to the
+ * widget that had just said it had nothing, which is the behaviour this exists to remove.
+ */
+export function handoffStepName(externalBooking: ExternalBookingData): string {
+    const configured = externalBooking.stepName;
+    if (!configured || RESERVED_STEP_NAMES.indexOf(configured) !== -1) {
+        return DEFAULT_EXTERNAL_BOOKING_STEP_NAME;
+    }
+    return configured;
+}
+
+/**
  * Builds the terminal handoff step that hosts the partner widget.
  */
 export function buildHandoffStep(externalBooking: ExternalBookingData): FormStepExternalWidget {
@@ -409,22 +425,6 @@ export function buildUnsupportedStep(copy: UnsupportedStepCopy = {}): FormStep {
             },
         ],
     } as FormStep;
-}
-
-/**
- * The name the handoff step takes, refusing the two names the steps it falls back to own.
- *
- * `stepName` is free-form. Configured as one of those, the handoff took that step's place: the
- * "already appended?" check matched the HANDOFF, the message step was never added, and the
- * handoff's own `fallbackStep` pointed at itself -- so a no-match returned the homeowner to the
- * widget that had just said it had nothing, which is the behaviour this exists to remove.
- */
-export function handoffStepName(externalBooking: ExternalBookingData): string {
-    const configured = externalBooking.stepName;
-    if (!configured || RESERVED_STEP_NAMES.indexOf(configured) !== -1) {
-        return DEFAULT_EXTERNAL_BOOKING_STEP_NAME;
-    }
-    return configured;
 }
 
 /** Appends the fallback step, unless the form already carries it (the handoff is re-applied). */
