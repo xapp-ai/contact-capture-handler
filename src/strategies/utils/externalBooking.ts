@@ -228,6 +228,29 @@ export const DEFAULT_EXTERNAL_BOOKING_STEP_NAME = "book_appointment";
 export const EXTERNAL_BOOKING_FALLBACK_STEP_NAME = "booking_request_received";
 
 /**
+ * Name of the step for an enquiry the partner cannot do anything with -- a cancellation, spam.
+ *
+ * Distinct from the fallback step: that one is "we could not offer you a time", this one is
+ * "this is not something to book". The partner script is never loaded for these, so a homeowner
+ * cancelling an appointment is not shown a booking form, and a spam submission never reaches a
+ * buyer.
+ */
+export const EXTERNAL_BOOKING_UNSUPPORTED_STEP_NAME = "booking_not_supported";
+
+/** Wording for that step. Every part is configurable per app; these are the neutral defaults. */
+export interface UnsupportedStepCopy {
+    readonly title?: string;
+    readonly heading?: string;
+    readonly body?: string;
+}
+
+const DEFAULT_UNSUPPORTED_COPY: Required<UnsupportedStepCopy> = {
+    title: "Thanks for getting in touch",
+    heading: "This request cannot be handled here",
+    body: "This form books new appointments, so we are not able to deal with this request through it. Please contact the business directly and they will be glad to help.",
+};
+
+/**
  * CostGuide / Contractor Appointments embed constants. `provider: "costguide"` is the only
  * supported provider, so these are fixed here rather than authored in Studio -- the widget
  * treats `externalWidget.config` as an opaque bag and holds no CostGuide-specific keys.
@@ -350,6 +373,38 @@ function lastSubmitIndex(steps: FormStep[]): number {
  * - Otherwise: the last data-collecting step becomes a crm-submitting final step, any trailing
  *   terminal acknowledgement is dropped, and the handoff is appended as the new terminal step.
  */
+/**
+ * The step shown for an enquiry the partner cannot handle.
+ *
+ * Deliberately says nothing about WHY: a homeowner told their message looks like spam is a
+ * homeowner lost, and the classification can be wrong. Terminal, and carries no externalWidget,
+ * which is what keeps the partner script from loading at all.
+ */
+export function buildUnsupportedStep(copy: UnsupportedStepCopy = {}): FormStep {
+    const { title, heading, body } = { ...DEFAULT_UNSUPPORTED_COPY, ...copy };
+    return {
+        name: EXTERNAL_BOOKING_UNSUPPORTED_STEP_NAME,
+        title,
+        previousAction: "omit",
+        nextAction: "omit",
+        fields: [
+            {
+                name: "booking_unsupported_heading",
+                type: "CARD",
+                variant: "h6",
+                style: { fontStyle: "normal", fontWeight: "bold" },
+                text: heading,
+            },
+            {
+                name: "booking_unsupported_body",
+                type: "CARD",
+                variant: "body1",
+                text: body,
+            },
+        ],
+    } as FormStep;
+}
+
 /** Appends the fallback step, unless the form already carries it (the handoff is re-applied). */
 function withFallbackStep(form: MultistepForm): MultistepForm {
     const steps = form.steps || [];
@@ -357,6 +412,15 @@ function withFallbackStep(form: MultistepForm): MultistepForm {
         return form;
     }
     return { ...form, steps: [...steps, buildFallbackStep()] };
+}
+
+/** Appends the unsupported-enquiry step, unless the form already carries it. */
+function withUnsupportedStep(form: MultistepForm, copy: UnsupportedStepCopy | undefined): MultistepForm {
+    const steps = form.steps || [];
+    if (steps.some((step) => step.name === EXTERNAL_BOOKING_UNSUPPORTED_STEP_NAME)) {
+        return form;
+    }
+    return { ...form, steps: [...steps, buildUnsupportedStep(copy)] };
 }
 
 export function applyExternalBookingHandoff(
@@ -377,12 +441,15 @@ export function applyExternalBookingHandoff(
             fallbackStep: EXTERNAL_BOOKING_FALLBACK_STEP_NAME,
         };
         existing.fullBleed = true;
-        return withFallbackStep(form);
+        return withUnsupportedStep(withFallbackStep(form), externalBooking.unsupportedEnquiry);
     }
 
     const submitIndex = lastSubmitIndex(steps);
     if (submitIndex === -1) {
-        return withFallbackStep({ ...form, steps: [...steps, buildHandoffStep(externalBooking)] });
+        return withUnsupportedStep(
+            withFallbackStep({ ...form, steps: [...steps, buildHandoffStep(externalBooking)] }),
+            externalBooking.unsupportedEnquiry,
+        );
     }
 
     const submitStep = steps[submitIndex];
@@ -390,8 +457,11 @@ export function applyExternalBookingHandoff(
     submitStep.final = true;
     submitStep.nextAction = "submit";
 
-    return withFallbackStep({
-        ...form,
-        steps: [...steps.slice(0, submitIndex + 1), buildHandoffStep(externalBooking)],
-    });
+    return withUnsupportedStep(
+        withFallbackStep({
+            ...form,
+            steps: [...steps.slice(0, submitIndex + 1), buildHandoffStep(externalBooking)],
+        }),
+        externalBooking.unsupportedEnquiry,
+    );
 }

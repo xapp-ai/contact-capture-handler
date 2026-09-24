@@ -25,7 +25,13 @@ import { ContactCaptureHandler } from "../handler";
 
 import { ResponseStrategy } from "./ResponseStrategy";
 import { getFormResponse, getStepFromData } from "./utils/forms";
-import { buildExternalBookingConfig, DEFAULT_EXTERNAL_BOOKING_STEP_NAME, toCategoryTrade } from "./utils/externalBooking";
+import {
+    buildExternalBookingConfig,
+    DEFAULT_EXTERNAL_BOOKING_STEP_NAME,
+    EXTERNAL_BOOKING_UNSUPPORTED_STEP_NAME,
+    toCategoryTrade,
+} from "./utils/externalBooking";
+import { classifyEnquiry, EnquiryResolution, isUnsupportedEnquiry } from "./utils/enquiryClassifier";
 import { resolveBookingTrade, TradeResolution } from "./utils/tradeClassifier";
 
 /**
@@ -295,17 +301,32 @@ export class FormResponseStrategy implements ResponseStrategy {
         // lead itself rather than being invisible. Mis-classification is a when, not an if, and
         // this is the difference between "a customer complained" and "we can see it happened".
         let tradeResolution: TradeResolution | undefined;
+        let enquiryResolution: EnquiryResolution | undefined;
         if (externalBooking?.enabled && isCrmSubmitStep) {
             const messageSlot = slots?.message ? requestSlotValueToString(slots.message.value) : undefined;
             const helpType = slots?.help_type ? requestSlotValueToString(slots.help_type.value) : service;
 
-            tradeResolution = await resolveBookingTrade({
-                externalBooking,
-                description: messageSlot,
-                chips: helpType ? [helpType] : [],
-                llmService: context.services.llmService,
-            });
+            // Both classifiers read the same message, and the visitor is waiting on this
+            // response, so they run together rather than one after the other.
+            const [trade, enquiry] = await Promise.all([
+                resolveBookingTrade({
+                    externalBooking,
+                    description: messageSlot,
+                    chips: helpType ? [helpType] : [],
+                    llmService: context.services.llmService,
+                }),
+                classifyEnquiry({
+                    description: messageSlot,
+                    chips: helpType ? [helpType] : [],
+                    llmService: context.services.llmService,
+                }),
+            ]);
+            tradeResolution = trade;
+            enquiryResolution = enquiry;
             log().info(`CostGuide trade resolved as "${tradeResolution.trade}" (${tradeResolution.method})`);
+            if (isUnsupportedEnquiry(enquiry.type, externalBooking.unsupportedEnquiry)) {
+                log().info(`Enquiry classified as "${enquiry.type}"; the handoff is skipped.`);
+            }
         }
 
         const url: string = request.attributes?.currentUrl as string;
@@ -352,6 +373,14 @@ export class FormResponseStrategy implements ResponseStrategy {
                       externalBookingTradeReasoning: tradeResolution.reasoning,
                   }
                 : {}),
+            // Why a handoff was skipped, where it was. Without it a diverted lead is
+            // indistinguishable from one the partner simply had nothing for.
+            ...(enquiryResolution && isUnsupportedEnquiry(enquiryResolution.type, externalBooking?.unsupportedEnquiry)
+                ? {
+                      externalBookingDivertedAs: enquiryResolution.type,
+                      externalBookingDivertedReasoning: enquiryResolution.reasoning,
+                  }
+                : {}),
         };
 
         // In case of a form, there is no transcript. The data is the "transcript".
@@ -396,19 +425,36 @@ export class FormResponseStrategy implements ResponseStrategy {
                 accumulated[name] = requestSlotValueToString(slots[name]?.value);
             }
 
-            const config = buildExternalBookingConfig({
-                result: accumulated,
-                trade: tradeResolution?.trade,
-                externalBooking,
-            });
-            // The config is always built now -- the visitor's details travel whether or not a
-            // trade resolved, and only the trade key drops out when it did not.
-            const stepUpdate = {
-                type: "FORM_STEP_UPDATE",
-                step: externalBooking.stepName || DEFAULT_EXTERNAL_BOOKING_STEP_NAME,
-                externalWidget: { config },
-            } as unknown as Display;
-            response = { displays: [stepUpdate] };
+            // A cancellation or a spam submission cannot become an appointment. Send the visitor
+            // to the message step and build no config: the widget loads the partner script from
+            // the handoff step's externalWidget, so an enquiry that never reaches that step
+            // never reaches the partner either.
+            const diverted =
+                enquiryResolution && isUnsupportedEnquiry(enquiryResolution.type, externalBooking.unsupportedEnquiry);
+            if (diverted) {
+                response = {
+                    displays: [
+                        {
+                            type: "FORM_STEP_UPDATE",
+                            step: EXTERNAL_BOOKING_UNSUPPORTED_STEP_NAME,
+                        } as unknown as Display,
+                    ],
+                };
+            } else {
+                const config = buildExternalBookingConfig({
+                    result: accumulated,
+                    trade: tradeResolution?.trade,
+                    externalBooking,
+                });
+                // The config is always built now -- the visitor's details travel whether or not a
+                // trade resolved, and only the trade key drops out when it did not.
+                const stepUpdate = {
+                    type: "FORM_STEP_UPDATE",
+                    step: externalBooking.stepName || DEFAULT_EXTERNAL_BOOKING_STEP_NAME,
+                    externalWidget: { config },
+                } as unknown as Display;
+                response = { displays: [stepUpdate] };
+            }
         }
         await this.addAvailability(
             response,
@@ -500,9 +546,7 @@ export class FormResponseStrategy implements ResponseStrategy {
 
                             session.set(Constants.CONTACT_CAPTURE_BUSY_DAYS, busyDays);
                         } catch (e) {
-                            log().warn(
-                                `getAvailability failed, continuing without busy days: ${(e as Error).message}`,
-                            );
+                            log().warn(`getAvailability failed, continuing without busy days: ${(e as Error).message}`);
                         }
                     }
                 }

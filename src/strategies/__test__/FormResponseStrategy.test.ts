@@ -311,6 +311,19 @@ describe(`${FormResponseStrategy.name}`, () => {
             return r;
         };
 
+        /**
+         * Gives the enquiry classifier a message to read and an answer to give. Without both it
+         * fails open to "booking", which is the behaviour every other test here relies on.
+         */
+        const stubEnquiry = (type: string): void => {
+            const slots = context.session.get(Constants.CONTACT_CAPTURE_SLOTS) as Record<string, unknown>;
+            slots.message = { name: "message", value: "Cancel appointment" };
+            context.session.set(Constants.CONTACT_CAPTURE_SLOTS, slots);
+            (context.services as { llmService?: unknown }).llmService = {
+                generate: () => Promise.resolve({ text: JSON.stringify({ type, reasoning: "test" }) }),
+            };
+        };
+
         beforeEach(() => {
             sendLead = sinon.stub(ContactCaptureHandler, "sendLead").resolves({ success: true, id: "lead-123" } as never);
         });
@@ -362,6 +375,57 @@ describe(`${FormResponseStrategy.name}`, () => {
             expect(config.advertiserId).to.equal(EXTERNAL_BOOKING.advertiserId);
             // The point of the change: the visitor's own details still travel.
             expect(config).to.have.property("firstName");
+        });
+
+        describe("enquiries the partner cannot handle", () => {
+            const stepUpdateFrom = (response: { displays?: unknown[] }): Record<string, unknown> =>
+                (response.displays || [])[0] as Record<string, unknown>;
+
+            it("sends a cancellation to the message step and never loads the partner script", async () => {
+                handler = buildHandler(EXTERNAL_BOOKING);
+                context = buildContext();
+                stubEnquiry("cancellation");
+
+                const response = await new FormResponseStrategy().getResponse(handler, buildRequest(), context);
+
+                const update = stepUpdateFrom(response as { displays?: unknown[] });
+                expect(update.step).to.equal("booking_not_supported");
+                expect(update).to.not.have.property("externalWidget");
+            });
+
+            it("records on the lead why the handoff was skipped", async () => {
+                handler = buildHandler(EXTERNAL_BOOKING);
+                context = buildContext();
+                stubEnquiry("spam");
+
+                await new FormResponseStrategy().getResponse(handler, buildRequest(), context);
+
+                expect(sendLead.getCall(0).args[1]).to.deep.include({
+                    externalBookingDivertedAs: "spam",
+                });
+            });
+
+            it("leaves a real booking alone", async () => {
+                handler = buildHandler(EXTERNAL_BOOKING);
+                context = buildContext();
+                stubEnquiry("booking");
+
+                const response = await new FormResponseStrategy().getResponse(handler, buildRequest(), context);
+
+                const update = stepUpdateFrom(response as { displays?: unknown[] });
+                expect(update.step).to.equal("book_appointment");
+                expect(update).to.have.property("externalWidget");
+            });
+
+            it("honours an app that opts out of diverting", async () => {
+                handler = buildHandler({ ...EXTERNAL_BOOKING, unsupportedEnquiry: { types: [] } });
+                context = buildContext();
+                stubEnquiry("spam");
+
+                const response = await new FormResponseStrategy().getResponse(handler, buildRequest(), context);
+
+                expect(stepUpdateFrom(response as { displays?: unknown[] }).step).to.equal("book_appointment");
+            });
         });
 
         // Mis-classification is a when, not an if. Without provenance on the lead the only

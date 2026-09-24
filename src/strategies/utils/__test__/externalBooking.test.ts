@@ -7,6 +7,8 @@ import { ExternalBookingData } from "../../../data";
 import {
     toCategoryTrade,
     EXTERNAL_BOOKING_FALLBACK_STEP_NAME,
+    EXTERNAL_BOOKING_UNSUPPORTED_STEP_NAME,
+    buildUnsupportedStep,
     applyExternalBookingHandoff,
     buildExternalBookingConfig,
     buildHandoffStep,
@@ -445,5 +447,51 @@ describe("no-match fallback step", () => {
         const twice = applyExternalBookingHandoff(once, BASE_BOOKING);
 
         expect(twice.steps.filter((s) => s.name === EXTERNAL_BOOKING_FALLBACK_STEP_NAME)).to.have.length(1);
+    });
+});
+
+describe("unsupported-enquiry step", () => {
+    // Spam and cancellations cannot become an appointment, so the partner script is never
+    // loaded for them. The homeowner still needs to be told something, and a business needs to
+    // be able to word it -- "try our website" is not right for every contractor.
+    it("adds a step for enquiries the partner cannot handle", () => {
+        const form = applyExternalBookingHandoff(generatedForm(), BASE_BOOKING);
+
+        expect(form.steps.map((s) => s.name)).to.contain(EXTERNAL_BOOKING_UNSUPPORTED_STEP_NAME);
+    });
+
+    it("says something polite and useful by default", () => {
+        const step = buildUnsupportedStep();
+        const text = (step.fields || []).map((f) => (f as { text?: string }).text || "").join(" ");
+
+        expect(text.toLowerCase()).to.contain("cannot be handled here");
+        expect(text.toLowerCase()).to.not.contain("spam");
+        expect(text.toLowerCase()).to.not.contain("error");
+    });
+
+    it("lets the business word all of it", () => {
+        const step = buildUnsupportedStep({
+            title: "We can't help with that here",
+            heading: "Please call the office",
+            body: "For anything about an existing appointment, call us on 555-0100.",
+        });
+        const text = (step.fields || []).map((f) => (f as { text?: string }).text || "").join(" ");
+
+        expect(step.title).to.equal("We can't help with that here");
+        expect(text).to.contain("Please call the office");
+        expect(text).to.contain("555-0100");
+    });
+
+    it("is terminal, like the other end-of-form steps", () => {
+        const step = buildUnsupportedStep();
+
+        expect(step.previousAction).to.equal("omit");
+        expect(step.nextAction).to.equal("omit");
+    });
+
+    it("carries no externalWidget, so the partner script never loads", () => {
+        const step = buildUnsupportedStep();
+
+        expect((step as { externalWidget?: unknown }).externalWidget).to.equal(undefined);
     });
 });
