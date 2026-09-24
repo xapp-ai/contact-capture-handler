@@ -1,3 +1,10 @@
+# [2.9.0](https://github.com/xapp-ai/contact-capture-handler/compare/v2.8.0...v2.9.0) (2026-09-24)
+
+
+### Features
+
+* land no-match homeowners on a request-received step, and record the posted trade ([#722](https://github.com/xapp-ai/contact-capture-handler/issues/722)) ([dd62c83](https://github.com/xapp-ai/contact-capture-handler/commit/dd62c8356e9e958f81e87af4ba973f2520179b59))
+
 # [2.8.0](https://github.com/xapp-ai/contact-capture-handler/compare/v2.7.3...v2.8.0) (2026-09-23)
 
 
