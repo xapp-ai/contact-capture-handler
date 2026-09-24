@@ -370,6 +370,7 @@ describe("#applyExternalBookingHandoff()", () => {
             "confirmation",
             DEFAULT_EXTERNAL_BOOKING_STEP_NAME,
             EXTERNAL_BOOKING_FALLBACK_STEP_NAME,
+            EXTERNAL_BOOKING_UNSUPPORTED_STEP_NAME,
         ]);
         const submit = result.steps.find((s) => s.name === "confirmation");
         expect(submit?.crmSubmit).to.equal(true);
@@ -398,6 +399,7 @@ describe("#applyExternalBookingHandoff()", () => {
             "contact_info",
             "book_appointment",
             EXTERNAL_BOOKING_FALLBACK_STEP_NAME,
+            EXTERNAL_BOOKING_UNSUPPORTED_STEP_NAME,
         ]);
         const handoff = result.steps.find((s) => s.name === "book_appointment");
         expect(handoff?.fullBleed).to.equal(true);
@@ -419,9 +421,12 @@ describe("no-match fallback step", () => {
     it("adds the fallback step to the form, after the handoff", () => {
         const form = applyExternalBookingHandoff(generatedForm(), BASE_BOOKING);
         const names = form.steps.map((s) => s.name);
+        const handoff = names.indexOf(DEFAULT_EXTERNAL_BOOKING_STEP_NAME);
 
-        expect(names[names.length - 1]).to.equal(EXTERNAL_BOOKING_FALLBACK_STEP_NAME);
-        expect(names[names.length - 2]).to.equal(DEFAULT_EXTERNAL_BOOKING_STEP_NAME);
+        // Order matters only in that the fallback follows the handoff it belongs to; the
+        // unsupported-enquiry step sits after both.
+        expect(names[handoff + 1]).to.equal(EXTERNAL_BOOKING_FALLBACK_STEP_NAME);
+        expect(names[handoff + 2]).to.equal(EXTERNAL_BOOKING_UNSUPPORTED_STEP_NAME);
     });
 
     it("tells the homeowner their request was received rather than that something failed", () => {
