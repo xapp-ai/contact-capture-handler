@@ -6,6 +6,9 @@ import { MultistepForm } from "stentor-models";
 import { ExternalBookingData } from "../../../data";
 import {
     toCategoryTrade,
+    EXTERNAL_BOOKING_FALLBACK_STEP_NAME,
+    EXTERNAL_BOOKING_UNSUPPORTED_STEP_NAME,
+    buildUnsupportedStep,
     applyExternalBookingHandoff,
     buildExternalBookingConfig,
     buildHandoffStep,
@@ -366,6 +369,8 @@ describe("#applyExternalBookingHandoff()", () => {
             "contact_info",
             "confirmation",
             DEFAULT_EXTERNAL_BOOKING_STEP_NAME,
+            EXTERNAL_BOOKING_FALLBACK_STEP_NAME,
+            EXTERNAL_BOOKING_UNSUPPORTED_STEP_NAME,
         ]);
         const submit = result.steps.find((s) => s.name === "confirmation");
         expect(submit?.crmSubmit).to.equal(true);
@@ -388,9 +393,149 @@ describe("#applyExternalBookingHandoff()", () => {
             ],
         });
         const result = applyExternalBookingHandoff(custom, BASE_BOOKING);
-        expect(result.steps).to.have.length(2);
+        // The handoff step is filled in place rather than duplicated; the fallback step the
+        // widget lands on when the partner has nothing to show is added alongside it.
+        expect(result.steps.map((step) => step.name)).to.deep.equal([
+            "contact_info",
+            "book_appointment",
+            EXTERNAL_BOOKING_FALLBACK_STEP_NAME,
+            EXTERNAL_BOOKING_UNSUPPORTED_STEP_NAME,
+        ]);
         const handoff = result.steps.find((s) => s.name === "book_appointment");
         expect(handoff?.fullBleed).to.equal(true);
         expect((handoff as never as { externalWidget?: unknown }).externalWidget).to.exist;
+    });
+});
+
+describe("no-match fallback step", () => {
+    // A homeowner whose request does not match a contract used to be left looking at
+    // "we couldn't load the booking form, please try again later" -- which is both wrong (we
+    // have their details) and alarming. It is not an edge case either: Erie Home only takes
+    // full roof installs and replacements, so every repair enquiry lands here by design.
+    it("gives the handoff a fallback step to land on", () => {
+        const step = buildHandoffStep(BASE_BOOKING);
+
+        expect(step.externalWidget.fallbackStep).to.equal(EXTERNAL_BOOKING_FALLBACK_STEP_NAME);
+    });
+
+    it("adds the fallback step to the form, after the handoff", () => {
+        const form = applyExternalBookingHandoff(generatedForm(), BASE_BOOKING);
+        const names = form.steps.map((s) => s.name);
+        const handoff = names.indexOf(DEFAULT_EXTERNAL_BOOKING_STEP_NAME);
+
+        // Order matters only in that the fallback follows the handoff it belongs to; the
+        // unsupported-enquiry step sits after both.
+        expect(names[handoff + 1]).to.equal(EXTERNAL_BOOKING_FALLBACK_STEP_NAME);
+        expect(names[handoff + 2]).to.equal(EXTERNAL_BOOKING_UNSUPPORTED_STEP_NAME);
+    });
+
+    it("tells the homeowner their request was received rather than that something failed", () => {
+        const form = applyExternalBookingHandoff(generatedForm(), BASE_BOOKING);
+        const fallback = form.steps.find((s) => s.name === EXTERNAL_BOOKING_FALLBACK_STEP_NAME);
+        const text = (fallback.fields || []).map((f) => (f as { text?: string }).text || "").join(" ");
+
+        expect(text.toLowerCase()).to.contain("received");
+        expect(text.toLowerCase()).to.not.contain("sorry");
+        expect(text.toLowerCase()).to.not.contain("try again");
+    });
+
+    it("is terminal: no way forward and no way back into the partner form", () => {
+        const form = applyExternalBookingHandoff(generatedForm(), BASE_BOOKING);
+        const fallback = form.steps.find((s) => s.name === EXTERNAL_BOOKING_FALLBACK_STEP_NAME);
+
+        expect(fallback.previousAction).to.equal("omit");
+        expect(fallback.nextAction).to.equal("omit");
+    });
+
+    it("does not add a second fallback step when the handoff is re-applied", () => {
+        const once = applyExternalBookingHandoff(generatedForm(), BASE_BOOKING);
+        const twice = applyExternalBookingHandoff(once, BASE_BOOKING);
+
+        expect(twice.steps.filter((s) => s.name === EXTERNAL_BOOKING_FALLBACK_STEP_NAME)).to.have.length(1);
+    });
+});
+
+describe("unsupported-enquiry step", () => {
+    // Spam and cancellations cannot become an appointment, so the partner script is never
+    // loaded for them. The homeowner still needs to be told something, and a business needs to
+    // be able to word it -- "try our website" is not right for every contractor.
+    it("adds a step for enquiries the partner cannot handle", () => {
+        const form = applyExternalBookingHandoff(generatedForm(), BASE_BOOKING);
+
+        expect(form.steps.map((s) => s.name)).to.contain(EXTERNAL_BOOKING_UNSUPPORTED_STEP_NAME);
+    });
+
+    it("says something polite and useful by default", () => {
+        const step = buildUnsupportedStep();
+        const text = (step.fields || []).map((f) => (f as { text?: string }).text || "").join(" ");
+
+        expect(text.toLowerCase()).to.contain("cannot be handled here");
+        expect(text.toLowerCase()).to.not.contain("spam");
+        expect(text.toLowerCase()).to.not.contain("error");
+    });
+
+    it("lets the business word all of it", () => {
+        const step = buildUnsupportedStep({
+            title: "We can't help with that here",
+            heading: "Please call the office",
+            body: "For anything about an existing appointment, call us on 555-0100.",
+        });
+        const text = (step.fields || []).map((f) => (f as { text?: string }).text || "").join(" ");
+
+        expect(step.title).to.equal("We can't help with that here");
+        expect(text).to.contain("Please call the office");
+        expect(text).to.contain("555-0100");
+    });
+
+    it("is terminal, like the other end-of-form steps", () => {
+        const step = buildUnsupportedStep();
+
+        expect(step.previousAction).to.equal("omit");
+        expect(step.nextAction).to.equal("omit");
+    });
+
+    it("carries no externalWidget, so the partner script never loads", () => {
+        const step = buildUnsupportedStep();
+
+        expect((step as { externalWidget?: unknown }).externalWidget).to.equal(undefined);
+    });
+});
+
+describe("reserved step names", () => {
+    // stepName is free-form, so nothing stopped an app naming the handoff after one of the
+    // steps it falls back to. The name check then matched the HANDOFF step, the message step
+    // was never appended, and fallbackStep pointed at the handoff itself -- so a no-match sent
+    // the homeowner back to the widget that just told us it had nothing, which is exactly the
+    // UX this was written to fix.
+    for (const reserved of [EXTERNAL_BOOKING_FALLBACK_STEP_NAME, EXTERNAL_BOOKING_UNSUPPORTED_STEP_NAME]) {
+        it(`ignores a configured stepName of "${reserved}" and keeps the default`, () => {
+            const form = applyExternalBookingHandoff(generatedForm(), { ...BASE_BOOKING, stepName: reserved });
+            const names = form.steps.map((s) => s.name);
+
+            expect(names).to.contain(DEFAULT_EXTERNAL_BOOKING_STEP_NAME);
+            expect(names).to.contain(EXTERNAL_BOOKING_FALLBACK_STEP_NAME);
+            expect(names).to.contain(EXTERNAL_BOOKING_UNSUPPORTED_STEP_NAME);
+            // One step per name: the handoff did not take a message step's place.
+            expect(new Set(names).size).to.equal(names.length);
+        });
+    }
+
+    it("never points a handoff at itself", () => {
+        const form = applyExternalBookingHandoff(generatedForm(), {
+            ...BASE_BOOKING,
+            stepName: EXTERNAL_BOOKING_FALLBACK_STEP_NAME,
+        });
+        const handoff = form.steps.find((s) => (s as { externalWidget?: unknown }).externalWidget);
+
+        expect((handoff as never as { externalWidget: { fallbackStep: string } }).externalWidget.fallbackStep).to.equal(
+            EXTERNAL_BOOKING_FALLBACK_STEP_NAME,
+        );
+        expect(handoff.name).to.not.equal(EXTERNAL_BOOKING_FALLBACK_STEP_NAME);
+    });
+
+    it("still honours an ordinary custom stepName", () => {
+        const form = applyExternalBookingHandoff(generatedForm(), { ...BASE_BOOKING, stepName: "book_it" });
+
+        expect(form.steps.map((s) => s.name)).to.contain("book_it");
     });
 });

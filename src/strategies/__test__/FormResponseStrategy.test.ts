@@ -311,6 +311,19 @@ describe(`${FormResponseStrategy.name}`, () => {
             return r;
         };
 
+        /**
+         * Gives the enquiry classifier a message to read and an answer to give. Without both it
+         * fails open to "booking", which is the behaviour every other test here relies on.
+         */
+        const stubEnquiry = (type: string): void => {
+            const slots = context.session.get(Constants.CONTACT_CAPTURE_SLOTS) as Record<string, unknown>;
+            slots.message = { name: "message", value: "Cancel appointment" };
+            context.session.set(Constants.CONTACT_CAPTURE_SLOTS, slots);
+            (context.services as { llmService?: unknown }).llmService = {
+                generate: () => Promise.resolve({ text: JSON.stringify({ type, reasoning: "test" }) }),
+            };
+        };
+
         beforeEach(() => {
             sendLead = sinon.stub(ContactCaptureHandler, "sendLead").resolves({ success: true, id: "lead-123" } as never);
         });
@@ -364,6 +377,70 @@ describe(`${FormResponseStrategy.name}`, () => {
             expect(config).to.have.property("firstName");
         });
 
+        it("points the step update at the same step the form actually carries", async () => {
+            // stepName is free-form and a reserved name is refused when the form is built, so
+            // the submit response has to refuse it the same way or it aims the widget at a step
+            // that is not there.
+            handler = buildHandler({ ...EXTERNAL_BOOKING, stepName: "booking_request_received" });
+            context = buildContext();
+
+            const response = await new FormResponseStrategy().getResponse(handler, buildRequest(), context);
+
+            const display = response.displays && (response.displays[0] as Record<string, unknown>);
+            expect(display?.step).to.equal("book_appointment");
+        });
+
+        describe("enquiries the partner cannot handle", () => {
+            const stepUpdateFrom = (response: { displays?: unknown[] }): Record<string, unknown> =>
+                (response.displays || [])[0] as Record<string, unknown>;
+
+            it("sends a cancellation to the message step and never loads the partner script", async () => {
+                handler = buildHandler(EXTERNAL_BOOKING);
+                context = buildContext();
+                stubEnquiry("cancellation");
+
+                const response = await new FormResponseStrategy().getResponse(handler, buildRequest(), context);
+
+                const update = stepUpdateFrom(response as { displays?: unknown[] });
+                expect(update.step).to.equal("booking_not_supported");
+                expect(update).to.not.have.property("externalWidget");
+            });
+
+            it("records on the lead why the handoff was skipped", async () => {
+                handler = buildHandler(EXTERNAL_BOOKING);
+                context = buildContext();
+                stubEnquiry("spam");
+
+                await new FormResponseStrategy().getResponse(handler, buildRequest(), context);
+
+                expect(sendLead.getCall(0).args[1]).to.deep.include({
+                    externalBookingDivertedAs: "spam",
+                });
+            });
+
+            it("leaves a real booking alone", async () => {
+                handler = buildHandler(EXTERNAL_BOOKING);
+                context = buildContext();
+                stubEnquiry("booking");
+
+                const response = await new FormResponseStrategy().getResponse(handler, buildRequest(), context);
+
+                const update = stepUpdateFrom(response as { displays?: unknown[] });
+                expect(update.step).to.equal("book_appointment");
+                expect(update).to.have.property("externalWidget");
+            });
+
+            it("honours an app that opts out of diverting", async () => {
+                handler = buildHandler({ ...EXTERNAL_BOOKING, unsupportedEnquiry: { types: [] } });
+                context = buildContext();
+                stubEnquiry("spam");
+
+                const response = await new FormResponseStrategy().getResponse(handler, buildRequest(), context);
+
+                expect(stepUpdateFrom(response as { displays?: unknown[] }).step).to.equal("book_appointment");
+            });
+        });
+
         // Mis-classification is a when, not an if. Without provenance on the lead the only
         // signal is a customer complaint; with it we can count how often and see why.
         describe("trade provenance on the lead", () => {
@@ -381,6 +458,24 @@ describe(`${FormResponseStrategy.name}`, () => {
                 });
             });
 
+            // The lead keeps the trade we resolved; the partner is handed the category's
+            // canonical trade. Without recording the second one there is no way to answer
+            // "what did we actually send for this lead?" except by asking CostGuide.
+            it("records what was posted to the partner, not just what was resolved", async () => {
+                handler = buildHandler({
+                    ...EXTERNAL_BOOKING,
+                    allowedTrades: ["Roofing - Repair"],
+                    defaultTrade: "Roofing - Repair",
+                });
+                context = buildContext();
+                await new FormResponseStrategy().getResponse(handler, buildRequest(), context);
+
+                expect(extrasFromSendLead()).to.deep.include({
+                    externalBookingTrade: "Roofing - Repair",
+                    externalBookingTradePosted: "Roofing - Asphalt Install or Replace",
+                });
+            });
+
             it("records the omitted case too, rather than leaving it invisible", async () => {
                 handler = buildHandler({ ...EXTERNAL_BOOKING, allowedTrades: [], defaultTrade: undefined });
                 context = buildContext();
@@ -389,6 +484,7 @@ describe(`${FormResponseStrategy.name}`, () => {
                 const extras = extrasFromSendLead();
                 expect(extras.externalBookingTradeResolution).to.equal("omitted");
                 expect(extras.externalBookingTrade).to.equal(undefined);
+                expect(extras.externalBookingTradePosted).to.equal(undefined);
             });
 
             it("leaves an app with no externalBooking entirely untouched", async () => {

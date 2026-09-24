@@ -157,6 +157,26 @@ export interface ExternalBookingData {
      * Must itself be a real CostGuide trade; anything else is ignored.
      */
     defaultTrade?: string;
+    /**
+     * Enquiries that must never reach the booking partner, and what to tell the homeowner.
+     *
+     * A cancellation or a spam submission cannot become an appointment, so the partner script is
+     * not loaded for them -- the homeowner lands on a plain message instead. Seen on 2026-09-23:
+     * a "Cancel appointment" message classified as a roofing support request and was sent into
+     * the partner's booking form, where nothing sensible could happen.
+     *
+     * `types` defaults to cancellation and spam; an empty array means send everything through.
+     * Valid values: booking, cancellation, support, spam, other. A booking is never diverted.
+     */
+    unsupportedEnquiry?: {
+        readonly types?: string[];
+        /** Step title. */
+        readonly title?: string;
+        /** Bold first line. */
+        readonly heading?: string;
+        /** The explanation underneath. Word it for the business -- point them at a phone number or a page. */
+        readonly body?: string;
+    };
 }
 
 export interface ContactCaptureBlueprint
