@@ -65,6 +65,10 @@ export const CONTACT_CAPTURE_JOB_TYPE = CONTACT_CAPTURE_PREFIX + "JobType";
  */
 export const CONTACT_CAPTURE_DESCRIPTION = CONTACT_CAPTURE_PREFIX + "Description";
 /**
+ * The visitor location (address/zip) last sent to getAvailability
+ */
+export const CONTACT_CAPTURE_AVAILABILITY_LOCATION = CONTACT_CAPTURE_PREFIX + "AvailabilityLocation";
+/**
  * Tracks if the user refused to provide contact information
  */
 export const CONTACT_CAPTURE_REFUSED = CONTACT_CAPTURE_PREFIX + "Refused";

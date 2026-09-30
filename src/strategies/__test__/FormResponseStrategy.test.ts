@@ -3,7 +3,7 @@ import * as chai from "chai";
 import * as sinon from "sinon";
 import * as sinonChai from "sinon-chai";
 
-import { Content, Context, CrmService, Handler, IntentRequest } from "stentor-models";
+import { Content, Context, CrmService, Handler, IntentRequest, Response } from "stentor-models";
 import { ContextBuilder } from "stentor-context";
 import { IntentRequestBuilder } from "stentor-request";
 
@@ -244,6 +244,196 @@ describe(`${FormResponseStrategy.name}`, () => {
             expect(threw, threw && threw.stack).to.be.undefined;
             // getJobType failed, so no jobType-based availability refetch happened.
             expect(crmService.getAvailability).to.not.have.been.called;
+        });
+    });
+
+    // #727: the visitor's contact travels to getAvailability, and a new or changed location
+    // (ADDRESS / ZIP) refetches availability once -- for CRMs that rank slots by where the visitor is.
+    describe("visitor contact on getAvailability", () => {
+        const seededBusyDays = {
+            range: { start: null as string, end: null as string },
+            unavailabilities: [{ date: { date: "2026-10-01" }, available: false }],
+        };
+        const freshBusyDays = {
+            range: { start: null as string, end: null as string },
+            unavailabilities: [{ date: { date: "2026-10-02" }, available: false }],
+        };
+
+        let crmService: {
+            getJobType: sinon.SinonStub;
+            getAvailability: sinon.SinonStub;
+        };
+
+        const buildContext = (list: Record<string, unknown>[], extra: Record<string, unknown> = {}): Context => {
+            const c = new ContextBuilder()
+                .withSessionData({
+                    id: "form-session",
+                    data: {
+                        [Constants.CONTACT_CAPTURE_SLOTS]: {},
+                        [Constants.CONTACT_CAPTURE_LIST]: { data: list },
+                        ...extra,
+                    },
+                })
+                .build();
+            (c.services as { crmService?: Partial<CrmService> }).crmService = crmService as never;
+            return c;
+        };
+
+        const zipList = (zip: string): Record<string, unknown>[] => [
+            { slotName: "full_name", type: "FULL_NAME", collectedValue: "Jane Doe" },
+            { slotName: "zip", type: "ZIP", collectedValue: zip },
+        ];
+
+        beforeEach(() => {
+            handler = new ContactCaptureHandler(PROPS_WITHOUT_CAPTURE);
+            request = new IntentRequestBuilder().withSlots({}).withIntentId(PROPS_WITHOUT_CAPTURE.intentId).build();
+            request.isNewSession = false;
+            request.attributes = {
+                enablePreferredTime: true,
+                data: { step: "contact_info", form: "booking_preferred_time" },
+            };
+            crmService = {
+                getJobType: sinon.stub().resolves({ id: "1043" }),
+                getAvailability: sinon.stub().resolves(freshBusyDays),
+            };
+        });
+
+        it("passes no contact on the first call when nothing is collected", async () => {
+            request.isNewSession = true;
+            context = new ContextBuilder().withSessionData({ id: "form-session", data: {} }).build();
+            (context.services as { crmService?: Partial<CrmService> }).crmService = crmService as never;
+
+            await new FormResponseStrategy().getResponse(handler, request, context);
+
+            expect(crmService.getAvailability).to.have.been.calledOnce;
+            expect(crmService.getAvailability.firstCall.args[1]).to.not.have.property("contact");
+        });
+
+        it("passes the contact on the first call when something is already collected", async () => {
+            context = buildContext(zipList("33602"));
+
+            await new FormResponseStrategy().getResponse(handler, request, context);
+
+            expect(crmService.getAvailability).to.have.been.calledOnce;
+            expect(crmService.getAvailability.firstCall.args[1].contact).to.deep.equal({
+                name: "Jane Doe",
+                zip: "33602",
+            });
+        });
+
+        it("fetches exactly once more when the zip is first collected, carrying the contact", async () => {
+            context = buildContext(zipList("33602"), { [Constants.CONTACT_CAPTURE_BUSY_DAYS]: seededBusyDays });
+            const strategy = new FormResponseStrategy();
+
+            const response = await strategy.getResponse(handler, request, context);
+
+            expect(crmService.getAvailability).to.have.been.calledOnce;
+            expect(crmService.getAvailability.firstCall.args[1].contact).to.deep.equal({
+                name: "Jane Doe",
+                zip: "33602",
+            });
+            expect(response.context.active[0].parameters.busyDays).to.equal("2026-10-02");
+
+            // A later step with the same location does not fetch again
+            await strategy.getResponse(handler, request, context);
+            expect(crmService.getAvailability).to.have.been.calledOnce;
+        });
+
+        it("fetches once when the address is first collected", async () => {
+            context = buildContext(
+                [{ slotName: "address", type: "ADDRESS", collectedValue: "1 Main St, Tampa, FL" }],
+                { [Constants.CONTACT_CAPTURE_BUSY_DAYS]: seededBusyDays },
+            );
+            const strategy = new FormResponseStrategy();
+
+            await strategy.getResponse(handler, request, context);
+            await strategy.getResponse(handler, request, context);
+
+            expect(crmService.getAvailability).to.have.been.calledOnce;
+            expect(crmService.getAvailability.firstCall.args[1].contact).to.deep.equal({
+                address: "1 Main St, Tampa, FL",
+            });
+        });
+
+        it("does not refetch when no location has been collected", async () => {
+            context = buildContext([{ slotName: "full_name", type: "FULL_NAME", collectedValue: "Jane Doe" }], {
+                [Constants.CONTACT_CAPTURE_BUSY_DAYS]: seededBusyDays,
+            });
+
+            await new FormResponseStrategy().getResponse(handler, request, context);
+
+            expect(crmService.getAvailability).to.not.have.been.called;
+        });
+
+        it("fetches again when the location changes", async () => {
+            context = buildContext(zipList("33602"), { [Constants.CONTACT_CAPTURE_BUSY_DAYS]: seededBusyDays });
+            const strategy = new FormResponseStrategy();
+
+            await strategy.getResponse(handler, request, context);
+
+            const list = context.session.get(Constants.CONTACT_CAPTURE_LIST);
+            list.data[1].collectedValue = "33603";
+            context.session.set(Constants.CONTACT_CAPTURE_LIST, list);
+
+            await strategy.getResponse(handler, request, context);
+
+            expect(crmService.getAvailability).to.have.been.calledTwice;
+            expect(crmService.getAvailability.secondCall.args[1].contact).to.deep.include({ zip: "33603" });
+        });
+
+        it("keeps the known job type and settings on a location refetch", async () => {
+            const settings = { forceAvailabilityClass: "drain-emergency" };
+            handler = new ContactCaptureHandler({
+                ...PROPS_WITHOUT_CAPTURE,
+                data: { ...PROPS_WITHOUT_CAPTURE.data, availabilitySettings: settings } as unknown as ContactCaptureData,
+            });
+            context = buildContext(zipList("33602"), {
+                [Constants.CONTACT_CAPTURE_BUSY_DAYS]: seededBusyDays,
+                [Constants.CONTACT_CAPTURE_JOB_TYPE]: { id: "1043" },
+            });
+
+            await new FormResponseStrategy().getResponse(handler, request, context);
+
+            const options = crmService.getAvailability.firstCall.args[1];
+            expect(options).to.include({ forceAvailabilityClass: "drain-emergency" });
+            expect(options.jobType).to.deep.equal({ id: "1043" });
+        });
+
+        it("carries the contact on a job-type refetch, in a single call", async () => {
+            context = buildContext(
+                [...zipList("33602"), { slotName: "message", type: "MESSAGE", collectedValue: "My drain is backed up" }],
+                { [Constants.CONTACT_CAPTURE_BUSY_DAYS]: seededBusyDays },
+            );
+            const strategy = new FormResponseStrategy();
+
+            await strategy.getResponse(handler, request, context);
+
+            expect(crmService.getAvailability).to.have.been.calledOnce;
+            const options = crmService.getAvailability.firstCall.args[1];
+            expect(options.jobType).to.deep.equal({ id: "1043" });
+            expect(options.contact).to.deep.equal({ name: "Jane Doe", zip: "33602" });
+
+            // The location was sent with the job-type refetch, so the next step does not refetch
+            await strategy.getResponse(handler, request, context);
+            expect(crmService.getAvailability).to.have.been.calledOnce;
+        });
+
+        it("keeps the previous busy days when the location refetch fails", async () => {
+            crmService.getAvailability.rejects(new Error("CRM down"));
+            context = buildContext(zipList("33602"), { [Constants.CONTACT_CAPTURE_BUSY_DAYS]: seededBusyDays });
+
+            let threw: Error | undefined;
+            let response: Response | undefined;
+            try {
+                response = await new FormResponseStrategy().getResponse(handler, request, context);
+            } catch (e) {
+                threw = e as Error;
+            }
+
+            expect(threw, threw && threw.stack).to.be.undefined;
+            expect(crmService.getAvailability).to.have.been.calledOnce;
+            expect(context.session.get(Constants.CONTACT_CAPTURE_BUSY_DAYS)).to.deep.equal(seededBusyDays);
+            expect(response.context.active[0].parameters.busyDays).to.equal("2026-10-01");
         });
     });
 

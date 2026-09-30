@@ -55,7 +55,7 @@
     "stentor-context": "1.74.13",
     "stentor-handler": "1.74.13",
     "stentor-logger": "1.74.10",
-    "stentor-models": "1.80.0",
+    "stentor-models": "1.81.0",
     "stentor-request": "1.74.10",
     "stentor-response": "1.74.13",
     "stentor-service-fetch": "1.74.6",
