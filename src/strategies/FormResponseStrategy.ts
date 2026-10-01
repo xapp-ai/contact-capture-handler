@@ -38,6 +38,7 @@ import {
     isUnsupportedEnquiry,
 } from "./utils/enquiryClassifier";
 import { resolveBookingTrade, TradeResolution } from "./utils/tradeClassifier";
+import { availabilityLocationKey, buildAvailabilityContact } from "./utils/availabilityContact";
 
 /**
  * Action response data object
@@ -486,9 +487,20 @@ export class FormResponseStrategy implements ResponseStrategy {
             Constants.CONTACT_CAPTURE_BUSY_DAYS,
         ) as CrmServiceAvailability;
 
-        // First time?
-        if (!busyDays && typeof crmService?.getAvailability === "function") {
-            const options: CrmServiceAvailabilityOptions = { ...settings };
+        // What the visitor has entered so far; CRMs that don't use it ignore it (#727)
+        const contact = buildAvailabilityContact(leadDataList);
+        const location = availabilityLocationKey(contact);
+
+        const fetchAvailability = async (options: CrmServiceAvailabilityOptions): Promise<void> => {
+            if (contact) {
+                options.contact = contact;
+            }
+
+            // Recorded before the call, like the description: one fetch per location change,
+            // even when it fails.
+            if (location) {
+                session.set(Constants.CONTACT_CAPTURE_AVAILABILITY_LOCATION, location);
+            }
 
             try {
                 busyDays = await crmService.getAvailability(
@@ -501,64 +513,78 @@ export class FormResponseStrategy implements ResponseStrategy {
 
                 session.set(Constants.CONTACT_CAPTURE_BUSY_DAYS, busyDays);
             } catch (e) {
+                // Keeps the previous busy days
                 log().warn(`getAvailability failed, continuing without busy days: ${(e as Error).message}`);
             }
-        } else if (leadDataList?.data && typeof crmService?.getJobType === "function") {
-            // Try to augment if we have a description
-            const messageData = leadDataList.data.find((data) => {
-                return data.slotName?.toLowerCase() === "message";
-            });
+        };
 
-            if (messageData?.collectedValue) {
-                const description = messageData.collectedValue?.trim();
-                const existingDescription = session.get(Constants.CONTACT_CAPTURE_DESCRIPTION);
+        // First time?
+        if (!busyDays && typeof crmService?.getAvailability === "function") {
+            await fetchAvailability({ ...settings });
+        } else {
+            let refetched = false;
 
-                // Only call if description changed
-                if (description !== existingDescription) {
-                    session.set(Constants.CONTACT_CAPTURE_DESCRIPTION, description);
+            if (leadDataList?.data && typeof crmService?.getJobType === "function") {
+                // Try to augment if we have a description
+                const messageData = leadDataList.data.find((data) => {
+                    return data.slotName?.toLowerCase() === "message";
+                });
 
-                    // Pass the in-scope availability settings so forceAvailabilityClass /
-                    // jobTypeClasses can influence which class the job resolves to (#663).
-                    // Guarded like getAvailability below: a classifier failure must not break the
-                    // whole request — we just skip the job-type-based availability refetch.
-                    let jobType: CrmServiceJobType | undefined;
-                    try {
-                        jobType = await crmService.getJobType(description, undefined, settings);
-                    } catch (e) {
-                        log().warn(`getJobType failed, skipping availability augmentation: ${(e as Error).message}`);
-                    }
-                    const existingJobType = session.get(Constants.CONTACT_CAPTURE_JOB_TYPE);
+                if (messageData?.collectedValue) {
+                    const description = messageData.collectedValue?.trim();
+                    const existingDescription = session.get(Constants.CONTACT_CAPTURE_DESCRIPTION);
 
-                    // Only call if the jobType changed (visitor changed the description)
-                    if (jobType?.id !== existingJobType?.id && typeof crmService?.getAvailability === "function") {
-                        session.set(Constants.CONTACT_CAPTURE_JOB_TYPE, jobType);
+                    // Only call if description changed
+                    if (description !== existingDescription) {
+                        session.set(Constants.CONTACT_CAPTURE_DESCRIPTION, description);
 
-                        let options: CrmServiceAvailabilityOptions = {
-                            jobType,
-                        };
-
-                        if (settings) {
-                            options = {
-                                ...options,
-                                ...settings,
-                            };
-                        }
-
+                        // Pass the in-scope availability settings so forceAvailabilityClass /
+                        // jobTypeClasses can influence which class the job resolves to (#663).
+                        // Guarded like getAvailability below: a classifier failure must not break the
+                        // whole request — we just skip the job-type-based availability refetch.
+                        let jobType: CrmServiceJobType | undefined;
                         try {
-                            busyDays = await crmService.getAvailability(
-                                {
-                                    start: null,
-                                    end: null,
-                                },
-                                options,
-                            );
-
-                            session.set(Constants.CONTACT_CAPTURE_BUSY_DAYS, busyDays);
+                            jobType = await crmService.getJobType(description, undefined, settings);
                         } catch (e) {
-                            log().warn(`getAvailability failed, continuing without busy days: ${(e as Error).message}`);
+                            log().warn(`getJobType failed, skipping availability augmentation: ${(e as Error).message}`);
+                        }
+                        const existingJobType = session.get(Constants.CONTACT_CAPTURE_JOB_TYPE);
+
+                        // Only call if the jobType changed (visitor changed the description)
+                        if (jobType?.id !== existingJobType?.id && typeof crmService?.getAvailability === "function") {
+                            session.set(Constants.CONTACT_CAPTURE_JOB_TYPE, jobType);
+
+                            let options: CrmServiceAvailabilityOptions = {
+                                jobType,
+                            };
+
+                            if (settings) {
+                                options = {
+                                    ...options,
+                                    ...settings,
+                                };
+                            }
+
+                            await fetchAvailability(options);
+                            refetched = true;
                         }
                     }
                 }
+            }
+
+            // The visitor's location arrived or changed since availability was last fetched
+            if (
+                !refetched &&
+                location &&
+                location !== session.get(Constants.CONTACT_CAPTURE_AVAILABILITY_LOCATION) &&
+                typeof crmService?.getAvailability === "function"
+            ) {
+                const jobType: CrmServiceJobType | undefined = session.get(Constants.CONTACT_CAPTURE_JOB_TYPE);
+
+                await fetchAvailability({
+                    ...(jobType ? { jobType } : {}),
+                    ...settings,
+                });
             }
         }
 
