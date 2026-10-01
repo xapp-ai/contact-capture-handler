@@ -1,3 +1,10 @@
+# [2.10.0](https://github.com/xapp-ai/contact-capture-handler/compare/v2.9.0...v2.10.0) (2026-10-01)
+
+
+### Features
+
+* pass visitor contact to getAvailability and refetch on location ([#728](https://github.com/xapp-ai/contact-capture-handler/issues/728)) ([186f981](https://github.com/xapp-ai/contact-capture-handler/commit/186f98177afb3ab38fbd9bb90db454ff3a4c13ff)), closes [#727](https://github.com/xapp-ai/contact-capture-handler/issues/727)
+
 # [2.9.0](https://github.com/xapp-ai/contact-capture-handler/compare/v2.8.0...v2.9.0) (2026-09-24)
 
 
