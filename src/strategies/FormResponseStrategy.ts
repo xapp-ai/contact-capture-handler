@@ -14,6 +14,7 @@ import {
     Request,
     RequestSlotMap,
     SessionStore,
+    TimeSlotSchedule,
 } from "stentor-models";
 import { requestSlotValueToString } from "stentor-utils";
 import { compileResponse } from "stentor-response";
@@ -31,14 +32,10 @@ import {
     handoffStepName,
     toCategoryTrade,
 } from "./utils/externalBooking";
-import {
-    canDivertEnquiry,
-    classifyEnquiry,
-    EnquiryResolution,
-    isUnsupportedEnquiry,
-} from "./utils/enquiryClassifier";
+import { canDivertEnquiry, classifyEnquiry, EnquiryResolution, isUnsupportedEnquiry } from "./utils/enquiryClassifier";
 import { resolveBookingTrade, TradeResolution } from "./utils/tradeClassifier";
 import { availabilityLocationKey, buildAvailabilityContact } from "./utils/availabilityContact";
+import { buildOfferingsByDate, hasTimeSlots, OfferingsByDate } from "./utils/liveSlots";
 
 /**
  * Action response data object
@@ -155,6 +152,35 @@ function formatBusyDays(busyDays: CrmServiceAvailability): string {
     return busyDates.join(",");
 }
 
+/**
+ * The live-scheduling parameters that sit next to busyDays on the BusyDays context (#741).
+ *
+ * Empty when the CRM sets neither timeSlots nor schedulingDisabled, so the context is unchanged.
+ *
+ * @param availability
+ * @param schedule The DATETIME field's schedule; without one the form uses chips and timeSlots are ignored
+ */
+function liveScheduling(
+    availability: CrmServiceAvailability,
+    schedule: TimeSlotSchedule | undefined,
+): { offeringsByDate?: OfferingsByDate; schedulingDisabled?: boolean } {
+    const parameters: { offeringsByDate?: OfferingsByDate; schedulingDisabled?: boolean } = {};
+
+    if (hasTimeSlots(availability)) {
+        if (schedule?.timezone) {
+            parameters.offeringsByDate = buildOfferingsByDate(availability, schedule.timezone);
+        } else {
+            log().debug("CRM returned live time slots but the form uses chips; ignoring them");
+        }
+    }
+
+    if (availability.schedulingDisabled) {
+        parameters.schedulingDisabled = true;
+    }
+
+    return parameters;
+}
+
 export class FormResponseStrategy implements ResponseStrategy {
     public async getResponse(handler: ContactCaptureHandler, request: Request, context: Context): Promise<Response> {
         const slots: RequestSlotMap = context.session.get(Constants.CONTACT_CAPTURE_SLOTS);
@@ -203,6 +229,7 @@ export class FormResponseStrategy implements ResponseStrategy {
                 context.services.crmService,
                 context.session,
                 handler.data?.availabilitySettings,
+                handler.data?.preferredTimeSchedule,
             );
 
             return response;
@@ -268,6 +295,7 @@ export class FormResponseStrategy implements ResponseStrategy {
                     context.services.crmService,
                     context.session,
                     handler.data?.availabilitySettings,
+                    handler.data?.preferredTimeSchedule,
                 );
                 return response;
             }
@@ -280,6 +308,7 @@ export class FormResponseStrategy implements ResponseStrategy {
                     context.services.crmService,
                     context.session,
                     handler.data?.availabilitySettings,
+                    handler.data?.preferredTimeSchedule,
                 );
                 return response;
             }
@@ -471,6 +500,7 @@ export class FormResponseStrategy implements ResponseStrategy {
             context.services.crmService,
             context.session,
             handler.data?.availabilitySettings,
+            handler.data?.preferredTimeSchedule,
         );
         return response;
     }
@@ -480,6 +510,7 @@ export class FormResponseStrategy implements ResponseStrategy {
         crmService: CrmService,
         session: SessionStore,
         settings?: CrmServiceAvailabilitySettings,
+        schedule?: TimeSlotSchedule,
     ): Promise<Response> {
         const leadDataList: CaptureRuntimeData = session.get(Constants.CONTACT_CAPTURE_LIST);
 
@@ -546,7 +577,9 @@ export class FormResponseStrategy implements ResponseStrategy {
                         try {
                             jobType = await crmService.getJobType(description, undefined, settings);
                         } catch (e) {
-                            log().warn(`getJobType failed, skipping availability augmentation: ${(e as Error).message}`);
+                            log().warn(
+                                `getJobType failed, skipping availability augmentation: ${(e as Error).message}`,
+                            );
                         }
                         const existingJobType = session.get(Constants.CONTACT_CAPTURE_JOB_TYPE);
 
@@ -595,9 +628,12 @@ export class FormResponseStrategy implements ResponseStrategy {
                     {
                         name: "BusyDays",
                         timeToLive: {},
+                        // Context parameters are typed as strings, but the form widget reads
+                        // offeringsByDate and schedulingDisabled as an object and a boolean.
                         parameters: {
                             busyDays: formatBusyDays(busyDays),
-                        },
+                            ...liveScheduling(busyDays, schedule),
+                        } as unknown as { [key: string]: string },
                     },
                 ],
             };
