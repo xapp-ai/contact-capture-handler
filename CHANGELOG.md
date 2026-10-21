@@ -1,3 +1,10 @@
+# [2.11.0](https://github.com/xapp-ai/contact-capture-handler/compare/v2.10.0...v2.11.0) (2026-10-21)
+
+
+### Features
+
+* send live CRM time slots and schedulingDisabled to the form widget ([#742](https://github.com/xapp-ai/contact-capture-handler/issues/742)) ([eb920d8](https://github.com/xapp-ai/contact-capture-handler/commit/eb920d85a19deed046231d701dc3e0ab23c0240e)), closes [#741](https://github.com/xapp-ai/contact-capture-handler/issues/741)
+
 # [2.10.0](https://github.com/xapp-ai/contact-capture-handler/compare/v2.9.0...v2.10.0) (2026-10-01)
 
 
