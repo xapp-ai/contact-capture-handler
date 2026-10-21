@@ -859,4 +859,231 @@ describe(`${FormResponseStrategy.name}`, () => {
             expect(extras).to.have.property("externalId", request.sessionId);
         });
     });
+
+    // #741: live CRM booking windows and request-only scheduling travel to the widget on the
+    // BusyDays context, next to busyDays.
+    describe("live slots and schedulingDisabled on the BusyDays context", () => {
+        const SCHEDULE = { timezone: "America/Los_Angeles", days: {} };
+
+        // 15:00Z-19:00Z on Oct 22 is 08:00-12:00 in Los Angeles
+        const liveAvailability = {
+            range: { start: null as string, end: null as string },
+            unavailabilities: [
+                {
+                    date: { date: "2026-10-22" },
+                    available: true,
+                    timeSlots: [
+                        {
+                            range: {
+                                start: { date: "2026-10-22", time: "15:00:00", tz: "Z" },
+                                end: { date: "2026-10-22", time: "19:00:00", tz: "Z" },
+                            },
+                            available: true,
+                        },
+                        {
+                            range: {
+                                start: { date: "2026-10-22", time: "19:00:00", tz: "Z" },
+                                end: { date: "2026-10-22", time: "23:00:00", tz: "Z" },
+                            },
+                            available: false,
+                        },
+                    ],
+                },
+                {
+                    date: { date: "2026-10-23" },
+                    available: false,
+                    timeSlots: [
+                        {
+                            range: {
+                                start: { date: "2026-10-23", time: "15:00:00", tz: "Z" },
+                                end: { date: "2026-10-23", time: "19:00:00", tz: "Z" },
+                            },
+                            available: false,
+                        },
+                    ],
+                },
+            ],
+        };
+
+        let crmService: { getAvailability: sinon.SinonStub };
+
+        const buildHandler = (extra: Record<string, unknown> = {}): ContactCaptureHandler =>
+            new ContactCaptureHandler({
+                ...PROPS_WITHOUT_CAPTURE,
+                data: { ...PROPS_WITHOUT_CAPTURE.data, ...extra } as unknown as ContactCaptureData,
+            });
+
+        const buildContext = (data: Record<string, unknown> = {}): Context => {
+            const c = new ContextBuilder().withSessionData({ id: "form-session", data }).build();
+            (c.services as { crmService?: Partial<CrmService> }).crmService = crmService as never;
+            return c;
+        };
+
+        const busyDaysParameters = (response: Response): Record<string, unknown> => {
+            const active = response.context?.active?.find((a) => a.name === "BusyDays");
+            return active?.parameters as Record<string, unknown>;
+        };
+
+        beforeEach(() => {
+            request = new IntentRequestBuilder().withSlots({}).withIntentId(PROPS_WITHOUT_CAPTURE.intentId).build();
+            request.isNewSession = true;
+            crmService = { getAvailability: sinon.stub().resolves(liveAvailability) };
+        });
+
+        it("adds offeringsByDate for a DATETIME form, open windows only, in the schedule timezone", async () => {
+            handler = buildHandler({ preferredTimeSchedule: SCHEDULE });
+            context = buildContext();
+
+            const response = await new FormResponseStrategy().getResponse(handler, request, context);
+
+            expect(busyDaysParameters(response)).to.deep.equal({
+                busyDays: "2026-10-23",
+                offeringsByDate: {
+                    "2026-10-22": [{ start: "08:00", end: "12:00" }],
+                    "2026-10-23": [],
+                },
+            });
+        });
+
+        it("ignores timeSlots for a chips form", async () => {
+            handler = buildHandler();
+            context = buildContext();
+
+            const response = await new FormResponseStrategy().getResponse(handler, request, context);
+
+            expect(busyDaysParameters(response)).to.deep.equal({ busyDays: "2026-10-23" });
+        });
+
+        it("sends exactly today's context when the CRM sets neither field", async () => {
+            crmService.getAvailability.resolves({
+                range: { start: null, end: null },
+                unavailabilities: [{ date: { date: "2026-10-01" }, available: false }],
+            });
+            handler = buildHandler({ preferredTimeSchedule: SCHEDULE });
+            context = buildContext();
+
+            const response = await new FormResponseStrategy().getResponse(handler, request, context);
+
+            expect(response.context.active).to.deep.equal([
+                { name: "BusyDays", timeToLive: {}, parameters: { busyDays: "2026-10-01" } },
+            ]);
+        });
+
+        it("passes schedulingDisabled through", async () => {
+            crmService.getAvailability.resolves({
+                range: { start: null, end: null },
+                unavailabilities: [],
+                schedulingDisabled: true,
+            });
+            handler = buildHandler({ preferredTimeSchedule: SCHEDULE });
+            context = buildContext();
+
+            const response = await new FormResponseStrategy().getResponse(handler, request, context);
+
+            expect(busyDaysParameters(response)).to.deep.equal({ busyDays: "", schedulingDisabled: true });
+        });
+
+        it("does not send schedulingDisabled when the CRM sets it false", async () => {
+            crmService.getAvailability.resolves({
+                range: { start: null, end: null },
+                unavailabilities: [],
+                schedulingDisabled: false,
+            });
+            handler = buildHandler();
+            context = buildContext();
+
+            const response = await new FormResponseStrategy().getResponse(handler, request, context);
+
+            expect(busyDaysParameters(response)).to.deep.equal({ busyDays: "" });
+        });
+
+        it("serves both fields from the session-cached availability without refetching", async () => {
+            const cached = { ...liveAvailability, schedulingDisabled: true };
+            handler = buildHandler({ preferredTimeSchedule: SCHEDULE });
+            context = buildContext({
+                [Constants.CONTACT_CAPTURE_SLOTS]: {},
+                [Constants.CONTACT_CAPTURE_LIST]: { data: [] },
+                [Constants.CONTACT_CAPTURE_BUSY_DAYS]: cached,
+            });
+            request.isNewSession = false;
+            request.attributes = {
+                enablePreferredTime: true,
+                data: { step: "contact_info", form: "booking_preferred_time" },
+            };
+
+            const response = await new FormResponseStrategy().getResponse(handler, request, context);
+
+            expect(crmService.getAvailability).to.not.have.been.called;
+            expect(busyDaysParameters(response)).to.deep.equal({
+                busyDays: "2026-10-23",
+                offeringsByDate: {
+                    "2026-10-22": [{ start: "08:00", end: "12:00" }],
+                    "2026-10-23": [],
+                },
+                schedulingDisabled: true,
+            });
+        });
+
+        it("caches the new fields on the session", async () => {
+            const withDisabled = { ...liveAvailability, schedulingDisabled: true };
+            crmService.getAvailability.resolves(withDisabled);
+            handler = buildHandler({ preferredTimeSchedule: SCHEDULE });
+            context = buildContext();
+
+            await new FormResponseStrategy().getResponse(handler, request, context);
+
+            expect(context.session.get(Constants.CONTACT_CAPTURE_BUSY_DAYS)).to.deep.equal(withDisabled);
+        });
+
+        describe("on submit with scheduling disabled", () => {
+            let sendLead: sinon.SinonStub;
+
+            beforeEach(() => {
+                sendLead = sinon.stub(ContactCaptureHandler, "sendLead").resolves({ success: true, id: "lead-1" } as never);
+            });
+
+            afterEach(() => {
+                sendLead.restore();
+            });
+
+            it("still sends the lead with no date or time collected", async () => {
+                handler = buildHandler({
+                    enableFormScheduling: true,
+                    CAPTURE_MAIN_FORM: "main",
+                    capture: { data: [] },
+                    preferredTimeSchedule: SCHEDULE,
+                    forms: [
+                        {
+                            type: "FORM",
+                            name: "main",
+                            steps: [
+                                { name: "confirmation", crmSubmit: true, final: true, nextAction: "submit", fields: [] },
+                            ],
+                        },
+                    ],
+                });
+                context = buildContext({
+                    [Constants.CONTACT_CAPTURE_SLOTS]: {
+                        full_name: { name: "full_name", value: "Jane Doe" },
+                        phone: { name: "phone", value: "5550000000" },
+                    },
+                    [Constants.CONTACT_CAPTURE_LIST]: { data: [] },
+                    [Constants.CONTACT_CAPTURE_BUSY_DAYS]: {
+                        range: { start: null, end: null },
+                        unavailabilities: [],
+                        schedulingDisabled: true,
+                    },
+                });
+                request.isNewSession = false;
+                request.attributes = { data: { step: "confirmation", form: "main", result: {} } };
+
+                await new FormResponseStrategy().getResponse(handler, request, context);
+
+                expect(sendLead).to.have.been.calledOnce;
+                const sentSlots = sendLead.firstCall.args[0];
+                expect(sentSlots).to.not.have.property("preferred_time");
+                expect(sentSlots).to.not.have.property("preferred_date");
+            });
+        });
+    });
 });

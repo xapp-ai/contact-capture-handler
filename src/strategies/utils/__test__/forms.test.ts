@@ -2008,7 +2008,10 @@ describe(`#${getContactFormFallback.name}()`, () => {
             durationMinutes: 60,
             days: {
                 monday: [{ start: "08:00", end: "17:00" }],
-                tuesday: [{ start: "08:00", end: "12:00" }, { start: "13:00", end: "17:00" }],
+                tuesday: [
+                    { start: "08:00", end: "12:00" },
+                    { start: "13:00", end: "17:00" },
+                ],
             },
             exceptions: [{ date: "2026-12-25", spans: [] }],
             leadTimeMinutes: 120,
@@ -2118,9 +2121,7 @@ describe(`#${getContactFormFallback.name}()`, () => {
                 { enablePreferredTime: true },
             );
 
-            const dateTimeField = form.steps[2].fields.find(
-                (field) => field.type === "DATETIME",
-            ) as FormDateTimeInput;
+            const dateTimeField = form.steps[2].fields.find((field) => field.type === "DATETIME") as FormDateTimeInput;
             // The confirmation step below reads #{preferred_date}; the DATETIME field is what
             // supplies it now, so the name is pinned rather than left to the widget default.
             expect(dateTimeField.dateFieldName).to.equal("preferred_date");
@@ -2178,6 +2179,30 @@ describe(`#${getContactFormFallback.name}()`, () => {
             const preferredTimeStep = form.steps[2];
             expect(preferredTimeStep.fields.find((field) => field.name === "preferred_date")).to.be.undefined;
             expect(preferredTimeStep.fields.filter((field) => field.type === "DATETIME")).to.have.length(1);
+        });
+
+        // #741: when the CRM sets schedulingDisabled the widget hides the DATETIME field, so the
+        // review step must render nothing date-related for a submission with no date or time.
+        it("conditions every review-step date & time card on a submitted date or time", () => {
+            const form = getContactFormFallback(
+                {
+                    capture: SIMPLE_BLUEPRINT,
+                    preferredTimeSchedule: SCHEDULE,
+                },
+                { enablePreferredTime: true },
+            );
+
+            const confirmationStep = form.steps[3];
+            const dateTimeCards = confirmationStep.fields.filter(
+                (field) =>
+                    /date|time|important/i.test(field.name) ||
+                    /preferred_|dateTime/.test((field as FormCardInput).text || ""),
+            );
+            expect(dateTimeCards).to.not.be.empty;
+
+            dateTimeCards.forEach((field) => {
+                expect(field.condition, field.name).to.match(/dateTime|preferred_date|preferred_time/);
+            });
         });
     });
     describe("when both preferredTimeOptions and preferredTimeSchedule are passed", () => {
