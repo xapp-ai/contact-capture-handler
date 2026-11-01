@@ -1,3 +1,10 @@
+# [2.12.0](https://github.com/xapp-ai/contact-capture-handler/compare/v2.11.0...v2.12.0) (2026-11-01)
+
+
+### Features
+
+* hold back the next business day's morning for after-hours leads ([#750](https://github.com/xapp-ai/contact-capture-handler/issues/750)) ([3390642](https://github.com/xapp-ai/contact-capture-handler/commit/3390642902cede02800f292e317bed3cd0d9c264)), closes [#749](https://github.com/xapp-ai/contact-capture-handler/issues/749)
+
 # [2.11.0](https://github.com/xapp-ai/contact-capture-handler/compare/v2.10.0...v2.11.0) (2026-10-21)
 
 
