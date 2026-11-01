@@ -2258,6 +2258,18 @@ describe(`#${getContactFormFallback.name}()`, () => {
             expect(preferredTimeField).to.exist;
             expect(preferredTimeField.type).to.equal("CHIPS");
             expect(preferredTimeField.items).to.deep.equal(DEFAULT_PREFERRED_TIME_ITEMS);
+            // Explicit windows, so the widget can hold back a blocked morning (#749)
+            expect(
+                (preferredTimeField.items as SelectableItem[]).map(({ id, startTime, endTime }) => ({
+                    id,
+                    startTime,
+                    endTime,
+                })),
+            ).to.deep.equal([
+                { id: "first_available", startTime: undefined, endTime: undefined },
+                { id: "morning", startTime: "08:00", endTime: "12:00" },
+                { id: "afternoon", startTime: "12:00", endTime: "17:00" },
+            ]);
 
             expect(preferredTimeStep.fields.find((field) => field.name === "card_time_preference")).to.exist;
             expect(preferredTimeStep.fields.find((field) => field.name === "time_request_note_card")).to.exist;

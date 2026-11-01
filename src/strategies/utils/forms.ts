@@ -56,10 +56,14 @@ export const DEFAULT_PREFERRED_TIME_ITEMS: SelectableItem[] = [
     {
         id: "morning",
         label: "Morning",
+        startTime: "08:00",
+        endTime: "12:00",
     },
     {
         id: "afternoon",
         label: "Afternoon",
+        startTime: "12:00",
+        endTime: "17:00",
     },
 ];
 

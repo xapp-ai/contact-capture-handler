@@ -1086,4 +1086,96 @@ describe(`${FormResponseStrategy.name}`, () => {
             });
         });
     });
+
+    // #749: a lead taken after hours gets the next business day's morning held back.
+    describe("nextBusinessDayBlock on the BusyDays context", () => {
+        const AFTER_HOURS_SETTINGS = {
+            timezone: "America/Chicago",
+            defaultBusyDays: { afterHoursNextDayBlockedUntil: "12:00" },
+        };
+        // Saturday 2026-11-14 10:00 in Chicago (UTC-6)
+        const SATURDAY_MORNING = new Date("2026-11-14T16:00:00Z");
+        // Tuesday 2026-11-10 15:00 in Chicago
+        const TUESDAY_AFTERNOON = new Date("2026-11-10T21:00:00Z");
+
+        let clock: sinon.SinonFakeTimers;
+
+        const buildHandler = (availabilitySettings: Record<string, unknown>): ContactCaptureHandler =>
+            new ContactCaptureHandler({
+                ...PROPS_WITHOUT_CAPTURE,
+                data: { ...PROPS_WITHOUT_CAPTURE.data, availabilitySettings } as unknown as ContactCaptureData,
+            });
+
+        const buildContext = (crmService?: Partial<CrmService>): Context => {
+            const c = new ContextBuilder().withSessionData({ id: "form-session", data: {} }).build();
+            if (crmService) {
+                (c.services as { crmService?: Partial<CrmService> }).crmService = crmService as never;
+            }
+            return c;
+        };
+
+        const busyDaysContext = (response: Response) => response.context?.active?.find((a) => a.name === "BusyDays");
+
+        beforeEach(() => {
+            request = new IntentRequestBuilder().withSlots({}).withIntentId(PROPS_WITHOUT_CAPTURE.intentId).build();
+            request.isNewSession = true;
+        });
+
+        afterEach(() => {
+            clock?.restore();
+        });
+
+        it("adds the block next to busyDays when the lead arrives after hours", async () => {
+            clock = sinon.useFakeTimers({ now: SATURDAY_MORNING, toFake: ["Date"] });
+            const crmService = {
+                getAvailability: sinon.stub().resolves({
+                    range: { start: null, end: null },
+                    unavailabilities: [{ date: { date: "2026-11-20" }, available: false }],
+                }),
+            };
+            handler = buildHandler(AFTER_HOURS_SETTINGS);
+            context = buildContext(crmService);
+
+            const response = await new FormResponseStrategy().getResponse(handler, request, context);
+
+            expect(busyDaysContext(response)?.parameters).to.deep.equal({
+                busyDays: "2026-11-20",
+                nextBusinessDayBlock: { date: "2026-11-16", blockedUntil: "12:00" },
+            });
+        });
+
+        it("sends the block on its own when there is no CRM availability", async () => {
+            clock = sinon.useFakeTimers({ now: SATURDAY_MORNING, toFake: ["Date"] });
+            handler = buildHandler(AFTER_HOURS_SETTINGS);
+            context = buildContext();
+
+            const response = await new FormResponseStrategy().getResponse(handler, request, context);
+
+            expect(busyDaysContext(response)).to.deep.equal({
+                name: "BusyDays",
+                timeToLive: {},
+                parameters: { nextBusinessDayBlock: { date: "2026-11-16", blockedUntil: "12:00" } },
+            });
+        });
+
+        it("adds nothing during business hours", async () => {
+            clock = sinon.useFakeTimers({ now: TUESDAY_AFTERNOON, toFake: ["Date"] });
+            handler = buildHandler(AFTER_HOURS_SETTINGS);
+            context = buildContext();
+
+            const response = await new FormResponseStrategy().getResponse(handler, request, context);
+
+            expect(busyDaysContext(response)).to.be.undefined;
+        });
+
+        it("adds nothing when the timezone was not stamped", async () => {
+            clock = sinon.useFakeTimers({ now: SATURDAY_MORNING, toFake: ["Date"] });
+            handler = buildHandler({ defaultBusyDays: AFTER_HOURS_SETTINGS.defaultBusyDays });
+            context = buildContext();
+
+            const response = await new FormResponseStrategy().getResponse(handler, request, context);
+
+            expect(busyDaysContext(response)).to.be.undefined;
+        });
+    });
 });

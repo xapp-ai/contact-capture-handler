@@ -36,6 +36,7 @@ import { canDivertEnquiry, classifyEnquiry, EnquiryResolution, isUnsupportedEnqu
 import { resolveBookingTrade, TradeResolution } from "./utils/tradeClassifier";
 import { availabilityLocationKey, buildAvailabilityContact } from "./utils/availabilityContact";
 import { buildOfferingsByDate, hasTimeSlots, OfferingsByDate } from "./utils/liveSlots";
+import { nextBusinessDayBlock } from "./utils/nextBusinessDayBlock";
 
 /**
  * Action response data object
@@ -621,18 +622,24 @@ export class FormResponseStrategy implements ResponseStrategy {
             }
         }
 
-        // Skip when busyDays is undefined — formatBusyDays would dereference it.
-        if (busyDays) {
+        // Held back from a lead taken after hours (#749); the widget reads it even without CRM busy days.
+        const block = nextBusinessDayBlock(new Date(), settings?.defaultBusyDays, settings?.timezone);
+
+        // Skip busyDays when undefined — formatBusyDays would dereference it.
+        if (busyDays || block) {
             response.context = {
                 active: [
                     {
                         name: "BusyDays",
                         timeToLive: {},
                         // Context parameters are typed as strings, but the form widget reads
-                        // offeringsByDate and schedulingDisabled as an object and a boolean.
+                        // offeringsByDate, schedulingDisabled and nextBusinessDayBlock as objects and a boolean.
                         parameters: {
-                            busyDays: formatBusyDays(busyDays),
-                            ...liveScheduling(busyDays, schedule),
+                            ...(busyDays && {
+                                busyDays: formatBusyDays(busyDays),
+                                ...liveScheduling(busyDays, schedule),
+                            }),
+                            ...(block && { nextBusinessDayBlock: block }),
                         } as unknown as { [key: string]: string },
                     },
                 ],
