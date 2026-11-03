@@ -193,6 +193,27 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
                     extras.currentUrl = request.attributes.currentUrl;
                 }
 
+                // GA4 ids the chat widget read from the visitor's cookies, so the GA4
+                // integration can credit the lead to the traffic source rather than
+                // Direct / Unassigned. Shape-checked: they are forwarded to Google.
+                if (typeof request.attributes.gaClientId === "string") {
+                    extras.gaClientId = request.attributes.gaClientId;
+                }
+
+                const gaSessionIds = request.attributes.gaSessionIds;
+                if (
+                    gaSessionIds &&
+                    typeof gaSessionIds === "object" &&
+                    !Array.isArray(gaSessionIds) &&
+                    Object.values(gaSessionIds).every((value) => typeof value === "string")
+                ) {
+                    extras.gaSessionIds = gaSessionIds;
+                }
+
+                if (request.attributes.ga4OptOut === true || request.attributes.ga4OptOut === "true") {
+                    extras.ga4OptOut = true;
+                }
+
                 // Custom Tracking Parameters (track_*)
                 Object.keys(request.attributes).forEach((key) => {
                     if (key.startsWith("track_")) {
