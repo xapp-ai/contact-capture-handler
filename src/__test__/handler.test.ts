@@ -259,6 +259,62 @@ describe(`${ContactCaptureHandler.name}`, () => {
                 );
             });
 
+            it("adds the visitor's GA4 ids to the extras so the GA4 integration can attribute the lead", () => {
+                const request = new IntentRequestBuilder()
+                    .withAttributes({
+                        gaClientId: "1234567890.1700000000",
+                        gaSessionIds: { ABC123XYZ: "1700000000" },
+                    })
+                    .build();
+
+                const crmService = new MockCRM();
+                sandbox.spy(crmService, "send");
+
+                ContactCaptureHandler.sendLead({}, {}, { data: [] }, [], crmService, request, new MockErrorService());
+
+                expect(crmService.send).to.have.been.calledOnce;
+                expect(crmService.send).to.have.been.calledWith(
+                    {
+                        fields: [],
+                        transcript: [],
+                        refId: undefined,
+                        jobTypeId: undefined,
+                        availabilityClassId: undefined,
+                        userId: "userId",
+                        sessionId: "sessionId",
+                        source: "stentor",
+                    },
+                    {
+                        gaClientId: "1234567890.1700000000",
+                        gaSessionIds: { ABC123XYZ: "1700000000" },
+                    },
+                );
+            });
+
+            it("passes the GA4 opt-out flag through so the lead is not sent to GA4", () => {
+                const request = new IntentRequestBuilder().withAttributes({ ga4OptOut: true }).build();
+
+                const crmService = new MockCRM();
+                sandbox.spy(crmService, "send");
+
+                ContactCaptureHandler.sendLead({}, {}, { data: [] }, [], crmService, request, new MockErrorService());
+
+                expect((crmService.send as sinon.SinonSpy).firstCall.args[1]).to.deep.equal({ ga4OptOut: true });
+            });
+
+            it("drops GA4 session ids that are not a map of strings", () => {
+                const request = new IntentRequestBuilder()
+                    .withAttributes({ gaSessionIds: "1700000000", gaClientId: 42 })
+                    .build();
+
+                const crmService = new MockCRM();
+                sandbox.spy(crmService, "send");
+
+                ContactCaptureHandler.sendLead({}, {}, { data: [] }, [], crmService, request, new MockErrorService());
+
+                expect((crmService.send as sinon.SinonSpy).firstCall.args[1]).to.deep.equal({});
+            });
+
             it("adds custom tracking parameters (track_*) to the extras", () => {
                 const request = new IntentRequestBuilder()
                     .withAttributes({
