@@ -1,3 +1,10 @@
+# [2.13.0](https://github.com/xapp-ai/contact-capture-handler/compare/v2.12.0...v2.13.0) (2026-11-03)
+
+
+### Features
+
+* pass the visitor's GA4 ids from chat attributes into lead extras ([#752](https://github.com/xapp-ai/contact-capture-handler/issues/752)) ([b0a3b7e](https://github.com/xapp-ai/contact-capture-handler/commit/b0a3b7e54f34e04c3ff6178bf7fe40369e02cf84))
+
 # [2.12.0](https://github.com/xapp-ai/contact-capture-handler/compare/v2.11.0...v2.12.0) (2026-11-01)
 
 
