@@ -291,6 +291,32 @@ describe(`${ContactCaptureHandler.name}`, () => {
                 );
             });
 
+            it("adds the referrer to the extras so a lead records where the visitor came from", () => {
+                const request = new IntentRequestBuilder()
+                    .withAttributes({ referrer: "https://www.google.com/" })
+                    .build();
+
+                const crmService = new MockCRM();
+                sandbox.spy(crmService, "send");
+
+                ContactCaptureHandler.sendLead({}, {}, { data: [] }, [], crmService, request, new MockErrorService());
+
+                expect((crmService.send as sinon.SinonSpy).firstCall.args[1]).to.deep.equal({
+                    referrer: "https://www.google.com/",
+                });
+            });
+
+            it("drops a referrer that is not a string", () => {
+                const request = new IntentRequestBuilder().withAttributes({ referrer: { href: "x" } }).build();
+
+                const crmService = new MockCRM();
+                sandbox.spy(crmService, "send");
+
+                ContactCaptureHandler.sendLead({}, {}, { data: [] }, [], crmService, request, new MockErrorService());
+
+                expect((crmService.send as sinon.SinonSpy).firstCall.args[1]).to.deep.equal({});
+            });
+
             it("passes the GA4 opt-out flag through so the lead is not sent to GA4", () => {
                 const request = new IntentRequestBuilder().withAttributes({ ga4OptOut: true }).build();
 
@@ -451,7 +477,15 @@ describe(`${ContactCaptureHandler.name}`, () => {
                     },
                 };
 
-                ContactCaptureHandler.sendLead(slots, {}, { data: [] }, [], crmService, request, new MockErrorService());
+                ContactCaptureHandler.sendLead(
+                    slots,
+                    {},
+                    { data: [] },
+                    [],
+                    crmService,
+                    request,
+                    new MockErrorService(),
+                );
 
                 expect(sendSpy).to.have.been.calledOnce;
                 const extras = sendSpy.getCall(0).args[1];
@@ -473,7 +507,15 @@ describe(`${ContactCaptureHandler.name}`, () => {
                     },
                 };
 
-                ContactCaptureHandler.sendLead(slots, {}, { data: [] }, [], crmService, request, new MockErrorService());
+                ContactCaptureHandler.sendLead(
+                    slots,
+                    {},
+                    { data: [] },
+                    [],
+                    crmService,
+                    request,
+                    new MockErrorService(),
+                );
 
                 const extras = sendSpy.getCall(0).args[1];
                 expect(Object.keys(extras)).to.include("xxTrustedFormCertUrl");
@@ -493,7 +535,15 @@ describe(`${ContactCaptureHandler.name}`, () => {
                     },
                 };
 
-                ContactCaptureHandler.sendLead(slots, {}, { data: [] }, [], crmService, request, new MockErrorService());
+                ContactCaptureHandler.sendLead(
+                    slots,
+                    {},
+                    { data: [] },
+                    [],
+                    crmService,
+                    request,
+                    new MockErrorService(),
+                );
 
                 expect(sendSpy).to.have.been.calledOnce;
                 const extras = sendSpy.getCall(0).args[1];
@@ -534,7 +584,15 @@ describe(`${ContactCaptureHandler.name}`, () => {
                     },
                 };
 
-                ContactCaptureHandler.sendLead(slots, {}, { data: [] }, [], crmService, request, new MockErrorService());
+                ContactCaptureHandler.sendLead(
+                    slots,
+                    {},
+                    { data: [] },
+                    [],
+                    crmService,
+                    request,
+                    new MockErrorService(),
+                );
 
                 expect(sendSpy).to.have.been.calledOnce;
                 const extras = sendSpy.getCall(0).args[1];
