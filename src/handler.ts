@@ -193,6 +193,12 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
                     extras.currentUrl = request.attributes.currentUrl;
                 }
 
+                // The page the visitor came from; the form widget strips its query string.
+                // Lets a booking be attributed to where it was clicked, e.g. Google vs a site.
+                if (typeof request.attributes.referrer === "string") {
+                    extras.referrer = request.attributes.referrer;
+                }
+
                 // GA4 ids the chat widget read from the visitor's cookies, so the GA4
                 // integration can credit the lead to the traffic source rather than
                 // Direct / Unassigned. Shape-checked: they are forwarded to Google.
@@ -225,10 +231,14 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
 
         // TrustedForm certificate URLs (from form submission slots)
         if (slots[Constants.TRUSTED_FORM_CERT_URL_SLOT]?.value) {
-            extras[Constants.TRUSTED_FORM_CERT_URL_SLOT] = requestSlotValueToString(slots[Constants.TRUSTED_FORM_CERT_URL_SLOT].value);
+            extras[Constants.TRUSTED_FORM_CERT_URL_SLOT] = requestSlotValueToString(
+                slots[Constants.TRUSTED_FORM_CERT_URL_SLOT].value,
+            );
         }
         if (slots[Constants.TRUSTED_FORM_PING_URL_SLOT]?.value) {
-            extras[Constants.TRUSTED_FORM_PING_URL_SLOT] = requestSlotValueToString(slots[Constants.TRUSTED_FORM_PING_URL_SLOT].value);
+            extras[Constants.TRUSTED_FORM_PING_URL_SLOT] = requestSlotValueToString(
+                slots[Constants.TRUSTED_FORM_PING_URL_SLOT].value,
+            );
         }
 
         log().debug(`Sending lead to FSM/CRM:`);
