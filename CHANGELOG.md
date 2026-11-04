@@ -1,3 +1,10 @@
+# [2.14.0](https://github.com/xapp-ai/contact-capture-handler/compare/v2.13.0...v2.14.0) (2026-11-04)
+
+
+### Features
+
+* pass the visitor's referrer through to lead extras ([#753](https://github.com/xapp-ai/contact-capture-handler/issues/753)) ([7a1b3cc](https://github.com/xapp-ai/contact-capture-handler/commit/7a1b3ccc68343d99a7de1e1ebbc308438faf0b79)), closes [chat-widget#1827](https://github.com/chat-widget/issues/1827)
+
 # [2.13.0](https://github.com/xapp-ai/contact-capture-handler/compare/v2.12.0...v2.13.0) (2026-11-03)
 
 
