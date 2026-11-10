@@ -1,3 +1,10 @@
+# [2.15.0](https://github.com/xapp-ai/contact-capture-handler/compare/v2.14.0...v2.15.0) (2026-11-10)
+
+
+### Features
+
+* ask for the job description (MESSAGE) in the default lead capture ([#756](https://github.com/xapp-ai/contact-capture-handler/issues/756)) ([ed75077](https://github.com/xapp-ai/contact-capture-handler/commit/ed75077243c8eab86d76d3433846eb4e4273c2ef)), closes [#755](https://github.com/xapp-ai/contact-capture-handler/issues/755)
+
 # [2.14.0](https://github.com/xapp-ai/contact-capture-handler/compare/v2.13.0...v2.14.0) (2026-11-04)
 
 
