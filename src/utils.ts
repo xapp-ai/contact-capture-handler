@@ -26,6 +26,9 @@ import { DEFAULT_RESPONSES } from "./constants";
  * Phone and email are both not individually required to match the form widget's
  * mandatoryGroup pattern (at least one of the two is needed).
  *
+ * MESSAGE (the job description) is required, matching agent-server's default required
+ * fields, and accepts any input since there is no slot to fill it from.
+ *
  * Frozen to prevent accidental mutation since this is a shared constant.
  */
 export const DEFAULT_CAPTURE_DATA: readonly DataDescriptorBase[] = Object.freeze([
@@ -56,6 +59,14 @@ export const DEFAULT_CAPTURE_DATA: readonly DataDescriptorBase[] = Object.freeze
         slotName: "zip",
         active: true,
         required: true,
+    }),
+    Object.freeze({
+        type: "MESSAGE" as const,
+        questionContentKey: "MessageQuestionContent",
+        slotName: "message",
+        active: true,
+        required: true,
+        acceptAnyInput: true,
     }),
 ]);
 

@@ -6,7 +6,7 @@ import { IntentRequestBuilder } from "stentor-request";
 
 import { ContactCaptureData } from "../data";
 
-import { cleanCode, generateAlternativeSlots, lookingForHelp, newLeadGenerationData } from "../utils";
+import { DEFAULT_CAPTURE_DATA, cleanCode, generateAlternativeSlots, lookingForHelp, newLeadGenerationData } from "../utils";
 
 describe(`#${generateAlternativeSlots.name}()`, () => {
     describe('when asking for the LAST_NAME', () => {
@@ -267,6 +267,43 @@ describe(`#${newLeadGenerationData.name}()`, () => {
     });
 
     describe("when capture.data is missing or invalid", () => {
+        it("asks for the job description last, accepting free text", () => {
+            const result = newLeadGenerationData({} as unknown as ContactCaptureData, "CHAT");
+            const message = result.data[result.data.length - 1];
+            expect(message).to.deep.equal({
+                type: "MESSAGE",
+                enums: undefined,
+                questionContentKey: "MessageQuestionContent",
+                slotName: "message",
+                acceptAnyInput: true,
+            });
+        });
+
+        it("declares MESSAGE as required, matching agent-server's default required fields", () => {
+            const message = DEFAULT_CAPTURE_DATA.find((d) => d.type === "MESSAGE");
+            expect(message).to.include({
+                slotName: "message",
+                questionContentKey: "MessageQuestionContent",
+                active: true,
+                required: true,
+                acceptAnyInput: true,
+            });
+        });
+
+        it("does not add MESSAGE to a configured blueprint", () => {
+            const configured = {
+                capture: {
+                    data: [
+                        { type: "FULL_NAME", questionContentKey: "FullNameQuestionContent", slotName: "full_name", active: true },
+                        { type: "PHONE", questionContentKey: "PhoneQuestionContent", slotName: "phone", active: true },
+                    ],
+                },
+            } as unknown as ContactCaptureData;
+
+            const result = newLeadGenerationData(configured);
+            expect(result.data.map((d) => d.type)).to.deep.equal(["FULL_NAME", "PHONE"]);
+        });
+
         it("returns default capture fields when capture.data is undefined", () => {
             const invalidData = {
                 capture: {
@@ -277,8 +314,8 @@ describe(`#${newLeadGenerationData.name}()`, () => {
             } as unknown as ContactCaptureData;
 
             const result = newLeadGenerationData(invalidData);
-            expect(result.data).to.have.length(4);
-            expect(result.data.map((d) => d.type)).to.deep.equal(["FULL_NAME", "PHONE", "EMAIL", "ZIP"]);
+            expect(result.data).to.have.length(5);
+            expect(result.data.map((d) => d.type)).to.deep.equal(["FULL_NAME", "PHONE", "EMAIL", "ZIP", "MESSAGE"]);
             expect(result.lastModifiedMs).to.be.a("number");
         });
 
@@ -286,8 +323,8 @@ describe(`#${newLeadGenerationData.name}()`, () => {
             const invalidData = {} as unknown as ContactCaptureData;
 
             const result = newLeadGenerationData(invalidData);
-            expect(result.data).to.have.length(4);
-            expect(result.data.map((d) => d.type)).to.deep.equal(["FULL_NAME", "PHONE", "EMAIL", "ZIP"]);
+            expect(result.data).to.have.length(5);
+            expect(result.data.map((d) => d.type)).to.deep.equal(["FULL_NAME", "PHONE", "EMAIL", "ZIP", "MESSAGE"]);
             expect(result.lastModifiedMs).to.be.a("number");
         });
 
@@ -295,8 +332,8 @@ describe(`#${newLeadGenerationData.name}()`, () => {
             const invalidData = null as unknown as ContactCaptureData;
 
             const result = newLeadGenerationData(invalidData);
-            expect(result.data).to.have.length(4);
-            expect(result.data.map((d) => d.type)).to.deep.equal(["FULL_NAME", "PHONE", "EMAIL", "ZIP"]);
+            expect(result.data).to.have.length(5);
+            expect(result.data.map((d) => d.type)).to.deep.equal(["FULL_NAME", "PHONE", "EMAIL", "ZIP", "MESSAGE"]);
             expect(result.lastModifiedMs).to.be.a("number");
         });
 
@@ -304,8 +341,8 @@ describe(`#${newLeadGenerationData.name}()`, () => {
             const invalidData = undefined as unknown as ContactCaptureData;
 
             const result = newLeadGenerationData(invalidData);
-            expect(result.data).to.have.length(4);
-            expect(result.data.map((d) => d.type)).to.deep.equal(["FULL_NAME", "PHONE", "EMAIL", "ZIP"]);
+            expect(result.data).to.have.length(5);
+            expect(result.data.map((d) => d.type)).to.deep.equal(["FULL_NAME", "PHONE", "EMAIL", "ZIP", "MESSAGE"]);
             expect(result.lastModifiedMs).to.be.a("number");
         });
 
@@ -317,8 +354,8 @@ describe(`#${newLeadGenerationData.name}()`, () => {
             } as unknown as ContactCaptureData;
 
             const result = newLeadGenerationData(invalidData, "FORM");
-            expect(result.data).to.have.length(4);
-            expect(result.data.map((d) => d.type)).to.deep.equal(["FULL_NAME", "PHONE", "EMAIL", "ZIP"]);
+            expect(result.data).to.have.length(5);
+            expect(result.data.map((d) => d.type)).to.deep.equal(["FULL_NAME", "PHONE", "EMAIL", "ZIP", "MESSAGE"]);
             expect(result.lastModifiedMs).to.be.a("number");
         });
 
@@ -328,8 +365,8 @@ describe(`#${newLeadGenerationData.name}()`, () => {
             } as unknown as ContactCaptureData;
 
             const result = newLeadGenerationData(invalidData, "CHAT");
-            expect(result.data).to.have.length(4);
-            expect(result.data.map((d) => d.type)).to.deep.equal(["FULL_NAME", "PHONE", "EMAIL", "ZIP"]);
+            expect(result.data).to.have.length(5);
+            expect(result.data.map((d) => d.type)).to.deep.equal(["FULL_NAME", "PHONE", "EMAIL", "ZIP", "MESSAGE"]);
             expect(result.lastModifiedMs).to.be.a("number");
         });
     });
