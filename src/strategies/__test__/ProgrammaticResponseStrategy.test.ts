@@ -10,6 +10,7 @@ import type {
     Context,
     Handler,
     IntentRequest,
+    RequestSlotMap,
 } from "stentor-models";
 import { ContextBuilder } from "stentor-context";
 import { IntentRequestBuilder } from "stentor-request";
@@ -22,6 +23,7 @@ import { ContactCaptureHandler } from "../../handler";
 import type { ChatResult } from "../models/xnlu";
 
 import { ProgrammaticResponseStrategy } from "../ProgrammaticResponseStrategy";
+import { newLeadGenerationData } from "../../utils";
 import type { ContactValidation } from "../models/xnlu";
 
 const props: Handler<Content, ContactCaptureData> = {
@@ -731,6 +733,58 @@ describe(`${ProgrammaticResponseStrategy.name}`, () => {
                 // No validationConfidence since we didn't use X-NLU validation
                 expect(leadDataList.data[0].validationConfidence).to.be.undefined;
             });
+        });
+    });
+    describe("when the app never configured capture.data", () => {
+        const unconfiguredProps: Handler<Content, ContactCaptureData> = {
+            ...props,
+            data: { ...props.data, capture: {} } as unknown as ContactCaptureData,
+        };
+
+        function sessionWith(
+            currentType: string,
+            collected: Record<string, string>,
+            slots: RequestSlotMap,
+        ): Context {
+            const list = newLeadGenerationData(unconfiguredProps.data, "CHAT");
+            list.data.forEach((d) => {
+                if (collected[d.type]) {
+                    d.collectedValue = collected[d.type];
+                }
+            });
+            return new ContextBuilder()
+                .withResponse(response)
+                .withSessionData({
+                    id: "foo",
+                    data: {
+                        [Constants.CONTACT_CAPTURE_CURRENT_DATA]: currentType,
+                        [Constants.CONTACT_CAPTURE_SLOTS]: slots,
+                        [Constants.CONTACT_CAPTURE_LIST]: list,
+                    },
+                })
+                .build();
+        }
+
+        it("asks for the job description after the zip code", async () => {
+            const unconfiguredHandler = new ContactCaptureHandler(unconfiguredProps);
+            const testRequest = new IntentRequestBuilder()
+                .withRawQuery("33602")
+                .withIntentId(props.intentId)
+                .updateDevice({ canSpeak: false })
+                .build();
+            const testContext = sessionWith("ZIP", {
+                FULL_NAME: "Jane Doe",
+                PHONE: "5551234567",
+                EMAIL: "jane@example.com",
+            }, { zip: { name: "zip", value: "33602" } });
+
+            const strategy = new ProgrammaticResponseStrategy(unconfiguredProps.data);
+            await strategy.getResponse(unconfiguredHandler, testRequest, testContext);
+
+            expect(testContext.session.get(Constants.CONTACT_CAPTURE_CURRENT_DATA)).to.equal("MESSAGE");
+            const leadDataList = testContext.session.get(Constants.CONTACT_CAPTURE_LIST);
+            expect(leadDataList.data.find((d: { type: string }) => d.type === "ZIP").collectedValue).to.equal("33602");
+            expect(leadDataList.data.find((d: { type: string }) => d.type === "MESSAGE").collectedValue).to.be.undefined;
         });
     });
 });
