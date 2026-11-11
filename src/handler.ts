@@ -181,6 +181,15 @@ export class ContactCaptureHandler extends QuestionAnsweringHandler<Content, Con
                     extras.gclid = request.attributes.gclid;
                 }
 
+                // Google substitutes these for gclid on iOS traffic (web-to-app / app-to-web)
+                if (request.attributes.gbraid) {
+                    extras.gbraid = request.attributes.gbraid;
+                }
+
+                if (request.attributes.wbraid) {
+                    extras.wbraid = request.attributes.wbraid;
+                }
+
                 if (request.attributes.fbclid) {
                     extras.fbclid = request.attributes.fbclid;
                 }

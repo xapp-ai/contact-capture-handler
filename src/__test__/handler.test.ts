@@ -457,6 +457,47 @@ describe(`${ContactCaptureHandler.name}`, () => {
                 expect(extras).to.not.have.property("utm_content");
                 expect(extras).to.not.have.property("fbclid");
                 expect(extras).to.not.have.property("msclkid");
+                expect(extras).to.not.have.property("gbraid");
+                expect(extras).to.not.have.property("wbraid");
+            });
+
+            it("adds the iOS Google click IDs gbraid and wbraid to the extras", () => {
+                const request = new IntentRequestBuilder()
+                    .withAttributes({
+                        gbraid: "google_ios_web_to_app",
+                        wbraid: "google_ios_app_to_web",
+                    })
+                    .build();
+
+                const crmService = new MockCRM();
+                const sendSpy = sandbox.spy(crmService, "send");
+
+                ContactCaptureHandler.sendLead({}, {}, { data: [] }, [], crmService, request, new MockErrorService());
+
+                expect(sendSpy).to.have.been.calledOnce;
+                expect(sendSpy.getCall(0).args[1]).to.deep.equal({
+                    gbraid: "google_ios_web_to_app",
+                    wbraid: "google_ios_app_to_web",
+                });
+            });
+
+            it("does not add empty gbraid or wbraid values", () => {
+                const request = new IntentRequestBuilder()
+                    .withAttributes({
+                        gclid: "google_click_123",
+                        gbraid: "",
+                        wbraid: "",
+                    })
+                    .build();
+
+                const crmService = new MockCRM();
+                const sendSpy = sandbox.spy(crmService, "send");
+
+                ContactCaptureHandler.sendLead({}, {}, { data: [] }, [], crmService, request, new MockErrorService());
+
+                expect(sendSpy.getCall(0).args[1]).to.deep.equal({
+                    gclid: "google_click_123",
+                });
             });
         });
         describe("for a request with TrustedForm slots", () => {
