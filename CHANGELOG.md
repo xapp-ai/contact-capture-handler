@@ -1,3 +1,10 @@
+# [2.16.0](https://github.com/xapp-ai/contact-capture-handler/compare/v2.15.0...v2.16.0) (2026-11-12)
+
+
+### Features
+
+* forward gbraid and wbraid click IDs to lead extras ([#758](https://github.com/xapp-ai/contact-capture-handler/issues/758)) ([140b80f](https://github.com/xapp-ai/contact-capture-handler/commit/140b80f2db9ee1c8b63ad77900ee187858969efa)), closes [XappMedia/stentor-api#6645](https://github.com/XappMedia/stentor-api/issues/6645) [#757](https://github.com/xapp-ai/contact-capture-handler/issues/757)
+
 # [2.15.0](https://github.com/xapp-ai/contact-capture-handler/compare/v2.14.0...v2.15.0) (2026-11-10)
 
 
