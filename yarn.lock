@@ -1150,12 +1150,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:24.19.2":
-  version: 24.19.2
-  resolution: "@types/node@npm:24.19.2"
+"@types/node@npm:24.19.4":
+  version: 24.19.4
+  resolution: "@types/node@npm:24.19.4"
   dependencies:
     undici-types: ">=7.24.0 <7.24.7"
-  checksum: 4afc94122d647e2c4bc794431632d07a67949d9674b73f13898e1f509de41862e841a07e16097965f18d36e93fc4b2c60ecf2304d8440694369e5282969c0481
+  checksum: b5109c0c015fb154089b0f0e3d15413806693805f6af585bab9080e4edb45840ca473056fc89eb0df36ab9c97ae57332c2bee419fa2ce8d2b2fdf1e87b9eec8a
   languageName: node
   linkType: hard
 
@@ -1532,7 +1532,7 @@ __metadata:
     "@semantic-release/release-notes-generator": 14.1.1
     "@types/chai": 5.2.3
     "@types/mocha": 10.0.10
-    "@types/node": 24.19.2
+    "@types/node": 24.19.4
     "@types/sax": 1.2.7
     "@types/sinon": 17.0.4
     "@types/sinon-chai": 3.2.12
